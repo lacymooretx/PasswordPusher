@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Before-action concern included in BaseController that redirects users to
+# the 2FA setup page when any of their teams requires two-factor authentication
+# and they haven't enabled it yet. Exempts 2FA setup paths and logout to avoid
+# redirect loops. Requires both enable_teams and enable_two_factor Settings.
 module TeamTwoFactorEnforcement
   extend ActiveSupport::Concern
 
@@ -26,8 +30,9 @@ module TeamTwoFactorEnforcement
       alert: I18n._("Your team '%{team}' requires two-factor authentication. Please set it up to continue.") % { team: requiring_team.name }
   end
 
+  # Exemption list: paths that must remain accessible during enforcement
+  # to allow users to actually set up 2FA and to sign out.
   def two_factor_setup_path?
-    # Allow access to 2FA setup, verification, team 2FA management, and logout
     request.path.start_with?("/users/two_factor") ||
       request.path.match?(%r{/teams/.+/two_factor}) ||
       request.path == destroy_user_session_path

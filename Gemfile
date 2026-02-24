@@ -28,8 +28,9 @@ group :development do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   # gem install debase -v '0.2.9' -- --with-cflags=-Wno-error=incompatible-function-pointer-types
   # https://blog.arkency.com/how-to-get-burned-by-16-years-old-hack-in-2024/
-  gem "debase"
-  gem "ruby-debug-ide"
+  # NOTE: debase and ruby-debug-ide do not support Ruby 4.0+
+  # gem "debase"
+  # gem "ruby-debug-ide"
   gem "pry-rails"
   gem "web-console"
 

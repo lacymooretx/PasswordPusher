@@ -13,6 +13,8 @@ module PushesHelper
     format("%.1f #{units[exp]}", size.to_f / (1024**exp))
   end
 
+  # --- User Policy Defaults ---
+
   # Returns the effective default for a push setting, checking user policy first
   # then falling back to the global Settings value.
   #

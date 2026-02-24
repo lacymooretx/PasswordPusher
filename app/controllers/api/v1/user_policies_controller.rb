@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# JSON API for reading and updating the authenticated user's push defaults.
+# Token-authenticated via Api::BaseController. Apipie annotations provide
+# auto-generated API docs. Requires Settings.enable_user_policies.
 class Api::V1::UserPoliciesController < Api::BaseController
   before_action :check_feature_enabled
 

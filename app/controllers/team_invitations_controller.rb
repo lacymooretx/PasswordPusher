@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Manages team invitations: create (admin sends email), destroy (admin revokes),
+# and accept (public token-based endpoint). The accept action handles edge cases
+# like expired/used tokens, unauthenticated users (stores token in session for
+# post-login redirect), and existing members.
 class TeamInvitationsController < BaseController
   before_action :check_feature_enabled
   before_action :set_team, except: [:accept]

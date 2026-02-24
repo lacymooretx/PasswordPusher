@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+# Mailer for request (intake form) notifications.
 class RequestMailer < ApplicationMailer
+  # Notifies the request owner that a third party has submitted a new push.
   def submission_received(request, push)
     @request = request
     @push = push

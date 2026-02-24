@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# Per-user push defaults (one record per user). Stores preferred values for
+# expire_after_days, expire_after_views, retrieval_step, and deletable_by_viewer
+# for each push kind (pw/url/file/qr) as separate columns.
+# Values must fall within the global Settings min/max range.
+# Requires Settings.enable_user_policies to be active.
 class UserPolicy < ApplicationRecord
   belongs_to :user
   validates :user_id, uniqueness: true
@@ -27,6 +32,8 @@ class UserPolicy < ApplicationRecord
     validate_kind_limits(:qr, Settings.qr)
   end
 
+  # Validates expire_after_days and expire_after_views for a single push kind
+  # against the corresponding global Settings min/max range.
   def validate_kind_limits(kind, settings)
     days = send("#{kind}_expire_after_days")
     if days.present? && !days.between?(settings.expire_after_days_min, settings.expire_after_days_max)

@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Intake form link that allows third parties to submit secrets to a user.
+# Each request has a public URL token, optional submission limit, and
+# optional expiration date. Submissions create Push records linked back
+# to this request. Requires Settings.enable_requests to be active.
 class Request < ApplicationRecord
   belongs_to :user
   has_many :pushes, dependent: :nullify
@@ -17,6 +21,8 @@ class Request < ApplicationRecord
     url_token.to_s
   end
 
+  # Returns true if the request can still accept submissions (not expired,
+  # not past expiration date, and submissions not exhausted).
   def active?
     !expired? && !past_expiration? && !submissions_exhausted?
   end
@@ -35,6 +41,7 @@ class Request < ApplicationRecord
     end
   end
 
+  # Increments submission_count and auto-expires if limits are reached.
   def record_submission!
     increment!(:submission_count)
     check_limits!

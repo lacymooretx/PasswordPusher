@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# OTP challenge page shown after successful password authentication when 2FA
+# is enabled. The user's ID is stored in session[:otp_user_id] by
+# SessionsController#create. Accepts either a TOTP code or a one-time backup
+# code. Inherits from ApplicationController (not BaseController) to avoid
+# requiring full authentication. Uses the login layout.
 class Users::TwoFactorVerificationController < ApplicationController
   layout "login"
 

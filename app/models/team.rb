@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Organization unit that groups users under shared policies and 2FA enforcement.
+# Uses a URL-friendly slug for routing. The creator becomes the owner automatically.
+# Requires Settings.enable_teams to be active.
 class Team < ApplicationRecord
   belongs_to :owner, class_name: "User"
   has_many :memberships, dependent: :destroy
@@ -40,10 +43,12 @@ class Team < ApplicationRecord
 
   # --- 2FA Enforcement ---
 
+  # Returns users who have not enabled two-factor authentication.
   def members_without_2fa
     users.where(otp_required_for_login: false)
   end
 
+  # Percentage (0-100) of team members with 2FA enabled.
   def two_factor_compliance_percentage
     total = member_count
     return 100 if total.zero?
@@ -98,6 +103,8 @@ class Team < ApplicationRecord
 
   private
 
+  # Auto-generates a URL-safe slug from the team name, appending a counter
+  # if a collision exists (e.g. "acme", "acme-1", "acme-2").
   def generate_slug
     return if slug.present?
 

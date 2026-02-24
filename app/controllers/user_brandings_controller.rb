@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Settings page for per-user branding customization (logo, colors, text).
+# Builds or finds the user's UserBranding record. Requires Settings.enable_user_branding.
 class UserBrandingsController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

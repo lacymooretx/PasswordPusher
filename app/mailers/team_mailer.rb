@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+# Mailer for team-related notifications: invitation emails, new member
+# confirmations (sent to owner), and 2FA reminder emails.
 class TeamMailer < ApplicationMailer
+  # Sends an invitation link to the invitee's email address.
   def invitation_email(invitation)
     @invitation = invitation
     @team = invitation.team
@@ -12,6 +15,7 @@ class TeamMailer < ApplicationMailer
     )
   end
 
+  # Notifies the team owner that a new member has joined.
   def member_added(team, user)
     @team = team
     @user = user
@@ -22,6 +26,7 @@ class TeamMailer < ApplicationMailer
     )
   end
 
+  # Reminds a team member to enable 2FA when the team requires it.
   def two_factor_reminder(team, user)
     @team = team
     @user = user

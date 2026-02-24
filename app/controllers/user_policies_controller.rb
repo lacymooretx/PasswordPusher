@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Settings page for per-user push defaults. Builds or finds the user's
+# UserPolicy record and persists changes. Requires Settings.enable_user_policies.
 class UserPoliciesController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

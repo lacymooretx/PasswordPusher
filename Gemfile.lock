@@ -159,9 +159,6 @@ GEM
     cssbundling-rails (1.4.3)
       railties (>= 6.0.0)
     date (3.5.1)
-    debase (0.2.9)
-      debase-ruby_core_source (>= 3.4.1)
-    debase-ruby_core_source (4.0.0)
     debug (1.11.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
@@ -649,8 +646,6 @@ GEM
       rubocop (>= 1.72)
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
-    ruby-debug-ide (0.7.5)
-      rake (>= 0.8.1)
     ruby-progressbar (1.13.0)
     rubyzip (3.2.2)
     sass-embedded (1.97.3)
@@ -827,7 +822,6 @@ DEPENDENCIES
   capybara (>= 3.37.1, < 4.0)
   config
   cssbundling-rails
-  debase
   debug
   devise (~> 5.0)
   devise-i18n
@@ -874,7 +868,6 @@ DEPENDENCIES
   rotp (~> 6.3)
   rqrcode (~> 3.2)
   rubocop-rails-omakase
-  ruby-debug-ide
   sass-embedded
   selenium-webdriver (>= 4.20.1)
   solid_cable

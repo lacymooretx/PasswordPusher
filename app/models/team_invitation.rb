@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Token-based team invitation with 7-day default expiration. One invitation
+# per email per team. Accepting creates a Membership in a transaction.
+# States: pending (not accepted, not expired), expired, accepted.
 class TeamInvitation < ApplicationRecord
   belongs_to :team
   belongs_to :invited_by, class_name: "User"
@@ -29,6 +32,8 @@ class TeamInvitation < ApplicationRecord
     accepted_at.present?
   end
 
+  # Accepts the invitation for the given user. Creates a Membership with the
+  # invited role and timestamps the acceptance, all in a single transaction.
   def accept!(user)
     return false if expired?
     return false if accepted?

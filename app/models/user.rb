@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Devise-based user account with optional 2FA (TOTP + backup codes),
+# SSO via OmniAuth, team memberships, per-user push policy, and branding.
 class User < ApplicationRecord
   include Pwpush::TokenAuthentication
 
@@ -8,6 +10,8 @@ class User < ApplicationRecord
     :recoverable, :rememberable, :validatable,
     :trackable, :confirmable, :lockable, :timeoutable,
     :omniauthable
+
+  # --- Associations ---
 
   has_many :pushes, dependent: :destroy
   has_many :requests, dependent: :destroy
@@ -27,7 +31,10 @@ class User < ApplicationRecord
   end
 
   # --- Two-Factor Authentication ---
+  # TOTP-based 2FA using ROTP. The otp_secret is Lockbox-encrypted at rest.
+  # Backup codes provide one-time-use recovery when the authenticator is unavailable.
 
+  # Returns true if the user has 2FA fully configured and required at login.
   def otp_enabled?
     otp_required_for_login? && otp_secret.present?
   end
@@ -39,6 +46,8 @@ class User < ApplicationRecord
     totp.provisioning_uri(account)
   end
 
+  # Validates a TOTP code with +/-15 second drift tolerance.
+  # Records the consumed timestep to prevent replay attacks.
   def verify_otp(code)
     return false unless otp_secret.present?
 
@@ -52,6 +61,7 @@ class User < ApplicationRecord
     end
   end
 
+  # Checks a one-time backup code against unused codes. Marks as used on match.
   def verify_otp_backup_code(code)
     plaintext = code.to_s.gsub(/\s/, "").downcase
     otp_backup_codes.where(used: false).find_each do |backup|
@@ -68,13 +78,18 @@ class User < ApplicationRecord
     update!(otp_required_for_login: true)
   end
 
+  # Fully removes 2FA: clears secret, consumed timestep, and all backup codes.
   def disable_two_factor!
     update!(otp_required_for_login: false, otp_secret: nil, consumed_timestep: nil)
     otp_backup_codes.delete_all
   end
 
   # --- SSO / OmniAuth ---
+  # Supports linking SSO identities to existing accounts by matching email.
 
+  # Finds or creates a user from an OmniAuth callback hash.
+  # Priority: match by provider+uid, then by email (links SSO to existing account),
+  # then create a new pre-confirmed user with a random password.
   def self.from_omniauth(auth)
     user = find_by(provider: auth.provider, uid: auth.uid)
     return user if user
@@ -96,6 +111,7 @@ class User < ApplicationRecord
     )
   end
 
+  # Returns true if this account was created/linked via an SSO provider.
   def sso_user?
     provider.present? && uid.present?
   end

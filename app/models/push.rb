@@ -2,6 +2,10 @@
 
 require "addressable/uri"
 
+# Core model representing a shared secret (text, file, URL, or QR code).
+# Pushes auto-expire based on view count and age limits. Content is encrypted
+# at rest via Lockbox. Settings are resolved through a priority chain:
+# Team Forced > Team Default > User Policy > Global Settings.
 class Push < ApplicationRecord
   enum :kind, [:text, :file, :url, :qr], validate: true
 
@@ -224,7 +228,10 @@ class Push < ApplicationRecord
     self.name ||= ""
   end
 
-  # Resolves a setting using the chain: Team Forced > Team Default > User Policy > Global Settings
+  # --- Policy Resolution ---
+
+  # Resolves a setting using the chain: Team Forced > Team Default > User Policy > Global Settings.
+  # Returns the first non-nil value found in the chain, falling back to global defaults.
   def resolve_setting(attribute)
     # 1. Team forced value (if teams enabled and push belongs to a team)
     forced = team_policy_forced_value(attribute)
@@ -276,7 +283,8 @@ class Push < ApplicationRecord
     user.user_policy.default_for(user_policy_kind_key, attribute)
   end
 
-  # Maps push kind to the column prefix used in UserPolicy
+  # Maps push kind enum ("text", "url", "file", "qr") to the column prefix
+  # used in UserPolicy and Team policy hashes (:pw, :url, :file, :qr).
   def user_policy_kind_key
     case kind
     when "text" then :pw

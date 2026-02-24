@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Authenticated CRUD for intake request links. Users create requests that
+# generate public URLs for third parties to submit secrets via
+# RequestSubmissionsController. Destroy soft-expires the request rather
+# than deleting it. Requires Settings.enable_requests.
 class RequestsController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

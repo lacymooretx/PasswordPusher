@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# One-time-use backup codes for 2FA recovery. Each code is stored as a
+# BCrypt digest so plaintext is never persisted. Codes are displayed once
+# at generation time and marked as used on successful verification.
 class OtpBackupCode < ApplicationRecord
   belongs_to :user
 

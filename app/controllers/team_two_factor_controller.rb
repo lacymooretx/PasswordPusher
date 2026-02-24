@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Team admin 2FA compliance dashboard and enforcement toggle. Shows per-member
+# 2FA status, overall compliance percentage, and allows toggling the
+# require_two_factor flag. Can send reminder emails to non-compliant members.
+# Requires both enable_teams and enable_two_factor Settings.
 class TeamTwoFactorController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

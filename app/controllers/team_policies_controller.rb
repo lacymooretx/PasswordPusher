@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Team admin interface for configuring push policies. The policy is stored as
+# a JSON column on Team with four top-level keys: "defaults" (per-kind default
+# values), "forced" (locked settings members cannot override), "hidden_features"
+# (push kinds hidden from team members), and "limits" (max values per kind).
 class TeamPoliciesController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled
@@ -43,6 +47,9 @@ class TeamPoliciesController < BaseController
   BOOL_ATTRS = %w[retrieval_step deletable_pushes].freeze
   HIDDEN_FEATURES = %w[url_pushes file_pushes qr_pushes].freeze
 
+  # Constructs the policy JSON hash from nested form params. Iterates over
+  # each push kind and setting type, casting values appropriately (integers
+  # for numeric settings, booleans for toggles, "1" checks for forced flags).
   def build_policy_from_params
     policy = {}
     policy_params = params[:policy] || {}

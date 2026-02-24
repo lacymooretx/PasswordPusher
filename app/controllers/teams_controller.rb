@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# CRUD for teams plus a dashboard view. The show action serves as the team
+# dashboard displaying members, pending invitations (admin only), and recent
+# pushes. Only admins/owners can edit; only the owner can delete.
+# Requires Settings.enable_teams.
 class TeamsController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

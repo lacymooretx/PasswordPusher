@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Overrides Devise's SessionsController to intercept login when the user has
+# 2FA enabled. On successful password authentication, stores the user ID in
+# the session, signs them out, and redirects to the OTP verification page.
+# Normal sign-in proceeds if 2FA is globally disabled or the user hasn't enabled it.
 class Users::SessionsController < Devise::SessionsController
   layout "login"
 

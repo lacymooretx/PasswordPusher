@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Public-facing intake form — no authentication required. Third parties visit
+# /req/:url_token to submit secrets. The submitted content becomes a Push
+# owned by the Request creator. Uses the "naked" layout (minimal chrome).
+# Notifies the request owner via RequestMailer on each submission.
 class RequestSubmissionsController < ApplicationController
   layout "naked"
 
@@ -55,6 +59,8 @@ class RequestSubmissionsController < ApplicationController
     end
   end
 
+  # Builds a Push from form params, assigns it to the request owner, and
+  # applies the request's push expiration overrides if configured.
   def build_push(kind)
     push = Push.new(
       kind: kind,

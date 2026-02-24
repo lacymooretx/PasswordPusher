@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Manages 2FA setup lifecycle: shows QR code for TOTP enrollment, verifies
+# the initial OTP to enable, disables after password confirmation, and
+# regenerates backup codes. Requires Settings.enable_two_factor.
 class Users::TwoFactorController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled

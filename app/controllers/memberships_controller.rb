@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Manages team membership roles and removal. Role changes require admin+
+# privileges. Removal logic: owners can't be removed, admins can remove
+# members, any member can leave (self-remove). The owner must transfer
+# ownership or delete the team to leave.
 class MembershipsController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled
@@ -22,6 +26,8 @@ class MembershipsController < BaseController
   end
 
   # DELETE /teams/:team_id/memberships/:id - Remove member or leave team
+  # Handles two distinct flows: self-removal (leaving) and removing another
+  # member. Permission checks differ for each case.
   def destroy
     current_membership = @team.membership_for(current_user)
 

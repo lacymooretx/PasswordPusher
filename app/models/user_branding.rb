@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Per-user branding customization for push delivery pages. Supports custom
+# logo (attached via ActiveStorage), colors, heading/message/footer text,
+# and optional white-label mode. One record per user.
+# Requires Settings.enable_user_branding.
 class UserBranding < ApplicationRecord
   belongs_to :user
   has_one_attached :logo
