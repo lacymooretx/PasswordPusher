@@ -1,5 +1,31 @@
 # Claude Execution Runlog — PasswordPusher Pro Features
 
+## 2026-02-24: Developer Documentation Creation
+
+### Goal
+Create 5 missing developer/contributor documentation files.
+
+### Execution
+- Ran 3 parallel agents:
+  - Agent A: `.env.example` (355 lines) + `docs/development.md` (199 lines)
+  - Agent B: `docs/architecture.md` (515 lines)
+  - Agent C: `CONTRIBUTING.md` (146 lines) + `CLAUDE.md` (148 lines)
+
+### Files Created
+- `/Users/lacy/code/pwpush/PasswordPusher/.env.example` — all PWP__ env vars grouped by purpose
+- `/Users/lacy/code/pwpush/PasswordPusher/docs/development.md` — clone-to-running-tests guide
+- `/Users/lacy/code/pwpush/PasswordPusher/docs/architecture.md` — system architecture reference
+- `/Users/lacy/code/pwpush/PasswordPusher/CONTRIBUTING.md` — contributor guide (links to other docs)
+- `/Users/lacy/code/pwpush/PasswordPusher/CLAUDE.md` — AI assistant context file
+
+### Verification
+- All 5 files exist with correct content
+- Cross-references between docs verified (development.md links to architecture.md and .env.example; CONTRIBUTING.md links to development.md and architecture.md)
+- .env.example feature flag vars match config/settings.yml
+- No code changes — tests unaffected (cannot run locally due to Ruby 2.6 vs 4.0.1 mismatch)
+
+---
+
 ## 2026-02-24: Phase 1 — Personal User Policy
 
 ### Step 1: Codebase Exploration
@@ -168,3 +194,59 @@ All 16 Pro features implemented:
 14. Hide Features
 15. Global Configure
 16. Monitor & Enforce 2FA
+
+---
+
+## 2026-02-24: Source Code Documentation — All Pro Feature Files
+
+### Goal
+Add inline documentation (class-level comments, method-level comments, section dividers) to all 26 Pro feature files following existing codebase conventions (no YARD tags, `#` comments only).
+
+### What was done
+- **Group A (8 files)**: Complex logic files — added class comments, method docs, section headers
+  - `app/models/team.rb` — class comment, 2FA methods, slug generation
+  - `app/models/push.rb` — class comment, `# --- Policy Resolution ---` section, resolve_setting chain docs
+  - `app/models/user.rb` — class comment, `# --- Associations ---` header, 2FA method docs, SSO docs
+  - `app/models/user_policy.rb` — class comment, validate_kind_limits doc
+  - `app/models/membership.rb` — class comment, removable_by? permission logic doc
+  - `app/models/request.rb` — class comment, active?/record_submission! docs
+  - `app/controllers/concerns/team_two_factor_enforcement.rb` — module comment, exemption list doc
+  - `app/controllers/users/sessions_controller.rb` — class comment explaining 2FA intercept flow
+
+- **Group B (8 files)**: Controllers with non-trivial logic — added class comments, key method docs
+  - `two_factor_controller.rb`, `two_factor_verification_controller.rb`
+  - `request_submissions_controller.rb`, `team_invitations_controller.rb`
+  - `team_policies_controller.rb`, `team_two_factor_controller.rb`
+  - `memberships_controller.rb`, `teams_controller.rb`
+
+- **Group C (10 files)**: Simple files — class comments + brief method docs
+  - Models: `otp_backup_code.rb`, `user_branding.rb`, `team_invitation.rb`
+  - Mailers: `team_mailer.rb`, `request_mailer.rb`
+  - Controllers: `user_policies_controller.rb`, `api/v1/user_policies_controller.rb`, `user_brandings_controller.rb`, `requests_controller.rb`
+  - Helper: `pushes_helper.rb` (added `# --- User Policy Defaults ---` section header)
+
+### Verification
+- Git diff confirms **135 lines added, 4 lines modified** — all comment-only changes
+- No code logic was altered
+- Spot-checked team.rb, push.rb, memberships_controller.rb, pushes_helper.rb — all accurate
+
+---
+
+## 2026-02-24: Ruby 4.0.1 Local Setup
+
+### Goal
+Get Ruby 4.0.1 running locally so tests can be executed.
+
+### What was done
+1. **Installed Ruby 4.0.1** via `ruby-install ruby 4.0.1` → installed to `~/.rubies/ruby-4.0.1/`
+2. **Added chruby to ~/.zshrc** — sourced `chruby.sh` and `auto.sh` so `.ruby-version` auto-switching works
+3. **Installed bundler** and ran `bundle install`
+4. **Commented out `debase` and `ruby-debug-ide`** in Gemfile — these VS Code debugger gems don't support Ruby 4.0+
+5. **Ran full test suite** — 820 tests, 4178 assertions, 0 failures, 0 errors
+
+### Files changed
+- `~/.config/zshrc/.zshrc` — added chruby source lines
+- `Gemfile` — commented out debase/ruby-debug-ide (incompatible with Ruby 4.0)
+
+### Result
+Ruby 4.0.1 is fully working locally. Tests pass. New terminal windows will auto-switch via chruby.
