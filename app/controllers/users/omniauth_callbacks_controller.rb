@@ -1,30 +1,34 @@
 # frozen_string_literal: true
 
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
-  # You should configure your model like this:
-  # devise :omniauthable, omniauth_providers: [:twitter]
+  # Google OAuth2 callback
+  def google_oauth2
+    handle_omniauth("Google")
+  end
 
-  # You should also create an action method in this controller like this:
-  # def twitter
-  # end
+  # Microsoft Graph callback
+  def microsoft_graph
+    handle_omniauth("Microsoft")
+  end
 
-  # More info at:
-  # https://github.com/heartcombo/devise#omniauth
+  # Handle OmniAuth failure (invalid credentials, cancelled, etc.)
+  def failure
+    redirect_to root_path, alert: I18n._("SSO authentication failed. Please try again.")
+  end
 
-  # GET|POST /resource/auth/twitter
-  # def passthru
-  #   super
-  # end
+  private
 
-  # GET|POST /users/auth/twitter/callback
-  # def failure
-  #   super
-  # end
+  def handle_omniauth(provider_name)
+    auth = request.env["omniauth.auth"]
 
-  # protected
+    @user = User.from_omniauth(auth)
 
-  # The path used when OmniAuth fails
-  # def after_omniauth_failure_path_for(scope)
-  #   super(scope)
-  # end
+    if @user.persisted?
+      flash[:notice] = I18n._("Successfully signed in with %{provider}.") % { provider: provider_name }
+      sign_in_and_redirect @user, event: :authentication
+    else
+      flash[:alert] = I18n._("Could not sign in with %{provider}. Please try again.") % { provider: provider_name }
+      redirect_to new_user_session_path
+    end
+  end
 end

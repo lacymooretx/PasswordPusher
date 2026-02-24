@@ -1,0 +1,9 @@
+<h2><%= _("Team Invitation") %></h2>
+
+<p><%= _("You've been invited to join the team <strong>%{team}</strong>.") % { team: @team.name } %></p>
+
+<p><%= _("Click the link below to accept the invitation:") %></p>
+
+<p><%= link_to _("Accept Invitation"), @accept_url %></p>
+
+<p><%= _("This invitation expires in 7 days.") %></p>

@@ -51,6 +51,50 @@
     </div>
   <% end %>
 
+  <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
+    <p class='my-3 py-3 lead border-bottom'><%= _('Two-Factor Authentication') %></p>
+    <% if resource.otp_enabled? %>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="badge bg-success"><%= _('Enabled') %></span>
+        <span class="text-muted"><%= _('Your account is protected with two-factor authentication.') %></span>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to _('Regenerate Backup Codes'), regenerate_backup_codes_users_two_factor_path, class: "btn btn-outline-secondary" %>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disable2faModal">
+          <%= _('Disable 2FA') %>
+        </button>
+      </div>
+
+      <!-- Disable 2FA Modal -->
+      <div class="modal fade" id="disable2faModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <%= form_tag(disable_users_two_factor_path, method: :delete) do %>
+              <div class="modal-header">
+                <h5 class="modal-title"><%= _('Disable Two-Factor Authentication') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p><%= _('Enter your password to confirm disabling two-factor authentication.') %></p>
+                <div class="form-floating">
+                  <%= password_field_tag :password, nil, class: "form-control", placeholder: _("Password"), autocomplete: "current-password" %>
+                  <label for="password"><%= _('Password') %></label>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= _('Cancel') %></button>
+                <button type="submit" class="btn btn-danger"><%= _('Disable 2FA') %></button>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-muted"><%= _('Add an extra layer of security to your account by enabling two-factor authentication.') %></p>
+      <%= link_to _('Set Up Two-Factor Authentication'), setup_users_two_factor_path, class: "btn btn-outline-primary" %>
+    <% end %>
+  <% end %>
+
   <p class='my-3 py-3 lead border-top'><%= I18n.t('devise.registrations.edit.cancel_my_account') %></p>
   <p class='text-muted'><%= I18n.t('devise.registrations.edit.cancel_my_account_description') %></p>
 

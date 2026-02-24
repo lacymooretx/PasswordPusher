@@ -3,22 +3,23 @@
 class Users::SessionsController < Devise::SessionsController
   layout "login"
 
-  # before_action :configure_sign_in_params, only: [:create]
-
-  # GET /resource/sign_in
-  # def new
-  #   super
-  # end
-
   # POST /resource/sign_in
-  # def create
-  #   super
-  # end
+  def create
+    if two_factor_enabled?
+      user = self.resource = warden.authenticate!(auth_options.merge(store: false))
+      if user.otp_enabled?
+        # Store user ID in session for OTP verification step
+        session[:otp_user_id] = user.id
+        session[:otp_remember_me] = sign_in_params[:remember_me]
+        sign_out(user) # Don't fully sign in yet
+        redirect_to new_users_two_factor_verification_path
+        return
+      end
+    end
 
-  # DELETE /resource/sign_out
-  # def destroy
-  #   super
-  # end
+    # Normal sign-in flow (no 2FA or 2FA not enabled for this user)
+    super
+  end
 
   # after_sign_out_path_for
   #
@@ -31,10 +32,9 @@ class Users::SessionsController < Devise::SessionsController
     root_path      # Redirect to the root path after logout
   end
 
-  # protected
+  private
 
-  # If you have extra params to permit, append them to the sanitizer.
-  # def configure_sign_in_params
-  #   devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
-  # end
+  def two_factor_enabled?
+    Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor
+  end
 end

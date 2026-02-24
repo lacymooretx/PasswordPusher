@@ -1,0 +1,73 @@
+<%= form_for(@request) do |f| %>
+  <% if @request.errors.any? %>
+    <div class="alert alert-danger">
+      <% @request.errors.full_messages.each do |msg| %>
+        <p class="mb-0"><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :name, _('Request Name'), class: "form-label" %>
+    <%= f.text_field :name, class: "form-control", placeholder: _("e.g. Client Credentials"), required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :description, _('Description (shown to submitter)'), class: "form-label" %>
+    <%= f.text_area :description, class: "form-control", rows: 3, placeholder: _("e.g. Please submit your server credentials securely using this form.") %>
+  </div>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Allowed Content Types') %></p>
+
+  <div class="form-check mb-2">
+    <%= f.check_box :allow_text, class: "form-check-input" %>
+    <%= f.label :allow_text, _('Text / Passwords'), class: "form-check-label" %>
+  </div>
+
+  <% if Settings.enable_logins && Settings.enable_file_pushes %>
+    <div class="form-check mb-2">
+      <%= f.check_box :allow_files, class: "form-check-input" %>
+      <%= f.label :allow_files, _('Files'), class: "form-check-label" %>
+    </div>
+  <% end %>
+
+  <% if Settings.enable_logins && Settings.enable_url_pushes %>
+    <div class="form-check mb-2">
+      <%= f.check_box :allow_url, class: "form-check-input" %>
+      <%= f.label :allow_url, _('URLs'), class: "form-check-label" %>
+    </div>
+  <% end %>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Push Expiration Defaults') %></p>
+  <p class="text-muted"><%= _('These settings apply to pushes created from submissions.') %></p>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <%= f.label :push_expire_after_days, _('Expire After Days'), class: "form-label" %>
+      <%= f.number_field :push_expire_after_days, class: "form-control", min: 1, placeholder: _("Default") %>
+    </div>
+    <div class="col-md-6">
+      <%= f.label :push_expire_after_views, _('Expire After Views'), class: "form-label" %>
+      <%= f.number_field :push_expire_after_views, class: "form-control", min: 1, placeholder: _("Default") %>
+    </div>
+  </div>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Request Limits') %></p>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <%= f.label :max_submissions, _('Maximum Submissions'), class: "form-label" %>
+      <%= f.number_field :max_submissions, class: "form-control", min: 1, placeholder: _("Unlimited") %>
+    </div>
+    <div class="col-md-6">
+      <%= f.label :expire_after_days, _('Request Expires After (days)'), class: "form-label" %>
+      <%= f.number_field :expire_after_days, class: "form-control", min: 1, max: 365, placeholder: _("Never") %>
+    </div>
+  </div>
+
+  <div class="my-3">
+    <button class="w-100 btn btn-lg btn-primary mt-3" type="submit">
+      <%= @request.persisted? ? _('Update Request') : _('Create Request Link') %>
+    </button>
+  </div>
+<% end %>

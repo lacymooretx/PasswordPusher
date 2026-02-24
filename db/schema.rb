@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -62,6 +62,26 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
     t.index ["name"], name: "index_data_migration_statuses_on_name", unique: true
   end
 
+  create_table "memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "role", default: 0, null: false
+    t.integer "team_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["team_id", "user_id"], name: "index_memberships_on_team_id_and_user_id", unique: true
+    t.index ["team_id"], name: "index_memberships_on_team_id"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "otp_backup_codes", force: :cascade do |t|
+    t.string "code_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "used", default: false, null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_otp_backup_codes_on_user_id"
+  end
+
   create_table "pushes", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "deletable_by_viewer", default: true
@@ -74,12 +94,37 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
     t.text "note_ciphertext"
     t.text "passphrase_ciphertext", limit: 2048
     t.text "payload_ciphertext", limit: 16777215
+    t.integer "request_id"
     t.boolean "retrieval_step", default: false
+    t.integer "team_id"
     t.datetime "updated_at", null: false
     t.string "url_token"
     t.integer "user_id"
+    t.index ["request_id"], name: "index_pushes_on_request_id"
+    t.index ["team_id"], name: "index_pushes_on_team_id"
     t.index ["url_token"], name: "index_pushes_on_url_token", unique: true
     t.index ["user_id"], name: "index_pushes_on_user_id"
+  end
+
+  create_table "requests", force: :cascade do |t|
+    t.boolean "allow_files", default: false, null: false
+    t.boolean "allow_text", default: true, null: false
+    t.boolean "allow_url", default: false, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "expire_after_days"
+    t.boolean "expired", default: false, null: false
+    t.datetime "expires_at"
+    t.integer "max_submissions"
+    t.string "name", null: false
+    t.integer "push_expire_after_days"
+    t.integer "push_expire_after_views"
+    t.integer "submission_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.string "url_token", null: false
+    t.integer "user_id", null: false
+    t.index ["url_token"], name: "index_requests_on_url_token", unique: true
+    t.index ["user_id"], name: "index_requests_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -203,12 +248,79 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "team_invitations", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.integer "invited_by_id", null: false
+    t.integer "role", default: 0, null: false
+    t.integer "team_id", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invited_by_id"], name: "index_team_invitations_on_invited_by_id"
+    t.index ["team_id", "email"], name: "index_team_invitations_on_team_id_and_email", unique: true
+    t.index ["team_id"], name: "index_team_invitations_on_team_id"
+    t.index ["token"], name: "index_team_invitations_on_token", unique: true
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.integer "owner_id", null: false
+    t.json "policy", default: {}
+    t.boolean "require_two_factor", default: false, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_teams_on_owner_id"
+    t.index ["slug"], name: "index_teams_on_slug", unique: true
+  end
+
+  create_table "user_brandings", force: :cascade do |t|
+    t.string "background_color"
+    t.string "brand_tagline"
+    t.string "brand_title"
+    t.datetime "created_at", null: false
+    t.string "delivery_footer"
+    t.string "delivery_heading"
+    t.text "delivery_message"
+    t.string "primary_color"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.boolean "white_label", default: false, null: false
+    t.index ["user_id"], name: "index_user_brandings_on_user_id", unique: true
+  end
+
+  create_table "user_policies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "file_deletable_by_viewer"
+    t.integer "file_expire_after_days"
+    t.integer "file_expire_after_views"
+    t.boolean "file_retrieval_step"
+    t.boolean "pw_deletable_by_viewer"
+    t.integer "pw_expire_after_days"
+    t.integer "pw_expire_after_views"
+    t.boolean "pw_retrieval_step"
+    t.boolean "qr_deletable_by_viewer"
+    t.integer "qr_expire_after_days"
+    t.integer "qr_expire_after_views"
+    t.boolean "qr_retrieval_step"
+    t.datetime "updated_at", null: false
+    t.integer "url_expire_after_days"
+    t.integer "url_expire_after_views"
+    t.boolean "url_retrieval_step"
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_user_policies_on_user_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false
     t.string "authentication_token", limit: 30
     t.datetime "confirmation_sent_at", precision: nil
     t.string "confirmation_token"
     t.datetime "confirmed_at", precision: nil
+    t.integer "consumed_timestep"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
@@ -218,17 +330,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
     t.datetime "last_sign_in_at", precision: nil
     t.string "last_sign_in_ip"
     t.datetime "locked_at", precision: nil
+    t.boolean "otp_required_for_login", default: false, null: false
+    t.text "otp_secret_ciphertext"
     t.string "preferred_language"
+    t.string "provider"
     t.datetime "remember_created_at", precision: nil
     t.datetime "reset_password_sent_at", precision: nil
     t.string "reset_password_token"
     t.integer "sign_in_count", default: 0
+    t.string "uid"
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
@@ -255,11 +372,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_06_094103) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_logs", "pushes"
+  add_foreign_key "memberships", "teams", on_delete: :cascade
+  add_foreign_key "memberships", "users", on_delete: :cascade
+  add_foreign_key "otp_backup_codes", "users", on_delete: :cascade
+  add_foreign_key "pushes", "requests", on_delete: :nullify
+  add_foreign_key "pushes", "teams", on_delete: :nullify
   add_foreign_key "pushes", "users"
+  add_foreign_key "requests", "users", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "team_invitations", "teams", on_delete: :cascade
+  add_foreign_key "team_invitations", "users", column: "invited_by_id", on_delete: :cascade
+  add_foreign_key "teams", "users", column: "owner_id", on_delete: :cascade
+  add_foreign_key "user_brandings", "users", on_delete: :cascade
+  add_foreign_key "user_policies", "users", on_delete: :cascade
 end

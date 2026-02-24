@@ -5,14 +5,14 @@
     data-knobs-tab-name-value="password"
     data-knobs-lang-day-value="<%= _('Day') %>"
     data-knobs-lang-days-value="<%= _('Days') %>"
-    data-knobs-default-days-value="<%= @push.persisted? ? @push.days_remaining : @push.settings_for_kind.expire_after_days_default %>"
+    data-knobs-default-days-value="<%= @push.persisted? ? @push.days_remaining : effective_default(@push.settings_for_kind, :expire_after_days_default, 'text') %>"
     data-knobs-lang-view-value="<%= _('View') %>"
     data-knobs-lang-views-value="<%= _('Views') %>"
-    data-knobs-default-views-value="<%= @push.persisted? ? @push.views_remaining : @push.settings_for_kind.expire_after_views_default %>"
+    data-knobs-default-views-value="<%= @push.persisted? ? @push.views_remaining : effective_default(@push.settings_for_kind, :expire_after_views_default, 'text') %>"
     data-knobs-lang-save-value="<%= _('Save') %>"
     data-knobs-lang-saved-value="<%= _('Saved!') %>"
-    data-knobs-default-retrieval-step-value="<%= @push.settings_for_kind.retrieval_step_default %>"
-    data-knobs-default-deletable-by-viewer-value="<%= @push.settings_for_kind.deletable_pushes_default %>"
+    data-knobs-default-retrieval-step-value="<%= effective_default(@push.settings_for_kind, :retrieval_step_default, 'text') %>"
+    data-knobs-default-deletable-by-viewer-value="<%= effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text') %>"
     data-pwgen-use-numbers-default-value="<%= Settings.gen.has_numbers %>"
     data-pwgen-title-cased-default-value="<%= Settings.gen.title_cased %>"
     data-pwgen-use-separators-default-value="<%= Settings.gen.use_separators %>"
@@ -66,7 +66,7 @@
             <div class='row'>
                 <div><%= _('Expire secret link and delete after:') %></div>
                 <div class='col-10'>
-                    <%= range_field_tag("push_expire_after_days", @push.persisted? ? @push.days_remaining : @push.settings_for_kind.expire_after_days_default,
+                    <%= range_field_tag("push_expire_after_days", @push.persisted? ? @push.days_remaining : effective_default(@push.settings_for_kind, :expire_after_days_default, 'text'),
                                         { :name => "push[expire_after_days]",
                                           :class => "form-range",
                                           :min => action_name == 'edit' ? @push.days_old + 1 : @push.settings_for_kind.expire_after_days_min,
@@ -77,12 +77,12 @@
                                         }) %>
                 </div>
                 <div class='col-2'>
-                    <div class="form-text" data-knobs-target="daysRangeLabel"><%= @push.persisted? ? @push.days_remaining : @push.settings_for_kind.expire_after_days_default %> <%= _('Days') %></div>
+                    <div class="form-text" data-knobs-target="daysRangeLabel"><%= @push.persisted? ? @push.days_remaining : effective_default(@push.settings_for_kind, :expire_after_days_default, 'text') %> <%= _('Days') %></div>
                 </div>
             </div>
             <div class='row'>
                 <div class='col-10'>
-                    <%= range_field_tag("push_expire_after_views", @push.persisted? ? @push.views_remaining : @push.settings_for_kind.expire_after_views_default,
+                    <%= range_field_tag("push_expire_after_views", @push.persisted? ? @push.views_remaining : effective_default(@push.settings_for_kind, :expire_after_views_default, 'text'),
                                         { :name => "push[expire_after_views]",
                                             :class => "form-range",
                                             :min => action_name == 'edit' ? @push.view_count + 1 : @push.settings_for_kind.expire_after_views_min,
@@ -94,7 +94,7 @@
                 </div>
 
                 <div class='col-2'>
-                    <div class="form-text" data-knobs-target="viewsRangeLabel"><%= @push.persisted? ? @push.views_remaining : @push.settings_for_kind.expire_after_views_default %> <%= _('Views') %></div>
+                    <div class="form-text" data-knobs-target="viewsRangeLabel"><%= @push.persisted? ? @push.views_remaining : effective_default(@push.settings_for_kind, :expire_after_views_default, 'text') %> <%= _('Views') %></div>
                 </div>
             </div>
             <div class='row'>
@@ -108,7 +108,7 @@
                     <div class="list-group mx-0">
                         <% if @push.settings_for_kind.enable_retrieval_step %>
                             <label class="list-group-item d-flex gap-2">
-                            <%= check_box_tag "push[retrieval_step]", '1', @push.persisted? ? @push.retrieval_step : @push.settings_for_kind.retrieval_step_default, checkbox_options_for_push(@push, "retrievalStep", @push.settings_for_kind.retrieval_step_default) %>
+                            <%= check_box_tag "push[retrieval_step]", '1', @push.persisted? ? @push.retrieval_step : effective_default(@push.settings_for_kind, :retrieval_step_default, 'text'), checkbox_options_for_push(@push, "retrievalStep", effective_default(@push.settings_for_kind, :retrieval_step_default, 'text')) %>
                             <span>
                                 <%= _('Use a 1-click retrieval step') %>
                                 <small class="d-block text-muted"><%= _('Helps to avoid chat systems and URL scanners from eating up views.') %></small>
@@ -117,7 +117,7 @@
                         <% end %>
                         <% if @push.settings_for_kind.enable_deletable_pushes %>
                             <label class="list-group-item d-flex gap-2">
-                            <%= check_box_tag "push[deletable_by_viewer]", '1', @push.persisted? ? @push.deletable_by_viewer : @push.settings_for_kind.deletable_pushes_default, checkbox_options_for_push(@push, "deletableByViewer", @push.settings_for_kind.deletable_pushes_default) %>
+                            <%= check_box_tag "push[deletable_by_viewer]", '1', @push.persisted? ? @push.deletable_by_viewer : effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text'), checkbox_options_for_push(@push, "deletableByViewer", effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text')) %>
                             <span>
                                 <%= _('Allow immediate deletion') %>
                                 <small class="d-block text-muted"><%= _('Allow users to delete this push once retrieved.') %></small>

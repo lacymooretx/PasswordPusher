@@ -2,6 +2,8 @@ constraints(format: :json) do
   namespace :api do
     namespace :v1 do
       get :version, to: "version#show"
+
+      resource :user_policy, only: [:show, :update], controller: "user_policies"
     end
   end
 

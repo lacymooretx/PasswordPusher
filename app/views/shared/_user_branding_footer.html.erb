@@ -1,0 +1,5 @@
+<% if @user_branding.present? && @user_branding.delivery_footer.present? %>
+  <div class="text-center text-muted mt-4 pt-3 border-top">
+    <small><%= @user_branding.delivery_footer %></small>
+  </div>
+<% end %>

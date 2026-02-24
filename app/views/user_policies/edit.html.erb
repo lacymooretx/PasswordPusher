@@ -1,0 +1,209 @@
+<% title(_('Push Defaults')) %>
+
+<main class=''>
+  <%= form_for @user_policy, url: user_policy_path, html: { method: :put } do |f| %>
+    <% if @user_policy.errors.any? %>
+      <div class="alert alert-danger">
+        <h4><%= pluralize(@user_policy.errors.count, "error") %> prevented your settings from being saved:</h4>
+        <ul>
+          <% @user_policy.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <p class='text-muted mb-4'>
+      <%= _('Set your personal default values for new pushes. Leave blank to use the system defaults.') %>
+    </p>
+
+    <%# Password Push Defaults %>
+    <p class='my-3 py-3 lead border-bottom'><%= _('Password Push Defaults') %></p>
+    <div class='row mb-3'>
+      <div class='col-md-6'>
+        <div class="form-floating">
+          <%= f.number_field :pw_expire_after_days, class: 'form-control',
+            min: Settings.pw.expire_after_days_min, max: Settings.pw.expire_after_days_max,
+            placeholder: Settings.pw.expire_after_days_default %>
+          <%= f.label :pw_expire_after_days, _('Expire After Days') %>
+          <div class="form-text"><%= _('System default: %{value}') % { value: Settings.pw.expire_after_days_default } %></div>
+        </div>
+      </div>
+      <div class='col-md-6'>
+        <div class="form-floating">
+          <%= f.number_field :pw_expire_after_views, class: 'form-control',
+            min: Settings.pw.expire_after_views_min, max: Settings.pw.expire_after_views_max,
+            placeholder: Settings.pw.expire_after_views_default %>
+          <%= f.label :pw_expire_after_views, _('Expire After Views') %>
+          <div class="form-text"><%= _('System default: %{value}') % { value: Settings.pw.expire_after_views_default } %></div>
+        </div>
+      </div>
+    </div>
+    <div class='row mb-3'>
+      <div class='col'>
+        <div class="list-group mx-0">
+          <% if Settings.pw.enable_retrieval_step %>
+            <label class="list-group-item d-flex gap-2">
+              <%= f.check_box :pw_retrieval_step, class: 'form-check-input flex-shrink-0' %>
+              <span>
+                <%= _('1-Click Retrieval Step') %>
+                <small class="d-block text-muted"><%= _('Default for new password pushes') %></small>
+              </span>
+            </label>
+          <% end %>
+          <% if Settings.pw.enable_deletable_pushes %>
+            <label class="list-group-item d-flex gap-2">
+              <%= f.check_box :pw_deletable_by_viewer, class: 'form-check-input flex-shrink-0' %>
+              <span>
+                <%= _('Allow Immediate Deletion') %>
+                <small class="d-block text-muted"><%= _('Default for new password pushes') %></small>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <% if Settings.enable_url_pushes %>
+      <%# URL Push Defaults %>
+      <p class='my-3 py-3 lead border-bottom'><%= _('URL Push Defaults') %></p>
+      <div class='row mb-3'>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :url_expire_after_days, class: 'form-control',
+              min: Settings.url.expire_after_days_min, max: Settings.url.expire_after_days_max,
+              placeholder: Settings.url.expire_after_days_default %>
+            <%= f.label :url_expire_after_days, _('Expire After Days') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.url.expire_after_days_default } %></div>
+          </div>
+        </div>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :url_expire_after_views, class: 'form-control',
+              min: Settings.url.expire_after_views_min, max: Settings.url.expire_after_views_max,
+              placeholder: Settings.url.expire_after_views_default %>
+            <%= f.label :url_expire_after_views, _('Expire After Views') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.url.expire_after_views_default } %></div>
+          </div>
+        </div>
+      </div>
+      <div class='row mb-3'>
+        <div class='col'>
+          <div class="list-group mx-0">
+            <% if Settings.url.enable_retrieval_step %>
+              <label class="list-group-item d-flex gap-2">
+                <%= f.check_box :url_retrieval_step, class: 'form-check-input flex-shrink-0' %>
+                <span>
+                  <%= _('1-Click Retrieval Step') %>
+                  <small class="d-block text-muted"><%= _('Default for new URL pushes') %></small>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if Settings.enable_file_pushes %>
+      <%# File Push Defaults %>
+      <p class='my-3 py-3 lead border-bottom'><%= _('File Push Defaults') %></p>
+      <div class='row mb-3'>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :file_expire_after_days, class: 'form-control',
+              min: Settings.files.expire_after_days_min, max: Settings.files.expire_after_days_max,
+              placeholder: Settings.files.expire_after_days_default %>
+            <%= f.label :file_expire_after_days, _('Expire After Days') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.files.expire_after_days_default } %></div>
+          </div>
+        </div>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :file_expire_after_views, class: 'form-control',
+              min: Settings.files.expire_after_views_min, max: Settings.files.expire_after_views_max,
+              placeholder: Settings.files.expire_after_views_default %>
+            <%= f.label :file_expire_after_views, _('Expire After Views') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.files.expire_after_views_default } %></div>
+          </div>
+        </div>
+      </div>
+      <div class='row mb-3'>
+        <div class='col'>
+          <div class="list-group mx-0">
+            <% if Settings.files.enable_retrieval_step %>
+              <label class="list-group-item d-flex gap-2">
+                <%= f.check_box :file_retrieval_step, class: 'form-check-input flex-shrink-0' %>
+                <span>
+                  <%= _('1-Click Retrieval Step') %>
+                  <small class="d-block text-muted"><%= _('Default for new file pushes') %></small>
+                </span>
+              </label>
+            <% end %>
+            <% if Settings.files.enable_deletable_pushes %>
+              <label class="list-group-item d-flex gap-2">
+                <%= f.check_box :file_deletable_by_viewer, class: 'form-check-input flex-shrink-0' %>
+                <span>
+                  <%= _('Allow Immediate Deletion') %>
+                  <small class="d-block text-muted"><%= _('Default for new file pushes') %></small>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if Settings.enable_qr_pushes %>
+      <%# QR Push Defaults %>
+      <p class='my-3 py-3 lead border-bottom'><%= _('QR Code Push Defaults') %></p>
+      <div class='row mb-3'>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :qr_expire_after_days, class: 'form-control',
+              min: Settings.qr.expire_after_days_min, max: Settings.qr.expire_after_days_max,
+              placeholder: Settings.qr.expire_after_days_default %>
+            <%= f.label :qr_expire_after_days, _('Expire After Days') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.qr.expire_after_days_default } %></div>
+          </div>
+        </div>
+        <div class='col-md-6'>
+          <div class="form-floating">
+            <%= f.number_field :qr_expire_after_views, class: 'form-control',
+              min: Settings.qr.expire_after_views_min, max: Settings.qr.expire_after_views_max,
+              placeholder: Settings.qr.expire_after_views_default %>
+            <%= f.label :qr_expire_after_views, _('Expire After Views') %>
+            <div class="form-text"><%= _('System default: %{value}') % { value: Settings.qr.expire_after_views_default } %></div>
+          </div>
+        </div>
+      </div>
+      <div class='row mb-3'>
+        <div class='col'>
+          <div class="list-group mx-0">
+            <% if Settings.qr.enable_retrieval_step %>
+              <label class="list-group-item d-flex gap-2">
+                <%= f.check_box :qr_retrieval_step, class: 'form-check-input flex-shrink-0' %>
+                <span>
+                  <%= _('1-Click Retrieval Step') %>
+                  <small class="d-block text-muted"><%= _('Default for new QR code pushes') %></small>
+                </span>
+              </label>
+            <% end %>
+            <% if Settings.qr.enable_deletable_pushes %>
+              <label class="list-group-item d-flex gap-2">
+                <%= f.check_box :qr_deletable_by_viewer, class: 'form-check-input flex-shrink-0' %>
+                <span>
+                  <%= _('Allow Immediate Deletion') %>
+                  <small class="d-block text-muted"><%= _('Default for new QR code pushes') %></small>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="form-floating my-3">
+      <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Save Push Defaults') %></button>
+    </div>
+  <% end %>
+</main>

@@ -1,0 +1,35 @@
+<h3 class="mb-4"><%= @request.name %></h3>
+
+<% if @request.description.present? %>
+  <p class="text-muted mb-4"><%= simple_format(@request.description) %></p>
+<% end %>
+
+<%= form_tag(request_submission_path(@request), method: :post, multipart: @request.allow_files?) do %>
+  <% if @request.allow_text? %>
+    <div class="mb-3">
+      <label for="payload" class="form-label"><%= _('Secret Text / Password') %></label>
+      <textarea name="payload" id="payload" class="form-control" rows="4" placeholder="<%= _('Enter the secret text or password here...') %>"></textarea>
+    </div>
+  <% end %>
+
+  <% if @request.allow_url? %>
+    <div class="mb-3">
+      <label for="url" class="form-label"><%= _('URL') %></label>
+      <input type="url" name="url" id="url" class="form-control" placeholder="https://...">
+    </div>
+  <% end %>
+
+  <% if @request.allow_files? %>
+    <div class="mb-3">
+      <label for="files" class="form-label"><%= _('Files') %></label>
+      <input type="file" name="files[]" id="files" class="form-control" multiple>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <label for="note" class="form-label"><%= _('Note (optional)') %></label>
+    <input type="text" name="note" id="note" class="form-control" placeholder="<%= _('Add an optional note...') %>">
+  </div>
+
+  <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Submit Securely') %></button>
+<% end %>

@@ -1,0 +1,35 @@
+<% if @user_branding.present? %>
+  <% if @user_branding.primary_color.present? || @user_branding.background_color.present? %>
+    <style>
+      <% if @user_branding.background_color.present? %>
+        body { background-color: <%= @user_branding.background_color %> !important; }
+      <% end %>
+      <% if @user_branding.primary_color.present? %>
+        .btn-primary { background-color: <%= @user_branding.primary_color %> !important; border-color: <%= @user_branding.primary_color %> !important; }
+        a { color: <%= @user_branding.primary_color %> !important; }
+      <% end %>
+    </style>
+  <% end %>
+
+  <div class="text-center mb-4">
+    <% if @user_branding.logo.attached? %>
+      <%= image_tag @user_branding.logo, style: "max-height: 80px; max-width: 250px;", alt: @user_branding.brand_title || "", class: "mb-2" %>
+    <% end %>
+
+    <% if @user_branding.white_label? && @user_branding.brand_title.present? %>
+      <h4 class="mb-1"><%= @user_branding.brand_title %></h4>
+    <% end %>
+
+    <% if @user_branding.white_label? && @user_branding.brand_tagline.present? %>
+      <p class="text-muted mb-0"><%= @user_branding.brand_tagline %></p>
+    <% end %>
+
+    <% if @user_branding.delivery_heading.present? %>
+      <h5 class="mt-3"><%= @user_branding.delivery_heading %></h5>
+    <% end %>
+
+    <% if @user_branding.delivery_message.present? %>
+      <p class="text-muted"><%= simple_format(@user_branding.delivery_message) %></p>
+    <% end %>
+  </div>
+<% end %>

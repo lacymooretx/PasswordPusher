@@ -20,6 +20,8 @@ class Push < ApplicationRecord
   end
 
   belongs_to :user, optional: true
+  belongs_to :request, optional: true
+  belongs_to :team, optional: true
 
   has_encrypted :payload, :note, :passphrase
 
@@ -157,11 +159,10 @@ class Push < ApplicationRecord
   end
 
   def set_expire_limits
-    self.expire_after_days ||= settings_for_kind.expire_after_days_default
-    self.expire_after_views ||= settings_for_kind.expire_after_views_default
+    # Settings resolution chain: Team Forced > User Policy > Global Settings
+    self.expire_after_days = resolve_setting(:expire_after_days) unless expire_after_days.present? && !team_forces?(:expire_after_days)
+    self.expire_after_views = resolve_setting(:expire_after_views) unless expire_after_views.present? && !team_forces?(:expire_after_views)
 
-    # MIGRATE - ask
-    # Are these assignments needed?
     unless self.expire_after_days.between?(settings_for_kind.expire_after_days_min, settings_for_kind.expire_after_days_max)
       self.expire_after_days = settings_for_kind.expire_after_days_default
     end
@@ -221,6 +222,68 @@ class Push < ApplicationRecord
     self.note ||= ""
     self.passphrase ||= ""
     self.name ||= ""
+  end
+
+  # Resolves a setting using the chain: Team Forced > Team Default > User Policy > Global Settings
+  def resolve_setting(attribute)
+    # 1. Team forced value (if teams enabled and push belongs to a team)
+    forced = team_policy_forced_value(attribute)
+    return forced if forced
+
+    # 2. Team default (non-forced)
+    team_default = team_policy_default(attribute)
+    return team_default if team_default
+
+    # 3. User policy default
+    user_default = user_policy_default(attribute)
+    return user_default if user_default
+
+    # 4. Global Settings default
+    settings_for_kind.send("#{attribute}_default")
+  end
+
+  # Returns true if the team forces this attribute
+  def team_forces?(attribute)
+    return false unless Settings.respond_to?(:enable_teams) && Settings.enable_teams
+    return false unless team
+
+    team.policy_forced?(user_policy_kind_key, attribute)
+  end
+
+  # Returns the team policy default (non-forced) for the attribute, or nil
+  def team_policy_default(attribute)
+    return nil unless Settings.respond_to?(:enable_teams) && Settings.enable_teams
+    return nil unless team
+
+    team.policy_default(user_policy_kind_key, attribute)
+  end
+
+  # Returns the forced value from team policy, or nil
+  def team_policy_forced_value(attribute)
+    return nil unless Settings.respond_to?(:enable_teams) && Settings.enable_teams
+    return nil unless team
+
+    team.policy_forced_value(user_policy_kind_key, attribute)
+  end
+
+  # Returns the user policy default for the given attribute, if user policies
+  # are enabled and the push owner has a policy with a value set.
+  # Returns nil to fall back to global Settings.
+  def user_policy_default(attribute)
+    return nil unless Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies
+    return nil unless user&.user_policy
+
+    user.user_policy.default_for(user_policy_kind_key, attribute)
+  end
+
+  # Maps push kind to the column prefix used in UserPolicy
+  def user_policy_kind_key
+    case kind
+    when "text" then :pw
+    when "url" then :url
+    when "file" then :file
+    when "qr" then :qr
+    end
   end
 
   def valid_url?(url)

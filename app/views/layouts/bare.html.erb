@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-  <title><%= content_for?(:html_title) ? yield(:html_title) : Settings.brand.title %></title>
+  <title><%= content_for?(:html_title) ? yield(:html_title) : (@user_branding&.white_label? && @user_branding&.brand_title.present? ? @user_branding.brand_title : Settings.brand.title) %></title>
 
   <meta content="<%= _('Password Pusher is an application to securely send passwords over the web. Links to passwords expire after a certain number of views and/or time has passed.') %>" name='description'>
   <meta content='width=device-width, initial-scale=1' name='viewport'>
@@ -24,7 +24,9 @@
 <body class="d-flex flex-column min-vh-100">
 
 <div class="container-fluid m-0 p-0">
+  <%= render partial: "shared/user_branding" if @user_branding.present? %>
   <%= yield %>
+  <%= render partial: "shared/user_branding_footer" if @user_branding.present? %>
 </div>
 
 </body>

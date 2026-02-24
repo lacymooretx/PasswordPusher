@@ -1,0 +1,17 @@
+one_request:
+  user: one
+  url_token: req_abc123
+  name: Client Credentials
+  description: Please submit your server credentials
+  allow_text: true
+  allow_files: false
+  allow_url: false
+  submission_count: 0
+  expired: false
+
+expired_request:
+  user: one
+  url_token: req_expired
+  name: Old Request
+  expired: true
+  submission_count: 5

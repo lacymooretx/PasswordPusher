@@ -1,0 +1,7 @@
+<p><%= _('Hello') %> <%= @user.email %>,</p>
+
+<p><%= _('A new submission has been received for your request:') %> <strong><%= @request.name %></strong></p>
+
+<p><%= _('Submissions received:') %> <%= @request.submission_count %><%= " / #{@request.max_submissions}" if @request.max_submissions %></p>
+
+<p><%= _('You can view the submitted content in your dashboard.') %></p>

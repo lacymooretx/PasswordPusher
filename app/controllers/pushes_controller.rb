@@ -6,6 +6,7 @@ class PushesController < BaseController
 
   before_action :set_push, except: %i[new create index]
   before_action :check_allowed
+  before_action :load_user_branding, only: %i[show preliminary passphrase]
 
   def show
     # This push may have expired since the last view.  Validate the push
@@ -346,6 +347,12 @@ class PushesController < BaseController
   end
 
   private
+
+  def load_user_branding
+    if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding
+      @user_branding = @push&.user&.user_branding
+    end
+  end
 
   def set_push
     @push = Push.includes(:audit_logs).find_by!(url_token: params[:id])

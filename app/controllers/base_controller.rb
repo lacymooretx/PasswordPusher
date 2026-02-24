@@ -1,4 +1,6 @@
 class BaseController < ApplicationController
+  include TeamTwoFactorEnforcement
+
   rescue_from ActionController::ParameterMissing do |exception|
     respond_to do |format|
       format.html { render plain: "Missing Parameters", status: :bad_request }

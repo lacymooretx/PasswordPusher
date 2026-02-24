@@ -1,0 +1,10 @@
+one_team:
+  name: Acme Corp
+  slug: acme-corp
+  description: The main team
+  owner: one
+
+empty_team:
+  name: Empty Team
+  slug: empty-team
+  owner: one

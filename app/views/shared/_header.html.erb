@@ -63,6 +63,46 @@
                   <%= _('API Token') %>
                 <% end %>
               </li>
+              <% if Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies %>
+                <li>
+                  <%= link_to edit_user_policy_path, class: "dropdown-item d-flex align-items-center" do %>
+                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    <%= _('Push Defaults') %>
+                  <% end %>
+                </li>
+              <% end %>
+              <% if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding %>
+                <li>
+                  <%= link_to edit_user_branding_path, class: "dropdown-item d-flex align-items-center" do %>
+                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                    <%= _('Branding') %>
+                  <% end %>
+                </li>
+              <% end %>
+              <% if Settings.respond_to?(:enable_requests) && Settings.enable_requests %>
+                <li>
+                  <%= link_to requests_path, class: "dropdown-item d-flex align-items-center" do %>
+                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <%= _('Requests') %>
+                  <% end %>
+                </li>
+              <% end %>
+              <% if Settings.respond_to?(:enable_teams) && Settings.enable_teams %>
+                <li>
+                  <%= link_to teams_path, class: "dropdown-item d-flex align-items-center" do %>
+                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <%= _('Teams') %>
+                  <% end %>
+                </li>
+              <% end %>
               <li>
                 <%= button_to destroy_user_session_path, method: :delete, class: "dropdown-item d-flex align-items-center w-100", form_class: "d-inline w-100" do %>
                   <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">

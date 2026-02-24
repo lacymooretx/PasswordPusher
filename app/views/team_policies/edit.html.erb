@@ -1,0 +1,112 @@
+<% title(_('Team Policy: %{team}') % { team: @team.name }) %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-6"><%= _('Team Policy') %></h1>
+    <%= link_to team_path(@team), class: 'btn btn-outline-secondary btn-sm' do %>
+      <em class="bi bi-arrow-left"></em> <%= _('Back to Team') %>
+    <% end %>
+  </div>
+
+  <p class="text-muted mb-4"><%= _('Configure default settings, forced values, and feature visibility for team members.') %></p>
+
+  <%= form_with(url: team_policy_path(@team), method: :patch) do |f| %>
+
+    <% %w[pw url file qr].each do |kind| %>
+      <% kind_label = { "pw" => "Text", "url" => "URL", "file" => "File", "qr" => "QR Code" }[kind] %>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><%= _('%{kind} Push Settings') % { kind: kind_label } %></h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- Defaults -->
+            <div class="col-md-4">
+              <h6><%= _('Defaults') %></h6>
+              <div class="mb-2">
+                <label class="form-label"><%= _('Expire After Days') %></label>
+                <input type="number" name="policy[defaults][<%= kind %>][expire_after_days]"
+                       value="<%= @policy.dig("defaults", kind, "expire_after_days") %>"
+                       class="form-control form-control-sm" min="1">
+              </div>
+              <div class="mb-2">
+                <label class="form-label"><%= _('Expire After Views') %></label>
+                <input type="number" name="policy[defaults][<%= kind %>][expire_after_views]"
+                       value="<%= @policy.dig("defaults", kind, "expire_after_views") %>"
+                       class="form-control form-control-sm" min="1">
+              </div>
+              <div class="form-check mb-2">
+                <input type="hidden" name="policy[defaults][<%= kind %>][retrieval_step]" value="false">
+                <input type="checkbox" name="policy[defaults][<%= kind %>][retrieval_step]" value="true"
+                       class="form-check-input" id="defaults_<%= kind %>_retrieval_step"
+                       <%= "checked" if @policy.dig("defaults", kind, "retrieval_step") %>>
+                <label class="form-check-label" for="defaults_<%= kind %>_retrieval_step"><%= _('Retrieval Step') %></label>
+              </div>
+              <div class="form-check mb-2">
+                <input type="hidden" name="policy[defaults][<%= kind %>][deletable_pushes]" value="false">
+                <input type="checkbox" name="policy[defaults][<%= kind %>][deletable_pushes]" value="true"
+                       class="form-check-input" id="defaults_<%= kind %>_deletable_pushes"
+                       <%= "checked" if @policy.dig("defaults", kind, "deletable_pushes") %>>
+                <label class="form-check-label" for="defaults_<%= kind %>_deletable_pushes"><%= _('Deletable by Viewer') %></label>
+              </div>
+            </div>
+
+            <!-- Force Lock -->
+            <div class="col-md-4">
+              <h6><%= _('Force (Lock Settings)') %></h6>
+              <p class="text-muted small"><%= _('When forced, team members cannot change these settings.') %></p>
+              <% %w[expire_after_days expire_after_views retrieval_step deletable_pushes].each do |attr| %>
+                <div class="form-check mb-2">
+                  <input type="checkbox" name="policy[forced][<%= kind %>][<%= attr %>]" value="1"
+                         class="form-check-input" id="forced_<%= kind %>_<%= attr %>"
+                         <%= "checked" if @policy.dig("forced", kind, attr) %>>
+                  <label class="form-check-label" for="forced_<%= kind %>_<%= attr %>"><%= attr.humanize %></label>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Limits -->
+            <div class="col-md-4">
+              <h6><%= _('Limits') %></h6>
+              <div class="mb-2">
+                <label class="form-label"><%= _('Max Expire After Days') %></label>
+                <input type="number" name="policy[limits][<%= kind %>][expire_after_days_max]"
+                       value="<%= @policy.dig("limits", kind, "expire_after_days_max") %>"
+                       class="form-control form-control-sm" min="1">
+              </div>
+              <div class="mb-2">
+                <label class="form-label"><%= _('Max Expire After Views') %></label>
+                <input type="number" name="policy[limits][<%= kind %>][expire_after_views_max]"
+                       value="<%= @policy.dig("limits", kind, "expire_after_views_max") %>"
+                       class="form-control form-control-sm" min="1">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Hidden Features -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><%= _('Hidden Features') %></h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted"><%= _('Hide push types from team members. Hidden types will not appear in push forms.') %></p>
+        <% { "url_pushes" => "URL Pushes", "file_pushes" => "File Pushes", "qr_pushes" => "QR Code Pushes" }.each do |feature, label| %>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="policy[hidden_features][<%= feature %>]" value="1"
+                   class="form-check-input" id="hidden_<%= feature %>"
+                   <%= "checked" if @policy.dig("hidden_features", feature) %>>
+            <label class="form-check-label" for="hidden_<%= feature %>"><%= _('Hide %{feature}') % { feature: label } %></label>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary"><%= _('Save Policy') %></button>
+      <%= link_to _('Cancel'), team_path(@team), class: 'btn btn-secondary' %>
+    </div>
+  <% end %>
+</div>

@@ -12,6 +12,11 @@ Rails.application.routes.draw do
     draw :madmin
     draw :users
     draw :pushes
+    draw :user_policies
+    draw :two_factor
+    draw :user_brandings
+    draw :requests
+    draw :teams
     draw :pwp_api
 
     apipie

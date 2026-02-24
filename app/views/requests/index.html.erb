@@ -1,0 +1,49 @@
+<% title(_('Request Links')) %>
+
+<main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><%= _('Request Links') %></h3>
+    <%= link_to _('New Request'), new_request_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @requests.any? %>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th><%= _('Name') %></th>
+            <th><%= _('Status') %></th>
+            <th><%= _('Submissions') %></th>
+            <th><%= _('Created') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @requests.each do |req| %>
+            <tr>
+              <td><%= link_to req.name, req %></td>
+              <td>
+                <% if req.active? %>
+                  <span class="badge bg-success"><%= _('Active') %></span>
+                <% else %>
+                  <span class="badge bg-secondary"><%= _('Expired') %></span>
+                <% end %>
+              </td>
+              <td><%= req.submission_count %><%= " / #{req.max_submissions}" if req.max_submissions %></td>
+              <td><%= l(req.created_at, format: :short) %></td>
+              <td>
+                <%= link_to _('View'), req, class: "btn btn-sm btn-outline-secondary" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= paginate @requests if @requests.respond_to?(:total_pages) %>
+  <% else %>
+    <div class="text-center text-muted my-5">
+      <p class="lead"><%= _('No request links yet.') %></p>
+      <p><%= _('Create a request link to let others submit secure content to you.') %></p>
+    </div>
+  <% end %>
+</main>

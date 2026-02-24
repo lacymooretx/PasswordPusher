@@ -19,9 +19,10 @@ module SetPushAttributes
           # at all so we set false - NOT deletable by viewers
           false
         else
-          # The JSON API is implicit so if it's not specified, use the app
-          # configured default
-          push.settings_for_kind.deletable_pushes_default
+          # The JSON API is implicit so if it's not specified, use the user policy
+          # default if available, or fall back to the app configured default
+          policy_val = user_policy_deletable_default(push)
+          policy_val.nil? ? push.settings_for_kind.deletable_pushes_default : policy_val
         end
       end
     else
@@ -45,14 +46,33 @@ module SetPushAttributes
           # at all so we set false - NOT deletable by viewers
           false
         else
-          # The JSON API is implicit so if it's not specified, use the app
-          # configured default
-          push.settings_for_kind.retrieval_step_default
+          # The JSON API is implicit so if it's not specified, use the user policy
+          # default if available, or fall back to the app configured default
+          policy_val = user_policy_retrieval_default(push)
+          policy_val.nil? ? push.settings_for_kind.retrieval_step_default : policy_val
         end
       end
     else
       # RETRIEVAL_STEP_ENABLED not enabled
       push.retrieval_step = false
     end
+  end
+
+  private
+
+  # Returns the user policy default for deletable_by_viewer, or nil to use global default
+  def user_policy_deletable_default(push)
+    return nil unless Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies
+    return nil unless push.user&.user_policy
+
+    push.user.user_policy.default_for(push.user_policy_kind_key, :deletable_by_viewer)
+  end
+
+  # Returns the user policy default for retrieval_step, or nil to use global default
+  def user_policy_retrieval_default(push)
+    return nil unless Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies
+    return nil unless push.user&.user_policy
+
+    push.user.user_policy.default_for(push.user_policy_kind_key, :retrieval_step)
   end
 end

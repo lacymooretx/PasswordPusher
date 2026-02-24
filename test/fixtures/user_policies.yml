@@ -1,0 +1,14 @@
+# User policy fixtures
+
+luca_policy:
+  user: luca
+  pw_expire_after_days: 14
+  pw_expire_after_views: 10
+  pw_retrieval_step: true
+  pw_deletable_by_viewer: false
+  url_expire_after_days: 30
+  url_expire_after_views: 20
+  file_expire_after_days: 3
+  file_expire_after_views: 2
+  qr_expire_after_days: 5
+  qr_expire_after_views: 3

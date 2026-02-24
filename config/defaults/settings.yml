@@ -8,6 +8,79 @@
 ### Application Defaults
 #
 
+### User Policies (Personal Push Defaults)
+#
+# When enabled, logged-in users can set their own default values for
+# push expiration, retrieval step, and deletable-by-viewer settings.
+# These per-user defaults override global Settings when creating new pushes.
+#
+# Environment variable override:
+# PWP__ENABLE_USER_POLICIES='false'
+#
+enable_user_policies: false
+
+### Two-Factor Authentication (2FA)
+#
+# When enabled, users can set up TOTP-based two-factor authentication
+# using authenticator apps (Google Authenticator, Authy, 1Password, etc.).
+# Backup codes are also provided for account recovery.
+#
+# Environment variable override:
+# PWP__ENABLE_TWO_FACTOR='false'
+#
+enable_two_factor: false
+
+### Single Sign-On (SSO)
+#
+# Enable SSO login with Google and/or Microsoft accounts.
+# Client ID and secret must be set via environment variables.
+#
+# Environment variable overrides:
+# PWP__SSO__GOOGLE__ENABLED='false'
+# PWP__SSO__GOOGLE__CLIENT_ID='your-google-client-id'
+# PWP__SSO__GOOGLE__CLIENT_SECRET='your-google-client-secret'
+# PWP__SSO__MICROSOFT__ENABLED='false'
+# PWP__SSO__MICROSOFT__CLIENT_ID='your-microsoft-client-id'
+# PWP__SSO__MICROSOFT__CLIENT_SECRET='your-microsoft-client-secret'
+#
+sso:
+  google:
+    enabled: false
+  microsoft:
+    enabled: false
+
+### Per-User Branding & White-Label
+#
+# When enabled, users can customize the appearance of their push delivery
+# pages with their own logo, heading, footer text, and colors.
+# White-label mode replaces PasswordPusher branding entirely.
+#
+# Environment variable override:
+# PWP__ENABLE_USER_BRANDING='false'
+#
+enable_user_branding: false
+
+### Request / Intake Forms
+#
+# When enabled, users can create request links that let third parties
+# submit text, files, or URLs securely. Submissions become pushes
+# owned by the requesting user.
+#
+# Environment variable override:
+# PWP__ENABLE_REQUESTS='false'
+#
+enable_requests: false
+
+### Team Collaboration
+#
+# When enabled, users can create teams, invite members, assign roles,
+# and share pushes within their team.
+#
+# Environment variable override:
+# PWP__ENABLE_TEAMS='false'
+#
+enable_teams: false
+
 ### URL Pushes
 #
 # Enable or disable URL based pushes.  These allow you to share URLs securely.

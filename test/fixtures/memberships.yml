@@ -1,0 +1,14 @@
+owner_membership:
+  team: one_team
+  user: one
+  role: 2
+
+admin_membership:
+  team: one_team
+  user: giuliana
+  role: 1
+
+empty_owner:
+  team: empty_team
+  user: one
+  role: 2

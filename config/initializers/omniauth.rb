@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+# OmniAuth SSO Configuration
+#
+# Google and Microsoft SSO providers are configured here.
+# Each provider is only registered if its enabled flag is set to true.
+#
+# Required environment variables (when enabled):
+#   Google:    PWP__SSO__GOOGLE__CLIENT_ID, PWP__SSO__GOOGLE__CLIENT_SECRET
+#   Microsoft: PWP__SSO__MICROSOFT__CLIENT_ID, PWP__SSO__MICROSOFT__CLIENT_SECRET
+
+Rails.application.config.after_initialize do
+  if Settings.respond_to?(:sso)
+    # Google SSO
+    if Settings.sso&.google&.enabled
+      client_id = ENV["PWP__SSO__GOOGLE__CLIENT_ID"]
+      client_secret = ENV["PWP__SSO__GOOGLE__CLIENT_SECRET"]
+
+      if client_id.present? && client_secret.present?
+        Devise.setup do |config|
+          config.omniauth :google_oauth2, client_id, client_secret, {
+            scope: "email,profile",
+            prompt: "select_account"
+          }
+        end
+      else
+        Rails.logger.warn "Google SSO is enabled but client_id/client_secret are not set."
+      end
+    end
+
+    # Microsoft SSO
+    if Settings.sso&.microsoft&.enabled
+      client_id = ENV["PWP__SSO__MICROSOFT__CLIENT_ID"]
+      client_secret = ENV["PWP__SSO__MICROSOFT__CLIENT_SECRET"]
+
+      if client_id.present? && client_secret.present?
+        Devise.setup do |config|
+          config.omniauth :microsoft_graph, client_id, client_secret, {
+            scope: "openid email profile"
+          }
+        end
+      else
+        Rails.logger.warn "Microsoft SSO is enabled but client_id/client_secret are not set."
+      end
+    end
+  end
+end

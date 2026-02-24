@@ -1,0 +1,15 @@
+pending_invitation:
+  team: one_team
+  invited_by: one
+  email: newmember@example.com
+  token: inv_pending_123
+  role: 0
+  expires_at: <%= 7.days.from_now %>
+
+expired_invitation:
+  team: one_team
+  invited_by: one
+  email: expired@example.com
+  token: inv_expired_456
+  role: 0
+  expires_at: <%= 1.day.ago %>
