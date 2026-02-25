@@ -9,7 +9,8 @@ devise_for :users, skip: :registrations, controllers: {
   passwords: "users/passwords",
   unlocks: "users/unlocks",
   confirmations: "users/confirmations",
-  registrations: "users/registrations"
+  registrations: "users/registrations",
+  omniauth_callbacks: "users/omniauth_callbacks"
 }
 
 devise_scope :user do

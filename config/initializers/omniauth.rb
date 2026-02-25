@@ -8,8 +8,11 @@
 # Required environment variables (when enabled):
 #   Google:    PWP__SSO__GOOGLE__CLIENT_ID, PWP__SSO__GOOGLE__CLIENT_SECRET
 #   Microsoft: PWP__SSO__MICROSOFT__CLIENT_ID, PWP__SSO__MICROSOFT__CLIENT_SECRET
+#
+# NOTE: Providers must be registered during initialization (not after_initialize)
+# so that Devise generates the OmniAuth route helpers before routes are drawn.
 
-Rails.application.config.after_initialize do
+Devise.setup do |config|
   if Settings.respond_to?(:sso)
     # Google SSO
     if Settings.sso&.google&.enabled
@@ -17,12 +20,10 @@ Rails.application.config.after_initialize do
       client_secret = ENV["PWP__SSO__GOOGLE__CLIENT_SECRET"]
 
       if client_id.present? && client_secret.present?
-        Devise.setup do |config|
-          config.omniauth :google_oauth2, client_id, client_secret, {
-            scope: "email,profile",
-            prompt: "select_account"
-          }
-        end
+        config.omniauth :google_oauth2, client_id, client_secret, {
+          scope: "email,profile",
+          prompt: "select_account"
+        }
       else
         Rails.logger.warn "Google SSO is enabled but client_id/client_secret are not set."
       end
@@ -34,11 +35,9 @@ Rails.application.config.after_initialize do
       client_secret = ENV["PWP__SSO__MICROSOFT__CLIENT_SECRET"]
 
       if client_id.present? && client_secret.present?
-        Devise.setup do |config|
-          config.omniauth :microsoft_graph, client_id, client_secret, {
-            scope: "openid email profile"
-          }
-        end
+        config.omniauth :microsoft_graph, client_id, client_secret, {
+          scope: "openid email profile"
+        }
       else
         Rails.logger.warn "Microsoft SSO is enabled but client_id/client_secret are not set."
       end
