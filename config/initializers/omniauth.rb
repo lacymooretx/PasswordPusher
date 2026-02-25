@@ -34,10 +34,19 @@ Devise.setup do |config|
       client_id = ENV["PWP__SSO__MICROSOFT__CLIENT_ID"]
       client_secret = ENV["PWP__SSO__MICROSOFT__CLIENT_SECRET"]
 
+      tenant_id = ENV["PWP__SSO__MICROSOFT__TENANT_ID"]
+
       if client_id.present? && client_secret.present?
-        config.omniauth :microsoft_graph, client_id, client_secret, {
-          scope: "openid email profile"
-        }
+        ms_options = {scope: "openid email profile"}
+
+        if tenant_id.present?
+          ms_options[:client_options] = {
+            authorize_url: "#{tenant_id}/oauth2/v2.0/authorize",
+            token_url: "#{tenant_id}/oauth2/v2.0/token"
+          }
+        end
+
+        config.omniauth :microsoft_graph, client_id, client_secret, ms_options
       else
         Rails.logger.warn "Microsoft SSO is enabled but client_id/client_secret are not set."
       end
