@@ -1,0 +1,92 @@
+<% title(_('Team Branding Settings')) %>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h3 mb-1"><%= _('Team Branding') %></h1>
+    <p class="text-muted mb-0"><%= _('Customize how push delivery pages appear to recipients of this team\'s pushes.') %></p>
+  </div>
+</div>
+
+<%= form_for(@team_branding, url: team_branding_path(@team), html: { method: :patch, multipart: true }) do |f| %>
+  <% if @team_branding.errors.any? %>
+    <div class="alert alert-danger">
+      <% @team_branding.errors.full_messages.each do |msg| %>
+        <p class="mb-0"><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Delivery Page') %></p>
+
+  <div class="mb-3">
+    <%= f.label :delivery_heading, _('Heading'), class: "form-label" %>
+    <%= f.text_field :delivery_heading, class: "form-control", placeholder: _("e.g. Secure message from Acme Corp") %>
+    <div class="form-text"><%= _("Shown at the top of the delivery page when recipients view team pushes.") %></div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :delivery_message, _('Message'), class: "form-label" %>
+    <%= f.text_area :delivery_message, class: "form-control", rows: 3, placeholder: _("e.g. This secure message was sent by our team...") %>
+    <div class="form-text"><%= _("Optional message displayed below the heading.") %></div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :delivery_footer, _('Footer Text'), class: "form-label" %>
+    <%= f.text_field :delivery_footer, class: "form-control", placeholder: _("e.g. © 2026 Acme Corp") %>
+  </div>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Logo') %></p>
+
+  <div class="mb-3">
+    <% if @team_branding.logo.attached? %>
+      <div class="mb-2">
+        <strong><%= _('Current logo:') %></strong><br>
+        <%= image_tag @team_branding.logo, style: "max-height: 80px; max-width: 200px;" %>
+      </div>
+    <% end %>
+    <%= f.label :logo, _('Upload Logo'), class: "form-label" %>
+    <%= f.file_field :logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
+    <div class="form-text"><%= _("PNG, JPEG, SVG, or WebP. Displayed on team delivery pages.") %></div>
+  </div>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('White Label') %></p>
+
+  <div class="form-check mb-3">
+    <%= f.check_box :white_label, class: "form-check-input" %>
+    <%= f.label :white_label, _('Enable white-label mode'), class: "form-check-label" %>
+    <div class="form-text"><%= _("Hides PasswordPusher branding and replaces it with your team's custom branding.") %></div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :brand_title, _('Brand Title'), class: "form-label" %>
+    <%= f.text_field :brand_title, class: "form-control", placeholder: _("e.g. Acme Secure Share") %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :brand_tagline, _('Brand Tagline'), class: "form-label" %>
+    <%= f.text_field :brand_tagline, class: "form-control", placeholder: _("e.g. Secure password sharing for teams") %>
+  </div>
+
+  <p class="my-3 py-3 lead border-bottom"><%= _('Colors') %></p>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <%= f.label :primary_color, _('Primary Color'), class: "form-label" %>
+      <div class="input-group">
+        <%= f.color_field :primary_color, class: "form-control form-control-color", value: @team_branding.primary_color || "#0d6efd" %>
+        <%= f.text_field :primary_color, class: "form-control", placeholder: "#0d6efd", id: nil %>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <%= f.label :background_color, _('Background Color'), class: "form-label" %>
+      <div class="input-group">
+        <%= f.color_field :background_color, class: "form-control form-control-color", value: @team_branding.background_color || "#ffffff" %>
+        <%= f.text_field :background_color, class: "form-control", placeholder: "#ffffff", id: nil %>
+      </div>
+    </div>
+  </div>
+
+  <div class="my-3">
+    <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Save Team Branding') %></button>
+  </div>
+<% end %>

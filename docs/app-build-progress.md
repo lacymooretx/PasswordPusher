@@ -23,6 +23,58 @@
 | 17 | User Account + 2FA + Notifications API | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 18 | Team Management API Gaps | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 19 | Swagger UI | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 20 | Organization Settings Hub | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 21 | Passphrase Password Generator | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 22 | Teams-Oriented Navigation & Polish | COMPLETE | 2026-02-25 | 2026-02-25 |
+
+---
+
+## Phase 22: Teams-Oriented Navigation & Polish
+
+### Goal
+Make the app feel teams-oriented by updating main navigation with top-level Pushes/Requests links, adding a team context switcher, refreshing the team index page, and enhancing the footer with configurable links.
+
+### Deliverables
+- [x] `app/views/shared/_header.html.erb` — redesigned with top-level Pushes/Requests nav, team switcher dropdown, slimmed account dropdown with Bootstrap Icons
+- [x] `app/views/teams/index.html.erb` — refreshed cards with team avatars, role badges, member counts, 2FA indicators, quick-action buttons
+- [x] `app/views/shared/_footer.html.erb` — added API Documentation link, configurable Best Practices/Help/Privacy/Terms links
+- [x] `config/settings.yml` + `config/defaults/settings.yml` — added `brand.help_url`, `brand.privacy_url`, `brand.terms_url`, `brand.best_practices_url` (byte-identical)
+- [x] `test/integration/navigation_test.rb` — 9 tests for header nav, team switcher, footer links
+
+### Verification
+- 1110 tests, 4762 assertions, 0 failures
+- ERB lint: 0 errors on modified files
+- Settings files byte-identical: confirmed
+
+---
+
+## Phase 21: Passphrase Password Generator
+
+### Goal
+Replace the default syllable-based password generator with an EFF Diceware passphrase generator using cryptographically secure randomness.
+
+### Deliverables
+- [x] `app/javascript/lib/eff_wordlist.js` — 7776-word EFF Large Wordlist (public domain)
+- [x] `app/javascript/controllers/pwgen_controller.js` — passphrase mode, mode switching, cookie persistence
+- [x] `app/views/shared/_pw_generator_modal.html.erb` — mode selector UI, passphrase options panel, syllable options panel
+- [x] `app/views/pushes/_form.html.erb` — new passphrase default data attributes
+- [x] `app/views/pushes/_qr_form.html.erb` — new passphrase default data attributes
+- [x] `config/settings.yml` + `config/defaults/settings.yml` — 5 new `gen.passphrase_*` settings
+
+### Settings Added
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `gen.mode` | `passphrase` | Generation mode: `passphrase` or `syllable` |
+| `gen.passphrase_word_count` | `4` | Number of words |
+| `gen.passphrase_separator` | `-` | Word separator |
+| `gen.passphrase_capitalize` | `true` | Capitalize each word |
+| `gen.passphrase_include_number` | `true` | Append random digit |
+
+### Verification
+- Settings verified via `rails runner`: all 5 new values load correctly
+- JavaScript builds cleanly (602.7kb bundle, EFF wordlist bundled)
+- ErbLint: 0 errors on changed views
+- Syllable mode preserved and accessible via mode radio button
 
 ---
 

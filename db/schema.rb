@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_000012) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_000013) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -260,6 +260,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_000012) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "team_brandings", force: :cascade do |t|
+    t.string "background_color"
+    t.string "brand_tagline"
+    t.string "brand_title"
+    t.datetime "created_at", null: false
+    t.string "delivery_footer"
+    t.string "delivery_heading"
+    t.text "delivery_message"
+    t.string "primary_color"
+    t.integer "team_id", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "white_label", default: false
+    t.index ["team_id"], name: "index_team_brandings_on_team_id"
+  end
+
   create_table "team_invitations", force: :cascade do |t|
     t.datetime "accepted_at"
     t.datetime "created_at", null: false
@@ -429,6 +444,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_000012) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "team_brandings", "teams"
   add_foreign_key "team_invitations", "teams", on_delete: :cascade
   add_foreign_key "team_invitations", "users", column: "invited_by_id", on_delete: :cascade
   add_foreign_key "teams", "users", column: "owner_id", on_delete: :cascade

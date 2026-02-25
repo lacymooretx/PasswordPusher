@@ -9,6 +9,7 @@ class Team < ApplicationRecord
   has_many :users, through: :memberships
   has_many :team_invitations, dependent: :destroy
   has_many :pushes, dependent: :nullify
+  has_one :team_branding, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 100}
   validates :slug, presence: true, uniqueness: true, length: {maximum: 100},

@@ -15,6 +15,31 @@ class TeamPoliciesControllerTest < ActionDispatch::IntegrationTest
     Settings.enable_teams = false
   end
 
+  test "show renders read-only policy for admin" do
+    sign_in @user
+    get team_policy_path(@team)
+    assert_response :success
+  end
+
+  test "show renders read-only policy for member" do
+    member = users(:luca)
+    @team.memberships.create!(user: member, role: :member)
+
+    sign_in member
+    get team_policy_path(@team)
+    assert_response :success
+  end
+
+  test "show raises not found for non-member" do
+    non_member = users(:luca)
+    # luca is not a member of one_team by default
+    # set_team uses current_user.teams.find_by! so non-members get 404
+
+    sign_in non_member
+    get team_policy_path(@team)
+    assert_response :not_found
+  end
+
   test "edit shows policy form" do
     sign_in @user
     get edit_team_policy_path(@team)

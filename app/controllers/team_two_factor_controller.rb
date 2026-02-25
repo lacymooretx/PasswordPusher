@@ -10,6 +10,8 @@ class TeamTwoFactorController < BaseController
   before_action :set_team
   before_action :require_team_admin
 
+  layout "team_settings"
+
   # GET /teams/:team_id/two_factor - Compliance dashboard
   def show
     @memberships = @team.memberships.includes(:user).order(:role, :created_at)

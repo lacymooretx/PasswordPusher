@@ -1,0 +1,21 @@
+<nav class="mb-4">
+  <ul class="nav nav-pills flex-wrap gap-1">
+    <li class="nav-item">
+      <a class="nav-link" href="#pushes">
+        <em class="bi bi-clipboard me-1"></em><%= _('Pushes') %>
+      </a>
+    </li>
+    <% if Settings.respond_to?(:enable_requests) && Settings.enable_requests %>
+      <li class="nav-item">
+        <a class="nav-link" href="#requests">
+          <em class="bi bi-inbox me-1"></em><%= _('Requests') %>
+        </a>
+      </li>
+    <% end %>
+    <li class="nav-item">
+      <a class="nav-link" href="#hidden-features">
+        <em class="bi bi-eye-slash me-1"></em><%= _('Hidden Features') %>
+      </a>
+    </li>
+  </ul>
+</nav>

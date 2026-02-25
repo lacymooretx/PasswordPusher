@@ -1,0 +1,90 @@
+<!-- Team Settings Sidebar Header -->
+<div class="d-flex flex-column justify-content-center align-items-center gap-2 mt-4 pb-4 border-bottom px-3">
+  <div>
+    <%= link_to team_path(@team) do %>
+      <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+        <em class="bi bi-people-fill text-primary fs-4"></em>
+      </div>
+    <% end %>
+  </div>
+  <div class="text-center">
+    <p class="h6 fw-bold text-dark mb-1"><%= @team.name %></p>
+    <% if @team.description.present? %>
+      <p class="small text-muted mb-0"><%= @team.description %></p>
+    <% end %>
+    <p class="small text-muted mb-0 mt-1">
+      <span class="badge bg-secondary bg-opacity-10 text-secondary">
+        <%= _('%{count} members') % { count: @team.member_count } %>
+      </span>
+    </p>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav class="mt-3 px-2">
+  <!-- Overview -->
+  <div class="mb-3">
+    <%= link_to team_path(@team), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all #{'bg-primary bg-opacity-10 text-primary fw-semibold' if current_page?(team_path(@team))} #{'text-dark hover-bg-light' unless current_page?(team_path(@team))}" do %>
+      <em class="bi bi-house me-3"></em>
+      <%= _('Overview') %>
+    <% end %>
+  </div>
+
+  <!-- Settings Section -->
+  <div class="mb-3">
+    <h6 class="px-3 text-muted text-uppercase small fw-semibold mb-2"><%= _('Settings') %></h6>
+    <div class="d-grid gap-1">
+      <%= link_to team_policy_path(@team), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all #{'bg-primary bg-opacity-10 text-primary fw-semibold' if request.path.start_with?(team_policy_path(@team).split('?').first)} #{'text-dark hover-bg-light' unless request.path.start_with?(team_policy_path(@team).split('?').first)}" do %>
+        <em class="bi bi-sliders me-3"></em>
+        <%= _('Policy & Settings') %>
+      <% end %>
+
+      <% if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding %>
+        <%= link_to edit_team_branding_path(@team), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all #{'bg-primary bg-opacity-10 text-primary fw-semibold' if current_page?(edit_team_branding_path(@team))} #{'text-dark hover-bg-light' unless current_page?(edit_team_branding_path(@team))}" do %>
+          <em class="bi bi-palette me-3"></em>
+          <%= _('Branding') %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Members Section -->
+  <div class="mb-3">
+    <h6 class="px-3 text-muted text-uppercase small fw-semibold mb-2"><%= _('Members') %></h6>
+    <div class="d-grid gap-1">
+      <%= link_to team_path(@team, anchor: 'members'), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all text-dark hover-bg-light" do %>
+        <em class="bi bi-people me-3"></em>
+        <%= _('Members') %>
+      <% end %>
+
+      <% if @team.admin?(current_user) %>
+        <%= link_to team_path(@team, anchor: 'invite'), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all text-dark hover-bg-light" do %>
+          <em class="bi bi-envelope-plus me-3"></em>
+          <%= _('Invite a User') %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Security Section -->
+  <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
+    <div class="mb-3">
+      <h6 class="px-3 text-muted text-uppercase small fw-semibold mb-2"><%= _('Security') %></h6>
+      <div class="d-grid gap-1">
+        <%= link_to team_two_factor_path(@team), class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 transition-all #{'bg-primary bg-opacity-10 text-primary fw-semibold' if current_page?(team_two_factor_path(@team))} #{'text-dark hover-bg-light' unless current_page?(team_two_factor_path(@team))}" do %>
+          <em class="bi bi-shield-check me-3"></em>
+          <%= _('Two-Factor Authentication') %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</nav>
+
+<footer class="mt-auto pt-4">
+  <div class="px-3 pb-3">
+    <%= link_to teams_path, class: "d-flex align-items-center px-3 py-2 text-decoration-none rounded-3 text-muted hover-bg-light transition-all small" do %>
+      <em class="bi bi-arrow-left me-2"></em>
+      <%= _('All Teams') %>
+    <% end %>
+  </div>
+</footer>

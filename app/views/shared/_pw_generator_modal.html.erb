@@ -6,66 +6,142 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+
+        <%# Mode selector %>
+        <div class="mb-3">
+          <div class="btn-group w-100" role="group" aria-label="<%= _('Password generation mode') %>">
+            <input type="radio" class="btn-check" name="pwgen_mode" id="mode_passphrase" value="passphrase"
+              data-pwgen-target="modePassphraseRadio"
+              data-action="change->pwgen#switchMode"
+              autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="mode_passphrase">
+              <em class="bi bi-chat-quote me-1"></em><%= _('Passphrase') %>
+              <span class="badge bg-success ms-1"><%= _('Recommended') %></span>
+            </label>
+
+            <input type="radio" class="btn-check" name="pwgen_mode" id="mode_syllable" value="syllable"
+              data-pwgen-target="modeSyllableRadio"
+              data-action="change->pwgen#switchMode"
+              autocomplete="off">
+            <label class="btn btn-outline-primary" for="mode_syllable">
+              <em class="bi bi-shuffle me-1"></em><%= _('Random Syllables') %>
+            </label>
+          </div>
+        </div>
+
+        <%# Test Area %>
         <div class='display-6 p-3 mb-3 text-center text-break text-wrap border'
             id='configure_password_payload' data-pwgen-target="testPayloadArea">
         <%= _('Test Area') %>
         </div>
-        <div class="row">
-            <div class="col">
-                <div class="mb-3">
-                    <label for="num_syllables" class="form-label"><%= _('Number of Syllables') %></label>
-                    <input type="number" class="form-control" id="num_syllables" data-pwgen-target="numSyllablesInput" autocomplete="on">
-                </div>
-                <div class="mb-3">
-                    <label for="min_syllable_length" class="form-label"><%= _('Minimum Syllable Length') %></label>
-                    <input type="number" class="form-control" id="min_syllable_length" data-pwgen-target="minSyllableLengthInput" autocomplete="on">
-                </div>
-                <div class="mb-3">
-                    <label for="max_syllable_length" class="form-label"><%= _('Maximum Syllable Length') %></label>
-                    <input type="number" class="form-control" id="max_syllable_length" data-pwgen-target="maxSyllableLengthInput" autocomplete="on">
-                </div>
+
+        <%# Passphrase Options Panel %>
+        <div data-pwgen-target="passphraseOptionsPanel">
+          <div class="row">
+            <div class="col-12 col-sm-6">
+              <div class="mb-3">
+                <label for="passphrase_word_count" class="form-label"><%= _('Number of Words') %></label>
+                <input type="number" class="form-control" id="passphrase_word_count"
+                  min="2" max="10"
+                  data-pwgen-target="wordCountInput"
+                  autocomplete="on">
+              </div>
+              <div class="mb-3">
+                <label for="passphrase_separator" class="form-label"><%= _('Separator') %></label>
+                <input type="text" class="form-control" id="passphrase_separator"
+                  maxlength="5"
+                  placeholder="-"
+                  data-pwgen-target="passphraseSeparatorInput"
+                  autocomplete="on">
+              </div>
             </div>
-            <div class="col">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="include_numbers" data-pwgen-target="includeNumbersCheckbox">
-                    <label class="form-check-label" for="include_numbers"><%= _('Include numbers') %></label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="use_titlecase" data-pwgen-target="useTitleCaseCheckbox" checked>
-                    <label class="form-check-label" for="use_titlecase"><%= _('Use Titlecase') %></label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="use_separators" data-pwgen-target="useSeparatorsCheckbox" checked>
-                    <label class="form-check-label" for="use_separators"><%= _('Use Separators') %></label>
-                </div>
-                <div class="d-grid gap-2 m-3 mt-5">
-                    <button class="btn btn-primary" type="button" id='configure_generate_password'
-                        data-action="click->pwgen#testGenerate"><%= _('Test') %></button>
-                </div>
+            <div class="col-12 col-sm-6">
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="passphrase_capitalize"
+                  data-pwgen-target="passphraseCapitalizeCheckbox">
+                <label class="form-check-label" for="passphrase_capitalize"><%= _('Capitalize Words') %></label>
+              </div>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="passphrase_include_number"
+                  data-pwgen-target="passphraseIncludeNumberCheckbox">
+                <label class="form-check-label" for="passphrase_include_number"><%= _('Append a Number') %></label>
+              </div>
+              <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-primary" type="button"
+                  data-action="click->pwgen#testGenerate"><%= _('Test') %></button>
+              </div>
             </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p class="text-muted small mb-0">
+                <em class="bi bi-info-circle me-1"></em>
+                <%= _('Words are selected from the EFF Large Wordlist (7776 words) using cryptographically secure randomness.') %>
+              </p>
+            </div>
+          </div>
         </div>
-        <div class="row">
+
+        <%# Syllable Options Panel (hidden by default since passphrase is default) %>
+        <div data-pwgen-target="syllableOptionsPanel" class="d-none">
+          <div class="row">
             <div class="col">
-                <div class="mb-3 row">
-                    <label for="separators" class="col-sm-3 col-form-label"><%= _('Separators') %></label>
-                    <div class="col-sm-8">
-                        <input class="form-control" type="text" id='separators' aria-label="Separators" data-pwgen-target="separatorsInput" autocomplete="on">
-                    </div>
-                </div>
-                <div class="mb-3 row">
-                    <label for="vowels" class="col-sm-3 col-form-label"><%= _('Vowels') %></label>
-                    <div class="col-sm-8">
-                        <input class="form-control" type="text" id='vowels' aria-label="Vowels" data-pwgen-target="vowelsInput" autocomplete="on">
-                    </div>
-                </div>
-                <div class="mb-3 row">
-                    <label for="consonants" class="col-sm-3 col-form-label"><%= _('Consonants') %></label>
-                    <div class="col-sm-8">
-                        <input class="form-control" type="text" id='consonants' aria-label="Consonants" data-pwgen-target="consonantsInput" autocomplete="on">
-                    </div>
-                </div>
+              <div class="mb-3">
+                <label for="num_syllables" class="form-label"><%= _('Number of Syllables') %></label>
+                <input type="number" class="form-control" id="num_syllables" data-pwgen-target="numSyllablesInput" autocomplete="on">
+              </div>
+              <div class="mb-3">
+                <label for="min_syllable_length" class="form-label"><%= _('Minimum Syllable Length') %></label>
+                <input type="number" class="form-control" id="min_syllable_length" data-pwgen-target="minSyllableLengthInput" autocomplete="on">
+              </div>
+              <div class="mb-3">
+                <label for="max_syllable_length" class="form-label"><%= _('Maximum Syllable Length') %></label>
+                <input type="number" class="form-control" id="max_syllable_length" data-pwgen-target="maxSyllableLengthInput" autocomplete="on">
+              </div>
             </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="include_numbers" data-pwgen-target="includeNumbersCheckbox">
+                <label class="form-check-label" for="include_numbers"><%= _('Include numbers') %></label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="use_titlecase" data-pwgen-target="useTitleCaseCheckbox" checked>
+                <label class="form-check-label" for="use_titlecase"><%= _('Use Titlecase') %></label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="use_separators" data-pwgen-target="useSeparatorsCheckbox" checked>
+                <label class="form-check-label" for="use_separators"><%= _('Use Separators') %></label>
+              </div>
+              <div class="d-grid gap-2 m-3 mt-5">
+                <button class="btn btn-primary" type="button" id='configure_generate_password'
+                  data-action="click->pwgen#testGenerate"><%= _('Test') %></button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="mb-3 row">
+                <label for="separators" class="col-sm-3 col-form-label"><%= _('Separators') %></label>
+                <div class="col-sm-8">
+                  <input class="form-control" type="text" id='separators' aria-label="Separators" data-pwgen-target="separatorsInput" autocomplete="on">
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <label for="vowels" class="col-sm-3 col-form-label"><%= _('Vowels') %></label>
+                <div class="col-sm-8">
+                  <input class="form-control" type="text" id='vowels' aria-label="Vowels" data-pwgen-target="vowelsInput" autocomplete="on">
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <label for="consonants" class="col-sm-3 col-form-label"><%= _('Consonants') %></label>
+                <div class="col-sm-8">
+                  <input class="form-control" type="text" id='consonants' aria-label="Consonants" data-pwgen-target="consonantsInput" autocomplete="on">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id='reset_to_defaults' data-action="click->pwgen#resetSettings"><%= _('Reset to Defaults') %></button>

@@ -1,0 +1,7 @@
+one:
+  team: one_team
+  brand_title: "Test Brand"
+  brand_tagline: "Secure sharing for teams"
+  delivery_heading: "Secure message from Acme Corp"
+  delivery_footer: "© 2026 Acme Corp"
+  white_label: false

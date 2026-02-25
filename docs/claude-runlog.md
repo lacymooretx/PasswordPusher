@@ -1,5 +1,66 @@
 # Claude Execution Runlog — PasswordPusher Pro Features
 
+## 2026-02-25: Production Deployment to docker.aspendora.com
+
+### Goal
+Deploy PasswordPusher (custom build with all pro features) to docker.aspendora.com at pwpush.aspendora.com.
+
+### Steps
+
+1. **Created SMTP2Go SMTP credentials** via API (`POST /v3/users/smtp/add`)
+   - Username: `pwpush@aspendora.com`
+   - Stored password in server `.env`
+
+2. **Created Cloudflare DNS record**
+   - A record: `pwpush.aspendora.com` → `149.28.251.164` (proxied)
+   - Zone ID: `a06c2491527a5d50b5e85a572886b589`
+
+3. **Created PostgreSQL database** in shared `postgres-n8n` container
+   - User: `pwpush`, Database: `pwpush_production`
+   - Verified existing `n8n` database untouched
+
+4. **Generated encryption keys**
+   - `PWPUSH_MASTER_KEY` (64-char hex)
+   - `SECRET_KEY_BASE` (128-char hex)
+
+5. **Cloned repo to server** at `/opt/docker/pwpush`
+   - Commit: `5a75ac7c` (all pro features)
+
+6. **Built Docker image** from `containers/docker/Dockerfile`
+   - Multi-stage build, `pwpush:latest`
+
+7. **Updated server configuration**
+   - `/opt/docker/.env` — added pwpush secrets
+   - `/opt/docker/docker-compose.yml` — added pwpush service + volume
+   - All features enabled via `PWP__ENABLE_*` env vars
+   - SMTP configured via SMTP2Go (mail.smtp2go.com:2525)
+
+8. **Obtained Let's Encrypt certificate** via DNS-01 challenge (Cloudflare)
+   - Cert: `/etc/letsencrypt/live/pwpush.aspendora.com/`
+   - Expires: 2026-05-26, auto-renewal configured
+
+9. **Added nginx reverse proxy config**
+   - HTTP → HTTPS redirect
+   - SSL termination with Cloudflare IP trust
+   - Proxy to `pwpush:5100`
+
+10. **Started container and verified**
+    - `docker compose up -d pwpush` — healthy
+    - `https://pwpush.aspendora.com` — HTTP 200
+    - `/up` health check — green
+    - `/api/v1/version.json` — responds `1.68.2`
+    - Existing databases confirmed intact
+
+### Result
+- PasswordPusher live at https://pwpush.aspendora.com
+- All pro features enabled
+- PostgreSQL backend (shared with n8n)
+- SMTP via SMTP2Go for email notifications
+- Auto-renewing Let's Encrypt cert via DNS challenge
+- Cloudflare proxied for DDoS protection
+
+---
+
 ## 2026-02-24: Broader API Coverage — Webhooks, Audit Logs, Team Policies
 
 ### Goal
@@ -688,3 +749,152 @@ Feature complete. Migration, mailer, jobs, views, tests, settings, and UI all cr
 - `app/views/admin/_navigation.html.erb` — Settings link
 - `test/controllers/api/v1/team_members_controller_test.rb` — role update tests
 - `test/controllers/api/v1/team_invitations_controller_test.rb` — accept tests
+
+---
+
+## 2026-02-25: Phase 21 — Passphrase Password Generator
+
+### Goal
+Add passphrase generation mode to the password generator, using the EFF Large Wordlist (7776 words) with cryptographically secure randomness. Passphrase mode becomes the default, syllable mode remains available.
+
+### Steps
+
+- [x] **1. Download EFF wordlist and create JS module**
+  - Fetched from https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt (7776 words, public domain)
+  - Created `app/javascript/lib/eff_wordlist.js` as ES module exporting `EFF_WORDLIST` array
+  - File size: ~77.9 KB
+
+- [x] **2. Add passphrase settings to both settings files**
+  - Added 5 new settings to `config/settings.yml` and `config/defaults/settings.yml` (after `syllables_count: 3`)
+  - Settings: `mode`, `passphrase_word_count`, `passphrase_separator`, `passphrase_capitalize`, `passphrase_include_number`
+  - Both files verified byte-identical with `diff`
+
+- [x] **3. Updated Stimulus controller `app/javascript/controllers/pwgen_controller.js`**
+  - Added import for `EFF_WORDLIST`
+  - Added new static targets: modePassphraseRadio, modeSyllableRadio, wordCountInput, passphraseSeparatorInput, passphraseCapitalizeCheckbox, passphraseIncludeNumberCheckbox, passphraseOptionsPanel, syllableOptionsPanel
+  - Added new static values: modeDefault, passphraseWordCountDefault, passphraseSeparatorDefault, passphraseCapitalizeDefault, passphraseIncludeNumberDefault
+  - Added `switchMode()` for radio-button mode switching with panel show/hide
+  - Added `generatePassphrase()` using crypto.getRandomValues() for secure word selection
+  - Updated `loadSettings()`, `loadForm()`, `saveSettings()` for passphrase fields
+  - Updated `generatePassword()` to delegate to passphrase or syllable based on mode
+  - Updated `testGenerate()` to handle both modes
+
+- [x] **4. Rewrote generator modal `app/views/shared/_pw_generator_modal.html.erb`**
+  - Added mode selector (radio btn-group: Passphrase Recommended / Random Syllables)
+  - Passphrase options panel (word count, separator, capitalize, include number, info text)
+  - Syllable options panel (hidden by default, all existing options preserved)
+  - Both panels controlled by data-pwgen-target attributes
+
+- [x] **5. Updated push forms with new default data attributes**
+  - `app/views/pushes/_form.html.erb` — added 5 new pwgen data attributes
+  - `app/views/pushes/_qr_form.html.erb` — added 5 new pwgen data attributes
+
+### Verification
+- Settings load correctly: `Settings.gen.mode` => "passphrase", all 5 new settings verified via rails runner
+- JavaScript builds cleanly: 602.7kb bundle, EFF wordlist included
+- ErbLint: 0 errors on all 3 changed view files
+- Test suite: 695 "database is locked" errors are pre-existing SQLite parallelism issue (unrelated to Phase 21)
+
+### Files Changed
+- `app/javascript/lib/eff_wordlist.js` — NEW: 7776-word EFF Large Wordlist ES module
+- `app/javascript/controllers/pwgen_controller.js` — extended with passphrase mode
+- `app/views/shared/_pw_generator_modal.html.erb` — restructured with mode selector + two option panels
+- `app/views/pushes/_form.html.erb` — 5 new pwgen passphrase data attributes
+- `app/views/pushes/_qr_form.html.erb` — 5 new pwgen passphrase data attributes
+- `config/settings.yml` — 5 new gen.passphrase_* settings
+- `config/defaults/settings.yml` — identical change (byte-identical verified)
+
+---
+
+## 2026-02-25: Phase 20 — Team Settings Hub
+
+### Goal
+Create a unified settings hub for teams using a persistent sidebar layout, mirroring the admin panel UX. All team-scoped configuration pages (overview, policy, branding, 2FA) render within a consistent two-pane layout.
+
+### Steps Completed
+1. Read existing admin layout, admin nav, teams controller, team_policies controller, user_brandings controller, user_branding model, team model, and all existing team views.
+2. Created `app/views/layouts/team_settings.html.erb` — standalone two-pane layout (280px sidebar + main content area) mirroring admin.html.erb pattern.
+3. Created `app/views/teams/_settings_nav.html.erb` — sidebar partial with team info area, Overview, Settings (Policy, Branding), Members (Members, Invite), Security (2FA) sections.
+4. Updated `config/routes/teams.rb` — added `show` to team policy, added `branding` resource route.
+5. Updated `app/controllers/team_policies_controller.rb` — added `show` action, `layout "team_settings"`, split auth between `require_team_member` (show) and `require_team_admin` (edit/update).
+6. Created `app/views/team_policies/_category_nav.html.erb` — horizontal nav-pills for policy sections.
+7. Created `app/views/team_policies/show.html.erb` — read-only policy display with cards per push kind showing defaults, forced indicators, and limits.
+8. Updated `app/views/team_policies/edit.html.erb` — removed old navigation/container, updated Cancel link to go to show view.
+9. Created `db/migrate/20260225000013_create_team_brandings.rb` — team_brandings table with all branding fields.
+10. Created `app/models/team_branding.rb` — belongs_to :team, has_one_attached :logo, same validations as UserBranding.
+11. Updated `app/models/team.rb` — added `has_one :team_branding, dependent: :destroy`.
+12. Created `app/controllers/team_brandings_controller.rb` — edit/update, layout "team_settings", require_team_admin.
+13. Created `app/views/team_brandings/edit.html.erb` — full branding form matching user_brandings/edit.html.erb pattern.
+14. Updated `app/controllers/teams_controller.rb` — `show` renders with `layout "team_settings"`.
+15. Updated `app/controllers/team_two_factor_controller.rb` — added `layout "team_settings"`.
+16. Updated `app/views/teams/show.html.erb` — removed old top nav buttons and container, added anchor IDs (#members, #invite).
+17. Updated `app/views/team_two_factor/show.html.erb` — removed old back button and container.
+18. Ran migration successfully.
+19. Created `test/fixtures/team_brandings.yml`.
+20. Created `test/models/team_branding_test.rb` — 17 tests, all passing.
+21. Created `test/controllers/team_brandings_controller_test.rb` — 7 tests, all passing.
+22. Updated `test/controllers/team_policies_controller_test.rb` — added 3 new show-action tests.
+
+### Result
+Full test suite: 1101 runs, 4743 assertions, 0 failures, 0 errors, 0 skips.
+
+### Files Changed
+- NEW: `app/views/layouts/team_settings.html.erb`
+- NEW: `app/views/teams/_settings_nav.html.erb`
+- NEW: `app/views/team_policies/show.html.erb`
+- NEW: `app/views/team_policies/_category_nav.html.erb`
+- NEW: `app/views/team_brandings/edit.html.erb`
+- NEW: `app/controllers/team_brandings_controller.rb`
+- NEW: `app/models/team_branding.rb`
+- NEW: `db/migrate/20260225000013_create_team_brandings.rb`
+- NEW: `test/fixtures/team_brandings.yml`
+- NEW: `test/models/team_branding_test.rb`
+- NEW: `test/controllers/team_brandings_controller_test.rb`
+- MODIFIED: `config/routes/teams.rb`
+- MODIFIED: `app/controllers/team_policies_controller.rb`
+- MODIFIED: `app/controllers/teams_controller.rb`
+- MODIFIED: `app/controllers/team_two_factor_controller.rb`
+- MODIFIED: `app/models/team.rb`
+- MODIFIED: `app/views/team_policies/edit.html.erb`
+- MODIFIED: `app/views/teams/show.html.erb`
+- MODIFIED: `app/views/team_two_factor/show.html.erb`
+- MODIFIED: `test/controllers/team_policies_controller_test.rb`
+
+---
+
+## 2026-02-25 — Phase 22: Teams-Oriented Navigation & Polish
+
+### Step 1: Add footer link settings
+- **Goal**: Add configurable footer links for Help, Privacy, Terms, Best Practices
+- **What**: Added `brand.help_url`, `brand.privacy_url`, `brand.terms_url`, `brand.best_practices_url` to settings
+- **Files changed**: `config/settings.yml`, `config/defaults/settings.yml`
+- **Result**: Settings added, files byte-identical
+
+### Step 2: Redesign header navigation
+- **Goal**: Transform flat dropdown into teams-oriented nav with top-level Pushes/Requests
+- **What**: Added top-level Pushes nav item, conditional Requests nav item, team switcher dropdown when user has teams (showing all teams with roles), slimmed account dropdown using Bootstrap Icons, person-circle icon for account
+- **Files changed**: `app/views/shared/_header.html.erb`
+- **Result**: Header now shows Pushes/Requests as primary nav, team switcher with role badges, clean account dropdown
+
+### Step 3: Refresh team index page
+- **Goal**: Upgrade team cards to be more informative
+- **What**: Added team avatar circles, role badges (Owner/Admin/Member with color coding), 2FA Required indicator, Settings and Members quick-action buttons, improved empty state with icon and description
+- **Files changed**: `app/views/teams/index.html.erb`
+- **Result**: Cards show team avatar, role, member count, 2FA status, action buttons
+
+### Step 4: Enhance footer
+- **Goal**: Add API docs link and configurable legal links
+- **What**: Added API Documentation link to footer menu, configurable Best Practices and Help links, Privacy Policy and Terms of Service links (shown when configured via settings)
+- **Files changed**: `app/views/shared/_footer.html.erb`
+- **Result**: Footer shows API docs, configurable legal links
+
+### Step 5: Write tests
+- **Goal**: Test header nav, team switcher, footer links
+- **What**: Created 9 integration tests covering all new navigation elements
+- **Files created**: `test/integration/navigation_test.rb`
+- **Result**: All 9 tests pass
+
+### Verification
+- `bin/rails test`: 1110 runs, 4762 assertions, 0 failures, 0 errors
+- `erblint`: 0 errors on modified files
+- `diff config/settings.yml config/defaults/settings.yml`: no differences

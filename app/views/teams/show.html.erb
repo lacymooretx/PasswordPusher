@@ -1,193 +1,173 @@
 <% title(@team.name) %>
 
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="display-6"><%= @team.name %></h1>
-      <% if @team.description.present? %>
-        <p class="text-muted"><%= @team.description %></p>
-      <% end %>
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h3 mb-1"><%= @team.name %></h1>
+    <% if @team.description.present? %>
+      <p class="text-muted mb-0"><%= @team.description %></p>
+    <% end %>
+  </div>
+</div>
+
+<!-- Members Section -->
+<div id="members" class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><em class="bi bi-people me-2"></em><%= _('Members') %></h5>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th><%= _('Email') %></th>
+          <th><%= _('Role') %></th>
+          <th><%= _('Joined') %></th>
+          <th class="text-end"><%= _('Actions') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @memberships.each do |membership| %>
+          <tr>
+            <td>
+              <%= membership.user.email %>
+              <% if membership.user == current_user %>
+                <span class="badge bg-info"><%= _('You') %></span>
+              <% end %>
+            </td>
+            <td>
+              <% if @team.admin?(current_user) && !membership.owner? && membership.user != current_user %>
+                <%= form_with(model: membership, url: team_membership_path(@team, membership), method: :patch, class: 'd-inline') do |f| %>
+                  <%= f.select :role, Membership.roles.keys.reject { |r| r == "owner" }.map { |r| [r.humanize, r] }, {}, class: 'form-select form-select-sm d-inline-block w-auto', onchange: 'this.form.submit()' %>
+                <% end %>
+              <% else %>
+                <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning' : 'secondary' %>">
+                  <%= membership.role.humanize %>
+                </span>
+              <% end %>
+            </td>
+            <td><%= I18n.l membership.created_at.in_time_zone(Settings.timezone), format: :short %></td>
+            <td class="text-end">
+              <% current_membership = @team.membership_for(current_user) %>
+              <% if membership.user == current_user && !membership.owner? %>
+                <%= button_to _('Leave'), team_membership_path(@team, membership), method: :delete,
+                  class: 'btn btn-outline-danger btn-sm',
+                  form: { data: { turbo_confirm: _('Are you sure you want to leave this team?') } } %>
+              <% elsif current_membership&.can_manage_members? && membership.removable_by?(current_membership) %>
+                <%= button_to _('Remove'), team_membership_path(@team, membership), method: :delete,
+                  class: 'btn btn-outline-danger btn-sm',
+                  form: { data: { turbo_confirm: _('Are you sure you want to remove this member?') } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Invite Section (admin only) -->
+<% if @team.admin?(current_user) %>
+  <div id="invite" class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0"><em class="bi bi-envelope me-2"></em><%= _('Invite Member') %></h5>
     </div>
-    <div class="d-flex gap-2">
-      <% if @team.admin?(current_user) %>
-        <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
-          <%= link_to team_two_factor_path(@team), class: 'btn btn-outline-success btn-sm' do %>
-            <em class="bi bi-shield-check"></em> <%= _('2FA') %>
-          <% end %>
-        <% end %>
-        <%= link_to edit_team_policy_path(@team), class: 'btn btn-outline-info btn-sm' do %>
-          <em class="bi bi-sliders"></em> <%= _('Policy') %>
-        <% end %>
-        <%= link_to edit_team_path(@team), class: 'btn btn-outline-warning btn-sm' do %>
-          <em class="bi bi-pencil"></em> <%= _('Edit') %>
-        <% end %>
+    <div class="card-body">
+      <%= form_with(model: TeamInvitation.new, url: team_invitations_path(@team), class: 'row g-3 align-items-end') do |f| %>
+        <div class="col-md-5">
+          <%= f.label :email, _('Email Address'), class: 'form-label' %>
+          <%= f.email_field :email, class: 'form-control', required: true, placeholder: 'colleague@company.com' %>
+        </div>
+        <div class="col-md-3">
+          <%= f.label :role, _('Role'), class: 'form-label' %>
+          <%= f.select :role, [['Member', 'member'], ['Admin', 'admin']], {}, class: 'form-select' %>
+        </div>
+        <div class="col-md-4">
+          <%= f.submit _('Send Invitation'), class: 'btn btn-primary' %>
+        </div>
       <% end %>
-      <%= link_to teams_path, class: 'btn btn-outline-secondary btn-sm' do %>
-        <em class="bi bi-arrow-left"></em> <%= _('All Teams') %>
+
+      <% if @pending_invitations&.any? %>
+        <hr>
+        <h6><%= _('Pending Invitations') %></h6>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th><%= _('Email') %></th>
+              <th><%= _('Role') %></th>
+              <th><%= _('Expires') %></th>
+              <th class="text-end"><%= _('Actions') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @pending_invitations.each do |inv| %>
+              <tr>
+                <td><%= inv.email %></td>
+                <td><%= inv.role.humanize %></td>
+                <td><%= time_ago_in_words(inv.expires_at) %></td>
+                <td class="text-end">
+                  <%= button_to _('Revoke'), team_invitation_path(@team, inv), method: :delete, class: 'btn btn-outline-danger btn-sm' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       <% end %>
     </div>
   </div>
+<% end %>
 
-  <!-- Members Section -->
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><em class="bi bi-people me-2"></em><%= _('Members') %></h5>
-    </div>
-    <div class="card-body p-0">
-      <table class="table table-hover mb-0">
+<!-- Team Pushes Section -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0"><em class="bi bi-clipboard-data me-2"></em><%= _('Team Pushes') %></h5>
+  </div>
+  <div class="card-body">
+    <% if @pushes.empty? %>
+      <p class="text-muted text-center mb-0"><%= _('No pushes have been assigned to this team yet.') %></p>
+    <% else %>
+      <table class="table table-striped table-sm table-hover">
         <thead>
           <tr>
-            <th><%= _('Email') %></th>
-            <th><%= _('Role') %></th>
-            <th><%= _('Joined') %></th>
-            <th class="text-end"><%= _('Actions') %></th>
+            <th><%= _('Name or ID') %></th>
+            <th><%= _('Kind') %></th>
+            <th><%= _('Created') %></th>
+            <th><%= _('Creator') %></th>
+            <th><%= _('Status') %></th>
           </tr>
         </thead>
         <tbody>
-          <% @memberships.each do |membership| %>
+          <% @pushes.each do |push| %>
             <tr>
+              <td><%= push.name.present? ? push.name : push.url_token %></td>
+              <td><%= push.kind.humanize %></td>
+              <td><%= I18n.l push.created_at.in_time_zone(Settings.timezone), format: :short %></td>
+              <td><%= push.user&.email || _('Anonymous') %></td>
               <td>
-                <%= membership.user.email %>
-                <% if membership.user == current_user %>
-                  <span class="badge bg-info"><%= _('You') %></span>
-                <% end %>
-              </td>
-              <td>
-                <% if @team.admin?(current_user) && !membership.owner? && membership.user != current_user %>
-                  <%= form_with(model: membership, url: team_membership_path(@team, membership), method: :patch, class: 'd-inline') do |f| %>
-                    <%= f.select :role, Membership.roles.keys.reject { |r| r == "owner" }.map { |r| [r.humanize, r] }, {}, class: 'form-select form-select-sm d-inline-block w-auto', onchange: 'this.form.submit()' %>
-                  <% end %>
+                <% if push.expired? %>
+                  <span class="badge bg-danger"><%= _('Expired') %></span>
                 <% else %>
-                  <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning' : 'secondary' %>">
-                    <%= membership.role.humanize %>
-                  </span>
-                <% end %>
-              </td>
-              <td><%= I18n.l membership.created_at.in_time_zone(Settings.timezone), format: :short %></td>
-              <td class="text-end">
-                <% current_membership = @team.membership_for(current_user) %>
-                <% if membership.user == current_user && !membership.owner? %>
-                  <%= button_to _('Leave'), team_membership_path(@team, membership), method: :delete,
-                    class: 'btn btn-outline-danger btn-sm',
-                    form: { data: { turbo_confirm: _('Are you sure you want to leave this team?') } } %>
-                <% elsif current_membership&.can_manage_members? && membership.removable_by?(current_membership) %>
-                  <%= button_to _('Remove'), team_membership_path(@team, membership), method: :delete,
-                    class: 'btn btn-outline-danger btn-sm',
-                    form: { data: { turbo_confirm: _('Are you sure you want to remove this member?') } } %>
+                  <span class="badge bg-success"><%= _('Active') %></span>
                 <% end %>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-    </div>
+      <%= paginate @pushes, list_classes: %w(pagination justify-content-center) %>
+    <% end %>
   </div>
+</div>
 
-  <!-- Invite Section (admin only) -->
-  <% if @team.admin?(current_user) %>
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5 class="mb-0"><em class="bi bi-envelope me-2"></em><%= _('Invite Member') %></h5>
-      </div>
-      <div class="card-body">
-        <%= form_with(model: TeamInvitation.new, url: team_invitations_path(@team), class: 'row g-3 align-items-end') do |f| %>
-          <div class="col-md-5">
-            <%= f.label :email, _('Email Address'), class: 'form-label' %>
-            <%= f.email_field :email, class: 'form-control', required: true, placeholder: 'colleague@company.com' %>
-          </div>
-          <div class="col-md-3">
-            <%= f.label :role, _('Role'), class: 'form-label' %>
-            <%= f.select :role, [['Member', 'member'], ['Admin', 'admin']], {}, class: 'form-select' %>
-          </div>
-          <div class="col-md-4">
-            <%= f.submit _('Send Invitation'), class: 'btn btn-primary' %>
-          </div>
-        <% end %>
-
-        <% if @pending_invitations&.any? %>
-          <hr>
-          <h6><%= _('Pending Invitations') %></h6>
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th><%= _('Email') %></th>
-                <th><%= _('Role') %></th>
-                <th><%= _('Expires') %></th>
-                <th class="text-end"><%= _('Actions') %></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @pending_invitations.each do |inv| %>
-                <tr>
-                  <td><%= inv.email %></td>
-                  <td><%= inv.role.humanize %></td>
-                  <td><%= time_ago_in_words(inv.expires_at) %></td>
-                  <td class="text-end">
-                    <%= button_to _('Revoke'), team_invitation_path(@team, inv), method: :delete, class: 'btn btn-outline-danger btn-sm' %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <!-- Team Pushes Section -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-0"><em class="bi bi-clipboard-data me-2"></em><%= _('Team Pushes') %></h5>
+<!-- Danger Zone -->
+<% if @team.owner?(current_user) %>
+  <div class="card border-danger mb-4">
+    <div class="card-header bg-danger text-white">
+      <h5 class="mb-0"><%= _('Danger Zone') %></h5>
     </div>
     <div class="card-body">
-      <% if @pushes.empty? %>
-        <p class="text-muted text-center mb-0"><%= _('No pushes have been assigned to this team yet.') %></p>
-      <% else %>
-        <table class="table table-striped table-sm table-hover">
-          <thead>
-            <tr>
-              <th><%= _('Name or ID') %></th>
-              <th><%= _('Kind') %></th>
-              <th><%= _('Created') %></th>
-              <th><%= _('Creator') %></th>
-              <th><%= _('Status') %></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @pushes.each do |push| %>
-              <tr>
-                <td><%= push.name.present? ? push.name : push.url_token %></td>
-                <td><%= push.kind.humanize %></td>
-                <td><%= I18n.l push.created_at.in_time_zone(Settings.timezone), format: :short %></td>
-                <td><%= push.user&.email || _('Anonymous') %></td>
-                <td>
-                  <% if push.expired? %>
-                    <span class="badge bg-danger"><%= _('Expired') %></span>
-                  <% else %>
-                    <span class="badge bg-success"><%= _('Active') %></span>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-        <%= paginate @pushes, list_classes: %w(pagination justify-content-center) %>
-      <% end %>
+      <p class="text-muted"><%= _('Deleting a team will remove all member associations. Team pushes will be preserved but unlinked.') %></p>
+      <%= button_to _('Delete Team'), team_path(@team), method: :delete,
+        class: 'btn btn-danger',
+        form: { data: { turbo_confirm: _('Are you sure you want to delete this team? This cannot be undone.') } } %>
     </div>
   </div>
-
-  <!-- Danger Zone -->
-  <% if @team.owner?(current_user) %>
-    <div class="card border-danger mb-4">
-      <div class="card-header bg-danger text-white">
-        <h5 class="mb-0"><%= _('Danger Zone') %></h5>
-      </div>
-      <div class="card-body">
-        <p class="text-muted"><%= _('Deleting a team will remove all member associations. Team pushes will be preserved but unlinked.') %></p>
-        <%= button_to _('Delete Team'), team_path(@team), method: :delete,
-          class: 'btn btn-danger',
-          form: { data: { turbo_confirm: _('Are you sure you want to delete this team? This cannot be undone.') } } %>
-      </div>
-    </div>
-  <% end %>
-</div>
+<% end %>

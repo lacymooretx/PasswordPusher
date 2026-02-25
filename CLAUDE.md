@@ -159,7 +159,10 @@ All feature controllers inherit from `BaseController`, which extends
 | 17 | User Account + 2FA + Notifications API | COMPLETE |
 | 18 | Team Management API Gaps | COMPLETE |
 | 19 | Swagger UI | COMPLETE |
+| 20 | Organization Settings Hub | COMPLETE |
+| 21 | Passphrase Password Generator | COMPLETE |
+| 22 | Teams-Oriented Navigation & Polish | COMPLETE |
 
-All features gated behind flags. 1074 tests, 4702 assertions, 0 failures.
+All features gated behind flags. 1110 tests, 4762 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

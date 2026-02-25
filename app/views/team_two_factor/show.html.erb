@@ -1,114 +1,112 @@
 <% title(_('2FA Compliance: %{team}') % { team: @team.name }) %>
 
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="display-6"><%= _('Two-Factor Authentication') %></h1>
-    <%= link_to team_path(@team), class: 'btn btn-outline-secondary btn-sm' do %>
-      <em class="bi bi-arrow-left"></em> <%= _('Back to Team') %>
-    <% end %>
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h3 mb-1"><%= _('Two-Factor Authentication') %></h1>
+    <p class="text-muted mb-0"><%= _('Monitor and enforce 2FA compliance for your team members.') %></p>
   </div>
+</div>
 
-  <!-- Compliance Overview -->
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-body">
-          <h2 class="display-4 <%= @compliance_percentage == 100 ? 'text-success' : 'text-warning' %>">
-            <%= @compliance_percentage %>%
-          </h2>
-          <p class="text-muted"><%= _('2FA Compliance') %></p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-body">
-          <h2 class="display-4"><%= @team.member_count %></h2>
-          <p class="text-muted"><%= _('Total Members') %></p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center">
-        <div class="card-body">
-          <h2 class="display-4 <%= @members_without_2fa.any? ? 'text-danger' : 'text-success' %>">
-            <%= @members_without_2fa.count %>
-          </h2>
-          <p class="text-muted"><%= _('Without 2FA') %></p>
-        </div>
+<!-- Compliance Overview -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h2 class="display-4 <%= @compliance_percentage == 100 ? 'text-success' : 'text-warning' %>">
+          <%= @compliance_percentage %>%
+        </h2>
+        <p class="text-muted"><%= _('2FA Compliance') %></p>
       </div>
     </div>
   </div>
-
-  <!-- Enforcement Toggle -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-0"><%= _('Enforcement') %></h5>
-    </div>
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <p class="mb-0">
-            <strong><%= _('Require 2FA for all team members') %></strong>
-          </p>
-          <p class="text-muted mb-0">
-            <%= _('When enabled, team members without 2FA will be redirected to set it up.') %>
-          </p>
-        </div>
-        <%= form_with(url: team_two_factor_path(@team), method: :patch, class: 'd-inline') do %>
-          <input type="hidden" name="require_two_factor" value="0">
-          <div class="form-check form-switch">
-            <input type="checkbox" name="require_two_factor" value="1"
-                   class="form-check-input" id="require_two_factor"
-                   <%= "checked" if @team.require_two_factor? %>
-                   onchange="this.form.submit()">
-            <label class="form-check-label" for="require_two_factor">
-              <%= @team.require_two_factor? ? _('Enabled') : _('Disabled') %>
-            </label>
-          </div>
-        <% end %>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h2 class="display-4"><%= @team.member_count %></h2>
+        <p class="text-muted"><%= _('Total Members') %></p>
       </div>
     </div>
   </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h2 class="display-4 <%= @members_without_2fa.any? ? 'text-danger' : 'text-success' %>">
+          <%= @members_without_2fa.count %>
+        </h2>
+        <p class="text-muted"><%= _('Without 2FA') %></p>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <!-- Member Status -->
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><%= _('Member 2FA Status') %></h5>
-      <% if @members_without_2fa.any? %>
-        <%= button_to _('Send Reminder Emails'), remind_team_two_factor_path(@team),
-          method: :post, class: 'btn btn-warning btn-sm' %>
+<!-- Enforcement Toggle -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0"><%= _('Enforcement') %></h5>
+  </div>
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <p class="mb-0">
+          <strong><%= _('Require 2FA for all team members') %></strong>
+        </p>
+        <p class="text-muted mb-0">
+          <%= _('When enabled, team members without 2FA will be redirected to set it up.') %>
+        </p>
+      </div>
+      <%= form_with(url: team_two_factor_path(@team), method: :patch, class: 'd-inline') do %>
+        <input type="hidden" name="require_two_factor" value="0">
+        <div class="form-check form-switch">
+          <input type="checkbox" name="require_two_factor" value="1"
+                 class="form-check-input" id="require_two_factor"
+                 <%= "checked" if @team.require_two_factor? %>
+                 onchange="this.form.submit()">
+          <label class="form-check-label" for="require_two_factor">
+            <%= @team.require_two_factor? ? _('Enabled') : _('Disabled') %>
+          </label>
+        </div>
       <% end %>
     </div>
-    <div class="card-body p-0">
-      <table class="table table-hover mb-0">
-        <thead>
+  </div>
+</div>
+
+<!-- Member Status -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><%= _('Member 2FA Status') %></h5>
+    <% if @members_without_2fa.any? %>
+      <%= button_to _('Send Reminder Emails'), remind_team_two_factor_path(@team),
+        method: :post, class: 'btn btn-warning btn-sm' %>
+    <% end %>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th><%= _('Email') %></th>
+          <th><%= _('Role') %></th>
+          <th class="text-center"><%= _('2FA Status') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @memberships.each do |membership| %>
           <tr>
-            <th><%= _('Email') %></th>
-            <th><%= _('Role') %></th>
-            <th class="text-center"><%= _('2FA Status') %></th>
+            <td><%= membership.user.email %></td>
+            <td>
+              <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning' : 'secondary' %>">
+                <%= membership.role.humanize %>
+              </span>
+            </td>
+            <td class="text-center">
+              <% if membership.user.otp_enabled? %>
+                <span class="badge bg-success"><em class="bi bi-shield-check"></em> <%= _('Enabled') %></span>
+              <% else %>
+                <span class="badge bg-danger"><em class="bi bi-shield-x"></em> <%= _('Not enabled') %></span>
+              <% end %>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <% @memberships.each do |membership| %>
-            <tr>
-              <td><%= membership.user.email %></td>
-              <td>
-                <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning' : 'secondary' %>">
-                  <%= membership.role.humanize %>
-                </span>
-              </td>
-              <td class="text-center">
-                <% if membership.user.otp_enabled? %>
-                  <span class="badge bg-success"><em class="bi bi-shield-check"></em> <%= _('Enabled') %></span>
-                <% else %>
-                  <span class="badge bg-danger"><em class="bi bi-shield-x"></em> <%= _('Not enabled') %></span>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+        <% end %>
+      </tbody>
+    </table>
   </div>
 </div>

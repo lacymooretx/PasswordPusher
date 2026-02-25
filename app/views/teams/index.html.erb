@@ -4,40 +4,71 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="display-6"><%= _('My Teams') %></h1>
     <%= link_to new_team_path, class: 'btn btn-primary' do %>
-      <em class="bi bi-plus-circle"></em>
+      <em class="bi bi-plus-circle me-1"></em>
       <%= _('Create Team') %>
     <% end %>
   </div>
 
   <% if @teams.empty? %>
-    <div class="text-center mt-5">
-      <p class="text-muted"><%= _('You are not a member of any teams yet.') %></p>
-      <%= link_to new_team_path, class: 'btn btn-primary' do %>
-        <em class="bi bi-plus-circle"></em>
+    <div class="text-center mt-5 py-5">
+      <div class="mb-3">
+        <em class="bi bi-people" style="font-size: 3rem; color: var(--bs-secondary);"></em>
+      </div>
+      <h4 class="text-muted mb-3"><%= _('No Teams Yet') %></h4>
+      <p class="text-muted mb-4"><%= _('Create a team to collaborate with colleagues and manage shared push settings.') %></p>
+      <%= link_to new_team_path, class: 'btn btn-primary btn-lg' do %>
+        <em class="bi bi-plus-circle me-1"></em>
         <%= _('Create Your First Team') %>
       <% end %>
     </div>
   <% else %>
     <div class="row">
       <% @teams.each do |team| %>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="card h-100">
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-              <h5 class="card-title"><%= team.name %></h5>
+              <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; min-width: 48px;">
+                  <em class="bi bi-people-fill text-primary" style="font-size: 1.25rem;"></em>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                  <h5 class="card-title mb-1 text-truncate"><%= team.name %></h5>
+                  <% membership = team.membership_for(current_user) %>
+                  <% if membership %>
+                    <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning text-dark' : 'secondary' %> rounded-pill">
+                      <%= membership.role.humanize %>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
               <% if team.description.present? %>
-                <p class="card-text text-muted"><%= truncate(team.description, length: 100) %></p>
+                <p class="card-text text-muted small mb-3"><%= truncate(team.description, length: 120) %></p>
               <% end %>
-              <div class="d-flex align-items-center text-muted mb-2">
-                <em class="bi bi-people me-1"></em>
-                <small><%= pluralize(team.member_count, _('member')) %></small>
-                <% membership = team.membership_for(current_user) %>
-                <% if membership %>
-                  <span class="badge bg-secondary ms-2"><%= membership.role.humanize %></span>
+              <div class="d-flex align-items-center gap-3 text-muted small">
+                <span>
+                  <em class="bi bi-people me-1"></em>
+                  <%= pluralize(team.member_count, _('member')) %>
+                </span>
+                <% if team.respond_to?(:require_two_factor?) && team.require_two_factor? %>
+                  <span class="text-success">
+                    <em class="bi bi-shield-check me-1"></em>
+                    <%= _('2FA Required') %>
+                  </span>
                 <% end %>
               </div>
             </div>
-            <div class="card-footer">
-              <%= link_to _('View Team'), team_path(team), class: 'btn btn-sm btn-outline-primary' %>
+            <div class="card-footer bg-transparent border-top-0 pt-0">
+              <div class="d-flex gap-2">
+                <%= link_to team_path(team), class: 'btn btn-sm btn-outline-primary flex-grow-1' do %>
+                  <em class="bi bi-gear me-1"></em>
+                  <%= _('Settings') %>
+                <% end %>
+                <% if team.admin?(current_user) %>
+                  <%= link_to team_path(team, anchor: 'members'), class: 'btn btn-sm btn-outline-secondary' do %>
+                    <em class="bi bi-people"></em>
+                  <% end %>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>

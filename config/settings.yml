@@ -824,6 +824,41 @@ gen:
   #
   syllables_count: 3
 
+  # Password generation mode: 'passphrase' or 'syllable'
+  #
+  # Environment variable override:
+  # PWP__GEN__MODE='passphrase'
+  #
+  mode: 'passphrase'
+
+  # Number of words in generated passphrases
+  #
+  # Environment variable override:
+  # PWP__GEN__PASSPHRASE_WORD_COUNT=4
+  #
+  passphrase_word_count: 4
+
+  # Separator between passphrase words
+  #
+  # Environment variable override:
+  # PWP__GEN__PASSPHRASE_SEPARATOR='-'
+  #
+  passphrase_separator: '-'
+
+  # Whether to capitalize each word in passphrases
+  #
+  # Environment variable override:
+  # PWP__GEN__PASSPHRASE_CAPITALIZE='true'
+  #
+  passphrase_capitalize: true
+
+  # Whether to append a random digit to passphrases
+  #
+  # Environment variable override:
+  # PWP__GEN__PASSPHRASE_INCLUDE_NUMBER='true'
+  #
+  passphrase_include_number: true
+
 brand:
   ### Site Title
   #
@@ -847,6 +882,22 @@ brand:
   # Environment variable override: PWP__BRAND__SHOW_FOOTER_MENU='true'
   #
   show_footer_menu: true
+
+  ### Footer Links
+  #
+  # Optional URLs displayed in the footer for legal, support, and documentation links.
+  # Leave blank/unset to hide the respective link.
+  #
+  # Environment variable overrides:
+  # PWP__BRAND__HELP_URL='https://example.com/help'
+  # PWP__BRAND__PRIVACY_URL='https://example.com/privacy'
+  # PWP__BRAND__TERMS_URL='https://example.com/terms'
+  # PWP__BRAND__BEST_PRACTICES_URL='https://example.com/best-practices'
+  #
+  # help_url:
+  # privacy_url:
+  # terms_url:
+  # best_practices_url:
 
   ### Site logo
   #

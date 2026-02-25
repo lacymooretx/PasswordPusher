@@ -8,7 +8,14 @@ class TeamPoliciesController < BaseController
   before_action :authenticate_user!
   before_action :check_feature_enabled
   before_action :set_team
-  before_action :require_team_admin
+  before_action :require_team_member, only: [:show]
+  before_action :require_team_admin, only: [:edit, :update]
+
+  layout "team_settings"
+
+  def show
+    @policy = @team.policy || {}
+  end
 
   def edit
     @policy = @team.policy || {}
@@ -34,6 +41,12 @@ class TeamPoliciesController < BaseController
 
   def set_team
     @team = current_user.teams.find_by!(slug: params[:team_id])
+  end
+
+  def require_team_member
+    unless @team.member?(current_user)
+      redirect_to teams_path, alert: I18n._("You don't have permission to do that.")
+    end
   end
 
   def require_team_admin

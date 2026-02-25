@@ -18,6 +18,7 @@ class TeamsController < BaseController
     @memberships = @team.memberships.includes(:user).order(:role, :created_at)
     @pending_invitations = @team.team_invitations.pending if @team.admin?(current_user)
     @pushes = @team.pushes.order(created_at: :desc).page(params[:page])
+    render layout: "team_settings"
   end
 
   def new
