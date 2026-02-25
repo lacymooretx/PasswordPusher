@@ -60,10 +60,11 @@ class SettingOverrideTest < ActiveSupport::TestCase
   end
 
   test "apply_all updates nested settings" do
-    SettingOverride.create!(key: "webhooks.max_per_user", value: "25", value_type: "integer")
+    original = Settings.pw.expire_after_days_default
+    SettingOverride.create!(key: "pw.expire_after_days_default", value: "25", value_type: "integer")
     SettingOverride.apply_all!
-    assert_equal 25, Settings.webhooks.max_per_user
+    assert_equal 25, Settings.pw.expire_after_days_default
     # Reset
-    Settings.webhooks.max_per_user = 10
+    Settings.pw.expire_after_days_default = original
   end
 end

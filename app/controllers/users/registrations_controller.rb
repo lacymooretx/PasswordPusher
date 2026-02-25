@@ -25,9 +25,25 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # end
 
   # PUT /resource
-  # def update
-  #   super
-  # end
+  # SSO users can update profile without a password since they authenticate via
+  # their identity provider. Non-SSO users still require current_password.
+  def update
+    if resource.sso_user?
+      # Remove password fields — SSO users don't have a local password
+      params_without_password = devise_parameter_sanitizer.sanitize(:account_update).except(
+        :password, :password_confirmation, :current_password
+      )
+      if resource.update(params_without_password)
+        set_flash_message! :notice, :updated
+        bypass_sign_in resource, scope: resource_name
+        redirect_to after_update_path_for(resource)
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    else
+      super
+    end
+  end
 
   # DELETE /resource
   def destroy

@@ -21,30 +21,32 @@
       </div>
     <% end %>
 
-    <p class='my-3 py-3 lead border-bottom'><%= I18n.t('devise.registrations.change_password') %></p>
-    <p class=''><%= I18n.t('devise.registrations.change_password_hint') %></p>
-    <div class="form-floating">
-      <%= f.password_field :password, class: 'form-control', autocomplete: "new-password", placeholder: I18n.t('devise.registrations.new_password') %>
-      <%= f.label I18n.t('devise.registrations.new_password'), for: :user_password %>
-    </div>
-    <div class="form-floating">
-      <%= f.password_field :password_confirmation, class: 'form-control', autocomplete: "new-password", placeholder: I18n.t('devise.registrations.password') %>
-      <%= f.label I18n.t('devise.registrations.new_password_confirmation'), for: :user_password_confirmation %>
-    </div>
+    <% unless resource.sso_user? %>
+      <p class='my-3 py-3 lead border-bottom'><%= I18n.t('devise.registrations.change_password') %></p>
+      <p class=''><%= I18n.t('devise.registrations.change_password_hint') %></p>
+      <div class="form-floating">
+        <%= f.password_field :password, class: 'form-control', autocomplete: "new-password", placeholder: I18n.t('devise.registrations.new_password') %>
+        <%= f.label I18n.t('devise.registrations.new_password'), for: :user_password %>
+      </div>
+      <div class="form-floating">
+        <%= f.password_field :password_confirmation, class: 'form-control', autocomplete: "new-password", placeholder: I18n.t('devise.registrations.password') %>
+        <%= f.label I18n.t('devise.registrations.new_password_confirmation'), for: :user_password_confirmation %>
+      </div>
 
-    <% if @minimum_password_length %>
-      <p class='text-muted mt-3 fs-7'>
-      * <%= sprintf(I18n.t('devise.registrations.password_minimum'), @minimum_password_length) %>
-      </p>
+      <% if @minimum_password_length %>
+        <p class='text-muted mt-3 fs-7'>
+        * <%= sprintf(I18n.t('devise.registrations.password_minimum'), @minimum_password_length) %>
+        </p>
+      <% end %>
+
+      <p class='my-3 py-3 lead border-bottom'><%= I18n.t('devise.registrations.verification') %></p>
+      <p class='text-muted'><%= I18n.t('devise.registrations.verification_text') %></p>
+
+      <div class="form-floating">
+        <%= f.password_field :current_password, class: 'form-control', autocomplete: "current-password", placeholder: I18n.t('devise.registrations.password') %>
+        <%= f.label _("Current Password"), for: :user_current_password %>
+      </div>
     <% end %>
-
-    <p class='my-3 py-3 lead border-bottom'><%= I18n.t('devise.registrations.verification') %></p>
-    <p class='text-muted'><%= I18n.t('devise.registrations.verification_text') %></p>
-
-    <div class="form-floating">
-      <%= f.password_field :current_password, class: 'form-control', autocomplete: "current-password", placeholder: I18n.t('devise.registrations.password') %>
-      <%= f.label _("Current Password"), for: :user_current_password %>
-    </div>
 
     <% if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications %>
       <p class='my-3 py-3 lead border-bottom'><%= _('Push Notifications') %></p>
@@ -92,11 +94,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
               <div class="modal-body">
-                <p><%= _('Enter your password to confirm disabling two-factor authentication.') %></p>
-                <div class="form-floating">
-                  <%= password_field_tag :password, nil, class: "form-control", placeholder: _("Password"), autocomplete: "current-password" %>
-                  <label for="password"><%= _('Password') %></label>
-                </div>
+                <% if resource.sso_user? %>
+                  <p><%= _('Are you sure you want to disable two-factor authentication?') %></p>
+                <% else %>
+                  <p><%= _('Enter your password to confirm disabling two-factor authentication.') %></p>
+                  <div class="form-floating">
+                    <%= password_field_tag :password, nil, class: "form-control", placeholder: _("Password"), autocomplete: "current-password" %>
+                    <label for="password"><%= _('Password') %></label>
+                  </div>
+                <% end %>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= _('Cancel') %></button>

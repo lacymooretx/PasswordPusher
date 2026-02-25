@@ -33,9 +33,9 @@ class Users::TwoFactorController < BaseController
   end
 
   # DELETE /users/two_factor/disable
-  # Disables 2FA after password confirmation
+  # Disables 2FA after password confirmation (SSO users skip password check)
   def disable
-    if current_user.valid_password?(params[:password])
+    if current_user.sso_user? || current_user.valid_password?(params[:password])
       current_user.disable_two_factor!
       redirect_to edit_user_registration_path, notice: I18n._("Two-factor authentication has been disabled.")
     else
