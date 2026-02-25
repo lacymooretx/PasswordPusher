@@ -34,7 +34,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     assert_difference "Request.count", 1 do
       post requests_path, params: {
-        request: { name: "New Test Request", allow_text: true }
+        request: {name: "New Test Request", allow_text: true}
       }
     end
     assert_response :redirect

@@ -24,10 +24,10 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     @user = User.from_omniauth(auth)
 
     if @user.persisted?
-      flash[:notice] = I18n._("Successfully signed in with %{provider}.") % { provider: provider_name }
+      flash[:notice] = I18n._("Successfully signed in with %{provider}.") % {provider: provider_name}
       sign_in_and_redirect @user, event: :authentication
     else
-      flash[:alert] = I18n._("Could not sign in with %{provider}. Please try again.") % { provider: provider_name }
+      flash[:alert] = I18n._("Could not sign in with %{provider}. Please try again.") % {provider: provider_name}
       redirect_to new_user_session_path
     end
   end

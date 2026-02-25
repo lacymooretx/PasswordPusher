@@ -19,7 +19,7 @@ class TeamInvitationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     assert_difference "TeamInvitation.count", 1 do
       post team_invitations_path(@team), params: {
-        team_invitation: { email: "invite@example.com", role: "member" }
+        team_invitation: {email: "invite@example.com", role: "member"}
       }
     end
     assert_response :redirect
@@ -29,7 +29,7 @@ class TeamInvitationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     assert_no_difference "TeamInvitation.count" do
       post team_invitations_path(@team), params: {
-        team_invitation: { email: "", role: "member" }
+        team_invitation: {email: "", role: "member"}
       }
     end
     assert_response :redirect

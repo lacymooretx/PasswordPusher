@@ -27,13 +27,13 @@
                 <label class="form-label"><%= _('Expire After Days') %></label>
                 <input type="number" name="policy[defaults][<%= kind %>][expire_after_days]"
                        value="<%= @policy.dig("defaults", kind, "expire_after_days") %>"
-                       class="form-control form-control-sm" min="1">
+                       class="form-control form-control-sm" min="1" autocomplete="off">
               </div>
               <div class="mb-2">
                 <label class="form-label"><%= _('Expire After Views') %></label>
                 <input type="number" name="policy[defaults][<%= kind %>][expire_after_views]"
                        value="<%= @policy.dig("defaults", kind, "expire_after_views") %>"
-                       class="form-control form-control-sm" min="1">
+                       class="form-control form-control-sm" min="1" autocomplete="off">
               </div>
               <div class="form-check mb-2">
                 <input type="hidden" name="policy[defaults][<%= kind %>][retrieval_step]" value="false">
@@ -72,13 +72,13 @@
                 <label class="form-label"><%= _('Max Expire After Days') %></label>
                 <input type="number" name="policy[limits][<%= kind %>][expire_after_days_max]"
                        value="<%= @policy.dig("limits", kind, "expire_after_days_max") %>"
-                       class="form-control form-control-sm" min="1">
+                       class="form-control form-control-sm" min="1" autocomplete="off">
               </div>
               <div class="mb-2">
                 <label class="form-label"><%= _('Max Expire After Views') %></label>
                 <input type="number" name="policy[limits][<%= kind %>][expire_after_views_max]"
                        value="<%= @policy.dig("limits", kind, "expire_after_views_max") %>"
-                       class="form-control form-control-sm" min="1">
+                       class="form-control form-control-sm" min="1" autocomplete="off">
               </div>
             </div>
           </div>

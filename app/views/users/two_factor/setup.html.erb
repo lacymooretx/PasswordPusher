@@ -16,7 +16,7 @@
   <div class="mb-4">
     <p class="text-muted mb-1"><%= _("Can't scan the QR code? Enter this key manually:") %></p>
     <div class="input-group">
-      <input type="text" class="form-control font-monospace" value="<%= @otp_secret %>" readonly id="otp-secret-key">
+      <input type="text" class="form-control font-monospace" value="<%= @otp_secret %>" readonly id="otp-secret-key" autocomplete="off">
       <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('otp-secret-key').value)">
         <%= _('Copy') %>
       </button>

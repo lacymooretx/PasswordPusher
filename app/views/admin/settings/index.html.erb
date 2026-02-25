@@ -1,0 +1,102 @@
+<% content_for :title, _("Settings") %>
+<% content_for :breadcrumbs do %>
+  <li class="breadcrumb-item active"><%= _("Settings") %></li>
+<% end %>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h4 mb-0"><%= _("Application Settings") %></h2>
+      <span class="badge bg-info text-dark">
+        <%= pluralize(SettingOverride.count, "override") %> active
+      </span>
+    </div>
+
+    <%= form_with url: admin_settings_path, method: :patch, local: true, class: "settings-form" do |f| %>
+      <!-- Tab Navigation -->
+      <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+        <% @sections.each_with_index do |(section_name, _keys), index| %>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link <%= "active" if index == 0 %>"
+                    id="tab-<%= section_name.parameterize %>"
+                    data-bs-toggle="tab"
+                    data-bs-target="#pane-<%= section_name.parameterize %>"
+                    type="button" role="tab"
+                    aria-controls="pane-<%= section_name.parameterize %>"
+                    aria-selected="<%= index == 0 %>">
+              <%= section_name %>
+            </button>
+          </li>
+        <% end %>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="settingsTabContent">
+        <% @sections.each_with_index do |(section_name, keys), index| %>
+          <div class="tab-pane fade <%= "show active" if index == 0 %>"
+               id="pane-<%= section_name.parameterize %>"
+               role="tabpanel"
+               aria-labelledby="tab-<%= section_name.parameterize %>">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 35%"><%= _("Setting") %></th>
+                    <th style="width: 30%"><%= _("Value") %></th>
+                    <th style="width: 15%"><%= _("Default") %></th>
+                    <th style="width: 20%"><%= _("Env Var") %></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% keys.each do |key| %>
+                    <% value = setting_value(key) %>
+                    <% is_overridden = @overrides.key?(key) %>
+                    <tr class="<%= "table-warning" if is_overridden %>">
+                      <td>
+                        <code class="small"><%= key %></code>
+                        <% if is_overridden %>
+                          <span class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem;">overridden</span>
+                        <% end %>
+                      </td>
+                      <td>
+                        <% case value %>
+                        <% when TrueClass, FalseClass %>
+                          <div class="form-check form-switch">
+                            <%= check_box_tag "settings[#{key}]", "true", value,
+                                class: "form-check-input",
+                                id: "setting_#{key.tr(".", "_")}" %>
+                            <!-- Hidden field to send 'false' when unchecked -->
+                            <%= hidden_field_tag "settings[#{key}]", "false", id: nil %>
+                          </div>
+                        <% when Integer %>
+                          <%= number_field_tag "settings[#{key}]", value,
+                              class: "form-control form-control-sm", style: "max-width: 120px;" %>
+                        <% when Float %>
+                          <%= number_field_tag "settings[#{key}]", value,
+                              class: "form-control form-control-sm", style: "max-width: 120px;", step: "0.1" %>
+                        <% else %>
+                          <%= text_field_tag "settings[#{key}]", value.to_s,
+                              class: "form-control form-control-sm" %>
+                        <% end %>
+                      </td>
+                      <td>
+                        <span class="text-muted small"><%= setting_default(key).to_s.truncate(30) %></span>
+                      </td>
+                      <td>
+                        <code class="small text-muted"><%= setting_env_var(key) %></code>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+        <%= submit_tag _("Save Settings"), class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

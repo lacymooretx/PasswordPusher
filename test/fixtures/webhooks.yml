@@ -1,0 +1,13 @@
+test_webhook:
+  user: giuliana
+  url: "https://example.com/webhook"
+  events: '["push.viewed", "push.expired"]'
+  enabled: true
+  failure_count: 0
+
+disabled_webhook:
+  user: giuliana
+  url: "https://example.com/disabled"
+  events: '["push.viewed"]'
+  enabled: false
+  failure_count: 10

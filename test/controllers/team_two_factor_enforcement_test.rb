@@ -27,7 +27,7 @@ class TeamTwoFactorEnforcementTest < ActionDispatch::IntegrationTest
 
     get pushes_path
     assert_response :redirect
-    assert_match /two_factor/, response.location
+    assert_match(/two_factor/, response.location)
   end
 
   test "allows access when user has 2fa enabled" do

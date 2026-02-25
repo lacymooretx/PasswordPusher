@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
   # To add extra fields to Devise registration, add the attribute names to `extra_keys`
   # See: https://stackoverflow.com/questions/64057147/attributes-not-saving-with-devise-and-accepts-nested-attributes-for
   def configure_permitted_parameters
-    extra_keys = [:preferred_language]
+    extra_keys = [:preferred_language, :notify_on_view, :notify_on_expire, :notify_on_expiring_soon]
     signup_keys = extra_keys + []
     devise_parameter_sanitizer.permit(:sign_up, keys: signup_keys)
     devise_parameter_sanitizer.permit(:account_update, keys: extra_keys)

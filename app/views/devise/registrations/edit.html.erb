@@ -46,6 +46,23 @@
       <%= f.label _("Current Password"), for: :user_current_password %>
     </div>
 
+    <% if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications %>
+      <p class='my-3 py-3 lead border-bottom'><%= _('Push Notifications') %></p>
+      <p class="text-muted"><%= _('Choose which email notifications you want to receive about your pushes.') %></p>
+      <div class="form-check mb-2">
+        <%= f.check_box :notify_on_view, class: "form-check-input", id: "notify_on_view" %>
+        <%= f.label :notify_on_view, _('Notify me when a push is viewed'), class: "form-check-label" %>
+      </div>
+      <div class="form-check mb-2">
+        <%= f.check_box :notify_on_expire, class: "form-check-input", id: "notify_on_expire" %>
+        <%= f.label :notify_on_expire, _('Notify me when a push expires'), class: "form-check-label" %>
+      </div>
+      <div class="form-check mb-2">
+        <%= f.check_box :notify_on_expiring_soon, class: "form-check-input", id: "notify_on_expiring_soon" %>
+        <%= f.label :notify_on_expiring_soon, _('Notify me when a push is about to expire (within 24 hours)'), class: "form-check-label" %>
+      </div>
+    <% end %>
+
     <div class="form-floating my-3">
       <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= I18n.t('devise.registrations.update_account') %></button>
     </div>

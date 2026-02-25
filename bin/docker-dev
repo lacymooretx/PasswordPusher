@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMPOSE_FILE="docker-compose.dev.yml"
+PROJECT="pwpush-dev"
+
+usage() {
+  cat <<EOF
+Usage: bin/docker-dev <command>
+
+Commands:
+  up        Start all services (detached)
+  down      Stop all services
+  build     Rebuild the app container
+  test      Run the test suite inside the container
+  console   Open a Rails console
+  bash      Open a bash shell in the app container
+  logs      Tail logs from all services
+  setup     First-time setup (build, create db, migrate, seed)
+EOF
+}
+
+case "${1:-}" in
+  up)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" up -d
+    echo "Services started. App at http://localhost:5100"
+    echo "MailCatcher at http://localhost:1080"
+    ;;
+  down)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" down
+    ;;
+  build)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" build
+    ;;
+  test)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" exec app bin/rails test "${@:2}"
+    ;;
+  console)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" exec app bin/rails console
+    ;;
+  bash)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" exec app bash
+    ;;
+  logs)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" logs -f "${@:2}"
+    ;;
+  setup)
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" build
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" up -d postgres redis
+    echo "Waiting for PostgreSQL..."
+    sleep 3
+    docker compose -f "$COMPOSE_FILE" -p "$PROJECT" run --rm app bash -c "bin/rails db:create db:migrate db:seed"
+    echo "Setup complete. Run 'bin/docker-dev up' to start."
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

@@ -15,20 +15,20 @@
   <% if @request.allow_url? %>
     <div class="mb-3">
       <label for="url" class="form-label"><%= _('URL') %></label>
-      <input type="url" name="url" id="url" class="form-control" placeholder="https://...">
+      <input type="url" name="url" id="url" class="form-control" placeholder="https://..." autocomplete="off">
     </div>
   <% end %>
 
   <% if @request.allow_files? %>
     <div class="mb-3">
       <label for="files" class="form-label"><%= _('Files') %></label>
-      <input type="file" name="files[]" id="files" class="form-control" multiple>
+      <input type="file" name="files[]" id="files" class="form-control" multiple autocomplete="off">
     </div>
   <% end %>
 
   <div class="mb-3">
     <label for="note" class="form-label"><%= _('Note (optional)') %></label>
-    <input type="text" name="note" id="note" class="form-control" placeholder="<%= _('Add an optional note...') %>">
+    <input type="text" name="note" id="note" class="form-control" placeholder="<%= _('Add an optional note...') %>" autocomplete="off">
   </div>
 
   <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Submit Securely') %></button>

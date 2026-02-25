@@ -37,7 +37,7 @@ class TwoFactorControllerTest < ActionDispatch::IntegrationTest
     @user.generate_otp_secret!
     totp = ROTP::TOTP.new(@user.otp_secret)
 
-    post enable_users_two_factor_path, params: { otp_code: totp.now }
+    post enable_users_two_factor_path, params: {otp_code: totp.now}
     @user.reload
 
     assert @user.otp_enabled?
@@ -49,7 +49,7 @@ class TwoFactorControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     @user.generate_otp_secret!
 
-    post enable_users_two_factor_path, params: { otp_code: "000000" }
+    post enable_users_two_factor_path, params: {otp_code: "000000"}
     @user.reload
 
     assert_not @user.otp_enabled?
@@ -61,7 +61,7 @@ class TwoFactorControllerTest < ActionDispatch::IntegrationTest
     @user.generate_otp_secret!
     @user.enable_two_factor!
 
-    delete disable_users_two_factor_path, params: { password: "password12345" }
+    delete disable_users_two_factor_path, params: {password: "password12345"}
     @user.reload
 
     assert_not @user.otp_enabled?
@@ -73,7 +73,7 @@ class TwoFactorControllerTest < ActionDispatch::IntegrationTest
     @user.generate_otp_secret!
     @user.enable_two_factor!
 
-    delete disable_users_two_factor_path, params: { password: "wrongpassword" }
+    delete disable_users_two_factor_path, params: {password: "wrongpassword"}
     @user.reload
 
     assert @user.otp_enabled?

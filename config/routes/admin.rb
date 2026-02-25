@@ -9,6 +9,9 @@ if Settings.enable_logins
           patch :revoke
         end
       end
+
+      get "settings", to: "settings#index", as: :settings
+      patch "settings", to: "settings#update"
     end
 
     mount MissionControl::Jobs::Engine, at: "/admin/jobs" if defined?(::MissionControl::Jobs::Engine)

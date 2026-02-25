@@ -35,10 +35,10 @@ class TeamPoliciesControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     patch team_policy_path(@team), params: {
       policy: {
-        defaults: { pw: { expire_after_days: "14", expire_after_views: "10" } },
-        forced: { pw: { expire_after_days: "1" } },
-        hidden_features: { url_pushes: "1" },
-        limits: { pw: { expire_after_days_max: "30" } }
+        defaults: {pw: {expire_after_days: "14", expire_after_views: "10"}},
+        forced: {pw: {expire_after_days: "1"}},
+        hidden_features: {url_pushes: "1"},
+        limits: {pw: {expire_after_days_max: "30"}}
       }
     }
     assert_response :redirect
@@ -50,10 +50,10 @@ class TeamPoliciesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update clears empty values" do
-    @team.update!(policy: { "defaults" => { "pw" => { "expire_after_days" => 14 } } })
+    @team.update!(policy: {"defaults" => {"pw" => {"expire_after_days" => 14}}})
     sign_in @user
     patch team_policy_path(@team), params: {
-      policy: { defaults: { pw: { expire_after_days: "" } } }
+      policy: {defaults: {pw: {expire_after_days: ""}}}
     }
     assert_response :redirect
     @team.reload

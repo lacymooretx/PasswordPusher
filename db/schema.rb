@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_000012) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -83,12 +83,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
   end
 
   create_table "pushes", force: :cascade do |t|
+    t.text "allowed_countries"
+    t.text "allowed_ips"
     t.datetime "created_at", null: false
     t.boolean "deletable_by_viewer", default: true
     t.integer "expire_after_days"
     t.integer "expire_after_views"
     t.boolean "expired", default: false
     t.datetime "expired_on"
+    t.datetime "expiring_soon_notified_at"
     t.integer "kind", null: false
     t.string "name"
     t.text "note_ciphertext"
@@ -125,6 +128,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
     t.integer "user_id", null: false
     t.index ["url_token"], name: "index_requests_on_url_token", unique: true
     t.index ["user_id"], name: "index_requests_on_user_id"
+  end
+
+  create_table "setting_overrides", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.string "value_type", default: "string", null: false
+    t.index ["key"], name: "index_setting_overrides_on_key", unique: true
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -330,6 +342,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
     t.datetime "last_sign_in_at", precision: nil
     t.string "last_sign_in_ip"
     t.datetime "locked_at", precision: nil
+    t.boolean "notify_on_expire", default: false, null: false
+    t.boolean "notify_on_expiring_soon", default: false, null: false
+    t.boolean "notify_on_view", default: false, null: false
     t.boolean "otp_required_for_login", default: false, null: false
     t.text "otp_secret_ciphertext"
     t.string "preferred_language"
@@ -369,6 +384,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
     t.index ["url_id"], name: "index_views_on_url_id"
   end
 
+  create_table "webhook_deliveries", force: :cascade do |t|
+    t.integer "attempt", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.string "event", null: false
+    t.json "payload"
+    t.text "response_body"
+    t.integer "response_code"
+    t.boolean "success", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.integer "webhook_id", null: false
+    t.index ["webhook_id"], name: "index_webhook_deliveries_on_webhook_id"
+  end
+
+  create_table "webhooks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.json "events", default: []
+    t.integer "failure_count", default: 0, null: false
+    t.datetime "last_failure_at"
+    t.string "last_failure_reason"
+    t.datetime "last_success_at"
+    t.text "secret_ciphertext"
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "url"], name: "index_webhooks_on_user_id_and_url", unique: true
+    t.index ["user_id"], name: "index_webhooks_on_user_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_logs", "pushes"
@@ -390,4 +434,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000008) do
   add_foreign_key "teams", "users", column: "owner_id", on_delete: :cascade
   add_foreign_key "user_brandings", "users", on_delete: :cascade
   add_foreign_key "user_policies", "users", on_delete: :cascade
+  add_foreign_key "webhook_deliveries", "webhooks", on_delete: :cascade
+  add_foreign_key "webhooks", "users", on_delete: :cascade
 end

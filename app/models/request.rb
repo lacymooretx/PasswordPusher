@@ -8,11 +8,11 @@ class Request < ApplicationRecord
   belongs_to :user
   has_many :pushes, dependent: :nullify
 
-  validates :name, presence: true, length: { maximum: 200 }
-  validates :description, length: { maximum: 2000 }, allow_blank: true
+  validates :name, presence: true, length: {maximum: 200}
+  validates :description, length: {maximum: 2000}, allow_blank: true
   validates :url_token, presence: true, uniqueness: true
-  validates :max_submissions, numericality: { greater_than: 0 }, allow_nil: true
-  validates :expire_after_days, numericality: { greater_than: 0, less_than_or_equal_to: 365 }, allow_nil: true
+  validates :max_submissions, numericality: {greater_than: 0}, allow_nil: true
+  validates :expire_after_days, numericality: {greater_than: 0, less_than_or_equal_to: 365}, allow_nil: true
 
   before_validation :set_url_token, on: :create
   before_validation :set_expiration, on: :create

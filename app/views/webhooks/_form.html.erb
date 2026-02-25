@@ -1,0 +1,43 @@
+<%= form_with(model: webhook, class: "needs-validation") do |f| %>
+  <% if webhook.errors.any? %>
+    <div class="alert alert-danger">
+      <h6><%= _('Please fix the following errors:') %></h6>
+      <ul class="mb-0">
+        <% webhook.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :url, _('Payload URL'), class: "form-label" %>
+    <%= f.url_field :url, class: "form-control", placeholder: "https://example.com/webhook", required: true %>
+    <div class="form-text"><%= _('We will send POST requests to this URL when events occur.') %></div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :events, _('Events'), class: "form-label d-block" %>
+    <div class="form-text mb-2"><%= _('Select which events should trigger this webhook.') %></div>
+    <% Webhook::VALID_EVENTS.each do |event| %>
+      <div class="form-check">
+        <%= check_box_tag "webhook[events][]", event, Array(webhook.events).include?(event), class: "form-check-input", id: "event_#{event.tr('.', '_')}" %>
+        <%= label_tag "event_#{event.tr('.', '_')}", event, class: "form-check-label" %>
+      </div>
+    <% end %>
+  </div>
+
+  <% unless webhook.new_record? %>
+    <div class="mb-3">
+      <div class="form-check form-switch">
+        <%= f.check_box :enabled, class: "form-check-input", role: "switch" %>
+        <%= f.label :enabled, _('Enabled'), class: "form-check-label" %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="d-flex gap-2">
+    <%= f.submit webhook.new_record? ? _('Create Webhook') : _('Update Webhook'), class: "btn btn-primary" %>
+    <%= link_to _('Cancel'), webhooks_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

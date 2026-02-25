@@ -19,7 +19,7 @@ class MembershipsController < BaseController
     end
 
     if @membership.update(membership_params)
-      redirect_to @team, notice: I18n._("Role updated for %{email}.") % { email: @membership.user.email }
+      redirect_to @team, notice: I18n._("Role updated for %{email}.") % {email: @membership.user.email}
     else
       redirect_to @team, alert: @membership.errors.full_messages.join(", ")
     end
@@ -55,7 +55,7 @@ class MembershipsController < BaseController
 
     email = @membership.user.email
     @membership.destroy
-    redirect_to @team, notice: I18n._("%{email} has been removed from the team.") % { email: email }
+    redirect_to @team, notice: I18n._("%{email} has been removed from the team.") % {email: email}
   end
 
   private

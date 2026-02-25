@@ -27,7 +27,7 @@ module TeamTwoFactorEnforcement
     return if two_factor_setup_path?
 
     redirect_to setup_users_two_factor_path,
-      alert: I18n._("Your team '%{team}' requires two-factor authentication. Please set it up to continue.") % { team: requiring_team.name }
+      alert: I18n._("Your team '%{team}' requires two-factor authentication. Please set it up to continue.") % {team: requiring_team.name}
   end
 
   # Exemption list: paths that must remain accessible during enforcement

@@ -3,8 +3,10 @@
 class Api::V1::PushesController < Api::BaseController
   include SetPushAttributes
   include LogEvents
+  include AccessRestriction
 
   before_action :set_push, only: %i[show preview audit destroy]
+  before_action :check_access_restrictions, only: %i[show]
 
   resource_description do
     name "Pushes"
@@ -262,7 +264,7 @@ class Api::V1::PushesController < Api::BaseController
     @audit_logs = @push.audit_logs
       .order(created_at: :desc)
       .page(page)
-      .per(50)
+      .per(Settings.api.per_page)
 
     @secret_url = helpers.secret_url(@push)
     render json: {views: @audit_logs}.to_json(except: %i[user_id push_id id])
@@ -361,7 +363,7 @@ class Api::V1::PushesController < Api::BaseController
     @pushes = Push.includes(:audit_logs)
       .where(user_id: current_user.id, expired: false)
       .page(page)
-      .per(50)
+      .per(Settings.api.per_page)
       .order(created_at: :desc)
 
     render template: "pushes/index", status: :ok
@@ -417,7 +419,7 @@ class Api::V1::PushesController < Api::BaseController
     @pushes = Push.includes(:audit_logs)
       .where(user_id: current_user.id, expired: true)
       .page(page)
-      .per(50)
+      .per(Settings.api.per_page)
       .order(created_at: :desc)
 
     render template: "pushes/index", status: :ok
@@ -440,12 +442,19 @@ class Api::V1::PushesController < Api::BaseController
       return nil
     end
 
-    if page > 200
+    if page > Settings.api.max_page
       render json: {error: "Invalid page parameter"}, status: :bad_request
       return nil
     end
 
     page
+  end
+
+  def check_access_restrictions
+    return unless @push
+
+    check_ip_restriction(@push)
+    check_geo_restriction(@push)
   end
 
   def set_push
@@ -468,10 +477,10 @@ class Api::V1::PushesController < Api::BaseController
   def push_params
     if request.path.start_with?("/f")
       params.require(:file_push).permit(:name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
     elsif request.path.start_with?("/r")
       params.require(:url).permit(:name, :expire_after_days, :expire_after_views,
-        :retrieval_step, :payload, :note, :passphrase)
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
     else
       # https://docs.pwpush.com/docs/json-api/#curl
       # curl -X POST -H "X-User-Email: <email>" -H "X-User-Token: MyAPIToken"
@@ -486,7 +495,7 @@ class Api::V1::PushesController < Api::BaseController
       #
       # More, kind can be used to create different kind pushes.
       params.require(:password).permit(:name, :kind, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
     end
   rescue => e
     Rails.logger.error("Error in push_params: #{e.message}")

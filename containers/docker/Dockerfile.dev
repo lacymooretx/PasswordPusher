@@ -1,0 +1,39 @@
+FROM ruby:4.0.1-slim
+
+# Install system dependencies
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    default-libmysqlclient-dev \
+    libsqlite3-dev \
+    libyaml-dev \
+    libvips \
+    node-gyp \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20 LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    npm install -g yarn && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Ruby dependencies
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# Install JS dependencies
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Source is mounted as volume, so no COPY of full source
+# Entrypoint handles db:create, db:migrate on first boot
+
+EXPOSE 5100
+
+CMD ["bin/dev"]

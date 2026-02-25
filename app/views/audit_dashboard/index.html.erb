@@ -1,0 +1,79 @@
+<div class="container mt-4">
+  <h2 class="mb-4"><%= _('Audit Log') %></h2>
+
+  <!-- Filter Bar -->
+  <%= form_tag audit_dashboard_index_path, method: :get, class: "card card-body mb-4" do %>
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <%= label_tag :kind, _('Event Kind'), class: "form-label" %>
+        <%= select_tag :kind,
+          options_for_select(
+            [[_('All Kinds'), '']] + AuditLog.kinds.keys.map { |k| [k.titleize, k] },
+            params[:kind]
+          ),
+          class: "form-select" %>
+      </div>
+      <div class="col-md-3">
+        <%= label_tag :ip, _('IP Address'), class: "form-label" %>
+        <%= text_field_tag :ip, params[:ip], class: "form-control", placeholder: "e.g. 127.0.0.1", autocomplete: "off" %>
+      </div>
+      <div class="col-md-3">
+        <%= label_tag :push_token, _('Push URL Token'), class: "form-label" %>
+        <%= text_field_tag :push_token, params[:push_token], class: "form-control", placeholder: "e.g. abc123", autocomplete: "off" %>
+      </div>
+      <div class="col-md-3">
+        <%= submit_tag _('Filter'), class: "btn btn-primary w-100" %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @audit_logs.any? %>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th><%= _('Timestamp') %></th>
+            <th><%= _('Kind') %></th>
+            <th><%= _('Push') %></th>
+            <th><%= _('IP') %></th>
+            <th><%= _('User Agent') %></th>
+            <th><%= _('Referrer') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @audit_logs.each do |log| %>
+            <tr>
+              <td><%= l(log.created_at, format: :short) %></td>
+              <td>
+                <% badge_class = case log.kind
+                  when 'creation' then 'bg-success'
+                  when 'view' then 'bg-info'
+                  when 'failed_view' then 'bg-warning text-dark'
+                  when 'expire', 'failed_passphrase' then 'bg-danger'
+                  else 'bg-secondary'
+                  end %>
+                <span class="badge <%= badge_class %>"><%= log.kind.titleize %></span>
+              </td>
+              <td>
+                <% if log.push %>
+                  <%= link_to truncate(log.push.url_token, length: 12), push_path(log.push) %>
+                <% else %>
+                  <span class="text-muted"><%= _('Deleted') %></span>
+                <% end %>
+              </td>
+              <td><%= log.ip %></td>
+              <td><%= truncate(log.user_agent.to_s, length: 50) %></td>
+              <td><%= truncate(log.referrer.to_s, length: 50) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= paginate @audit_logs %>
+  <% else %>
+    <div class="alert alert-info text-center">
+      <p class="mb-0"><%= _('No audit log entries found.') %></p>
+    </div>
+  <% end %>
+</div>

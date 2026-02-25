@@ -3,29 +3,6 @@
     {
       "warning_type": "Redirect",
       "warning_code": 18,
-      "fingerprint": "8eba704398108c2df9de213ec60cf60339bd484ced2b64c2a9b27dee42e035d1",
-      "check_name": "Redirect",
-      "message": "Possible unprotected redirect",
-      "file": "app/controllers/urls_controller.rb",
-      "line": 67,
-      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
-      "code": "redirect_to(Url.includes(:views).find_by!(:url_token => params[:id]).payload, :allow_other_host => true, :status => :see_other)",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "UrlsController",
-        "method": "show"
-      },
-      "user_input": "Url.includes(:views).find_by!(:url_token => params[:id]).payload",
-      "confidence": "Weak",
-      "cwe_id": [
-        601
-      ],
-      "note": "Other host redirection is the core feature of this code."
-    },
-    {
-      "warning_type": "Redirect",
-      "warning_code": 18,
       "fingerprint": "45a939621a772f695f2c34c948ce23819c4174f79b3aef09b10ec3ce8c0568e8",
       "check_name": "Redirect",
       "message": "Possible unprotected redirect",
@@ -45,8 +22,54 @@
         601
       ],
       "note": "Other host redirection is the core feature of this code."
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "5011c2eef8a2a8400a7700cb5127ec34d988b403470b71484c7ea37f000d0669",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/memberships_controller.rb",
+      "line": 84,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params.require(:membership).permit(:role)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "MembershipsController",
+        "method": "membership_params"
+      },
+      "user_input": ":role",
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": "Role assignment is the intended purpose of this action. Only team admins/owners can change roles, enforced by require_admin before_action."
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "54417b4e19984fc7b647d410b09563cc828d01ee04489727fb9c5173952ba0ec",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/team_invitations_controller.rb",
+      "line": 91,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params.require(:team_invitation).permit(:email, :role)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "TeamInvitationsController",
+        "method": "invitation_params"
+      },
+      "user_input": ":role",
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": "Role assignment on invitations is intentional. Only team admins/owners can create invitations, enforced by require_admin before_action."
     }
   ],
-  "updated": "2026-01-08 21:20:23 +0100",
-  "brakeman_version": "7.1.2"
+  "updated": "2026-02-24 17:58:00 -0600",
+  "brakeman_version": "8.0.2"
 }

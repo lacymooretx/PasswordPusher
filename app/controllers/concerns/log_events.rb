@@ -14,13 +14,18 @@ module LogEvents
     elsif user_signed_in? && push.user_id == current_user.id
       log_event(push, :owner_view)
     else
-      log_event(push, :view)
+      audit_log = log_event(push, :view)
+      if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications
+        PushNotificationJob.perform_later(push.id, "view", audit_log.id) if push.user&.notify_on_view?
+      end
+      Push.dispatch_webhook("push.viewed", push)
     end
     push
   end
 
   def log_creation(push)
     log_event(push, :creation)
+    Push.dispatch_webhook("push.created", push)
   end
 
   def log_update(push)
@@ -29,10 +34,15 @@ module LogEvents
 
   def log_failed_passphrase(push)
     log_event(push, :failed_passphrase)
+    Push.dispatch_webhook("push.failed_passphrase", push)
   end
 
   def log_expire(push)
     log_event(push, :expire)
+    if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications
+      PushNotificationJob.perform_later(push.id, "expire") if push.user&.notify_on_expire?
+    end
+    Push.dispatch_webhook("push.expired", push)
   end
 
   def log_event(push, kind)

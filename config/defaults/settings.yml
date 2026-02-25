@@ -81,6 +81,61 @@ enable_requests: false
 #
 enable_teams: false
 
+### Audit Dashboard
+#
+# When enabled, logged-in users can view a centralized audit log of all
+# events across their pushes (views, expirations, failed passphrases, etc.).
+#
+# Environment variable override:
+# PWP__ENABLE_AUDIT_DASHBOARD='false'
+#
+enable_audit_dashboard: false
+
+### Push Notifications
+#
+# When enabled, users can opt in to receive email notifications when their
+# pushes are viewed, expire, or are about to expire.
+#
+# Environment variable override:
+# PWP__ENABLE_PUSH_NOTIFICATIONS='false'
+#
+enable_push_notifications: false
+
+### Webhooks
+#
+# When enabled, users can register webhook URLs to receive HTTP POST
+# notifications for push lifecycle events (created, viewed, expired, etc.).
+#
+# Environment variable override:
+# PWP__ENABLE_WEBHOOKS='false'
+#
+enable_webhooks: false
+
+### Webhook Configuration
+#
+# Settings for webhook behavior. These control limits and retry behavior.
+#
+webhooks:
+  # Maximum webhooks per user
+  max_per_user: 10
+  # Number of consecutive failures before auto-disabling
+  max_failures: 10
+  # Number of retry attempts for failed deliveries
+  retry_attempts: 5
+  # Number of days to retain webhook delivery records
+  delivery_retention_days: 30
+
+### IP Allowlisting
+#
+# When enabled, users can restrict push access to specific IP addresses
+# or CIDR ranges. Pushes with IP restrictions will only be viewable
+# from the specified addresses.
+#
+# Environment variable override:
+# PWP__ENABLE_IP_ALLOWLISTING='false'
+#
+enable_ip_allowlisting: false
+
 ### URL Pushes
 #
 # Enable or disable URL based pushes.  These allow you to share URLs securely.
@@ -1206,3 +1261,42 @@ secure_cookies: false
 # PWP__PURGE_AFTER='3 months'
 #
 purge_after: "disabled"
+
+### IP Allowlisting
+#
+# When enabled, users can restrict push access to specific IP addresses or CIDR ranges.
+#
+# Environment variable override:
+# PWP__ENABLE_IP_ALLOWLISTING='false'
+#
+enable_ip_allowlisting: false
+
+### Geofencing
+#
+# When enabled, users can restrict push access to specific countries.
+# Requires a MaxMind GeoLite2 Country database file.
+# Download from: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data
+#
+# Environment variable override:
+# PWP__ENABLE_GEOFENCING='false'
+#
+enable_geofencing: false
+
+### Geofencing Configuration
+#
+# Path to the MaxMind GeoLite2 Country database file.
+#
+geofencing:
+  database_path: ''
+
+### API Pagination Defaults
+#
+# Controls pagination for API list endpoints (active, expired, audit).
+#
+# Environment variable overrides:
+# PWP__API__PER_PAGE=50
+# PWP__API__MAX_PAGE=200
+#
+api:
+  per_page: 50
+  max_page: 200

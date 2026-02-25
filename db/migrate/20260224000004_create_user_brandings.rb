@@ -3,7 +3,7 @@
 class CreateUserBrandings < ActiveRecord::Migration[8.1]
   def change
     create_table :user_brandings do |t|
-      t.references :user, null: false, foreign_key: { on_delete: :cascade }, index: { unique: true }
+      t.references :user, null: false, foreign_key: {on_delete: :cascade}, index: {unique: true}
 
       # Delivery page customization
       t.string :delivery_heading

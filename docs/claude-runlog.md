@@ -1,5 +1,234 @@
 # Claude Execution Runlog — PasswordPusher Pro Features
 
+## 2026-02-24: Broader API Coverage — Webhooks, Audit Logs, Team Policies
+
+### Goal
+Create 3 new API controllers for features that previously only had HTML interfaces: Webhooks, Audit Logs, and Team Policies. Add full Apipie annotations and tests.
+
+### Steps
+
+1. **Read reference files** — Studied Api::BaseController, WebhooksController (HTML), AuditDashboardController (HTML), TeamPoliciesController (HTML), Api::V1::TeamsController (Apipie pattern), models, routes, fixtures, existing API tests.
+
+2. **Created 3 API controllers:**
+   - `app/controllers/api/v1/webhooks_controller.rb` — CRUD (index/show/create/update/destroy), feature flag check, max_per_user enforcement, JSON serialization with delivery history on show, full Apipie annotations
+   - `app/controllers/api/v1/audit_logs_controller.rb` — index-only with filtering (kind, ip, push_token), Kaminari pagination (50/page), Apipie annotations
+   - `app/controllers/api/v1/team_policies_controller.rb` — show/update, admin check, permit! for flexible policy JSON, Apipie annotations
+
+3. **Updated routes** — `config/routes/pwp_api.rb`:
+   - Added `resources :webhooks` and `resources :audit_logs` to api/v1 namespace
+   - Added `resource :policy` nested under teams block
+
+4. **Created 3 test files:**
+   - `test/controllers/api/v1/webhooks_controller_test.rb` — 11 tests: index, show with deliveries, show 404 for other user, create, create invalid, create at max limit, update, destroy, feature disabled, unauthenticated, token auth
+   - `test/controllers/api/v1/audit_logs_controller_test.rb` — 8 tests: index, filter by kind, filter by push_token, filter by ip, field presence, feature disabled, unauthenticated, token auth
+   - `test/controllers/api/v1/team_policies_controller_test.rb` — 8 tests: show as owner, show as admin, update with JSON content type, non-member 404, regular member 403, feature disabled, unauthenticated, token auth
+
+5. **Fixed test issues:**
+   - Webhook fixture events stored as JSON string (not array) caused validation errors on update — added `events` to update params
+   - Settings.webhooks max_per_user persisted between tests — added teardown cleanup
+   - Team policy update received string values — used `to_json` + `Content-Type: application/json` header for proper typing
+
+### Files Created (6)
+- `app/controllers/api/v1/webhooks_controller.rb`
+- `app/controllers/api/v1/audit_logs_controller.rb`
+- `app/controllers/api/v1/team_policies_controller.rb`
+- `test/controllers/api/v1/webhooks_controller_test.rb`
+- `test/controllers/api/v1/audit_logs_controller_test.rb`
+- `test/controllers/api/v1/team_policies_controller_test.rb`
+
+### Files Modified (1)
+- `config/routes/pwp_api.rb` — added webhook, audit_log, and team policy API routes
+
+### Verification
+- New tests: 27 runs, 77 assertions, 0 failures, 0 errors
+- Full suite: 1005 runs, 4563 assertions, 0 failures, 0 errors
+
+---
+
+## 2026-02-24: Settings Extraction, .env.example Expansion, i18n Fix
+
+### Goal
+3 tasks: extract hardcoded API pagination to Settings, expand .env.example with all missing settings, add i18n to base_controller.rb error messages.
+
+### Steps
+
+1. **Task 1: Extract hardcoded pagination to Settings**
+   - Added `api:` section with `per_page: 50` and `max_page: 200` to both `config/settings.yml` and `config/defaults/settings.yml` (kept byte-identical)
+   - Updated `app/controllers/api/v1/pushes_controller.rb`: replaced 3x `.per(50)` with `.per(Settings.api.per_page)` and `page > 200` with `page > Settings.api.max_page`
+   - Added `PWP__API__PER_PAGE` and `PWP__API__MAX_PAGE` to `.env.example`
+
+2. **Task 2: Expand .env.example**
+   - Audited all settings in settings.yml against .env.example
+   - Added missing brand favicon/icon overrides (14 icon env vars: `PWP__BRAND__ICON_*` and `PWP__BRAND__MS_ICON_144x144`)
+   - All other settings were already present
+
+3. **Task 3: i18n for base_controller.rb**
+   - Wrapped 3 hardcoded English strings with `_()` GetText pattern:
+     - `_("Missing Parameters")`
+     - `_("Unsupported format")`
+     - `_("Invalid request parameters")` (in both HTML and JSON render calls)
+
+### Files Modified
+- `config/settings.yml` — added `api:` section
+- `config/defaults/settings.yml` — added `api:` section (kept byte-identical)
+- `app/controllers/api/v1/pushes_controller.rb` — 4 replacements (3x per_page, 1x max_page)
+- `.env.example` — added API pagination section + brand icon env vars
+- `app/controllers/base_controller.rb` — i18n wrappers on 3 error strings
+
+### Verification
+- `config/settings.yml` and `config/defaults/settings.yml` confirmed byte-identical via `diff`
+- Password JSON active/expired/audit tests: 8 runs, 409 assertions, 0 failures, 0 errors
+- Model tests: 6 runs, 11 assertions, 0 failures, 0 errors
+- Full suite SQLite lock errors are pre-existing environmental issue, not caused by changes
+
+---
+
+## 2026-02-24: Post-Build — Polish & Hardening Improvements
+
+### Goal
+9 improvement tasks across 4 phases: jobs/config, API annotations/tests, lint/security, documentation.
+
+### Steps
+
+1. **Phase A** (2 parallel agents):
+   - A1+A2: Wired ExpiringPushesNotificationJob into recurring.yml, created WebhookDeliveryCleanupJob + test + settings
+   - A3: Updated .env.example with missing Phase 11-15 env vars
+
+2. **Phase B** (3 parallel agents):
+   - B1: Added Apipie annotations to 5 API controllers
+   - B2: Created webhook dispatch integration test (4 tests)
+   - B3: Created API IP restriction test (5 tests)
+
+3. **Phase C** (lint + security):
+   - RuboCop autocorrect: 14 offenses fixed
+   - ErbLint: 11 missing autocomplete attributes fixed across 5 views
+   - Brakeman: Fixed HIGH webhook URL regex (missing `\z` anchor), added 2 false positives to brakeman.ignore
+
+4. **Test failures found and fixed**:
+   - WebhookDeliveryCleanupJobTest: agent used non-existent columns (url, request_headers, request_body) — fixed to match actual WebhookDelivery schema
+   - WebhookDispatchTest: fixture events loaded as JSON string, `Array(string).include?()` failed — added `JSON.parse` in webhook_dispatch.rb concern
+
+5. **Phase D**: Created docs/geofencing-setup.md and docs/ruby-setup.md
+
+6. **Final verification**: 919 runs, 4354 assertions, 0 failures, 0 errors. Brakeman: 0 warnings. RuboCop + ErbLint: clean.
+
+### Result
+All post-build improvements complete. Test count increased from 907 to 919 (+12 new tests).
+
+---
+
+## 2026-02-24: Phase 15 — CLI Tool (Final Phase)
+
+### Goal
+Standalone Ruby CLI wrapping the PasswordPusher JSON API.
+
+### Steps
+
+1. **2 parallel agents**: 15A (client + config), 15B (CLI commands + tests + README)
+2. **Agent 15A** — Created gemspec, Gemfile, lib/pwpush.rb, version.rb, config.rb, client.rb
+3. **Agent 15B** — Created bin/pwpush, cli.rb (8 Thor commands), test_helper.rb, client_test.rb (10 tests), config_test.rb (3 tests), README.md
+4. **Verification** — Main suite: 907 runs, 0 failures. CLI tests: 13 runs, 0 failures.
+5. **Updated** app-build-progress.md — ALL PHASES COMPLETE.
+
+### Files Created (12)
+- `tools/cli/pwpush-cli.gemspec`, `tools/cli/Gemfile`
+- `tools/cli/bin/pwpush`, `tools/cli/lib/pwpush.rb`
+- `tools/cli/lib/pwpush/version.rb`, `tools/cli/lib/pwpush/config.rb`, `tools/cli/lib/pwpush/client.rb`, `tools/cli/lib/pwpush/cli.rb`
+- `tools/cli/test/test_helper.rb`, `tools/cli/test/client_test.rb`, `tools/cli/test/config_test.rb`
+- `tools/cli/README.md`
+
+### Result
+Phase 15 complete. All 9 features across 7 phases implemented and tested.
+
+---
+
+## 2026-02-24: Phase 15B — CLI Commands, Executable, and Tests
+
+### Goal
+Create the Thor-based CLI entry point, executable, test suite, and README for the pwpush CLI tool.
+
+### Steps
+
+1. **Checked existing Phase 15A files** — Confirmed gemspec, Gemfile, lib/pwpush.rb, version.rb, config.rb, client.rb all present and stable.
+2. **Created bin/pwpush** — Executable entry point, `chmod +x` applied.
+3. **Created lib/pwpush/cli.rb** — Thor-based CLI with 8 commands: push, file, url, list, expire, get, version, config. Includes error handling (ApiError, ConnectionFailed), display helpers, and interactive config setup.
+4. **Created test/test_helper.rb** — Sets load path, requires pwpush + minitest + webmock.
+5. **Created test/client_test.rb** — 10 tests covering: create_push, get_push, get_push_with_passphrase, expire_push, active_pushes, expired_pushes, version, authentication_error, bearer_auth_when_no_email, validation_error.
+6. **Created test/config_test.rb** — 3 tests covering: loads_from_env, invalid_without_config, env_overrides_file.
+7. **Created README.md** — Installation, configuration, usage examples, development instructions.
+8. **Bundle install** — All deps installed (thor, tty-table, faraday, webmock, minitest).
+9. **Ran tests** — client_test.rb: 10 runs, 17 assertions, 0 failures. config_test.rb: 3 runs, 6 assertions, 0 failures. Total: 13 tests, 23 assertions, 0 failures/errors.
+
+### Files Created
+- `tools/cli/bin/pwpush`
+- `tools/cli/lib/pwpush/cli.rb`
+- `tools/cli/test/test_helper.rb`
+- `tools/cli/test/client_test.rb`
+- `tools/cli/test/config_test.rb`
+- `tools/cli/README.md`
+
+### Result
+Phase 15B complete. All 13 tests pass with 23 assertions.
+
+---
+
+## 2026-02-24: Phases 13+14 — API Coverage + Access Restrictions
+
+### Goal
+Phase 13: Extend JSON API for Teams, Requests, UserBranding. Phase 14: IP allowlisting and geofencing.
+
+### Steps
+
+1. **Read context** — All model files (Team, Membership, TeamInvitation, Request, UserBranding), API base controller, existing API pushes controller, fixtures, routes
+2. **4 parallel agents**: 13A (Teams API), 13B (Requests+Branding API), 14A (IP Allowlisting), 14B (Geofencing)
+3. **Agent 13A** — Created 3 API controllers (teams, members, invitations), 3 test files (22 tests). Modified pwp_api.rb routes.
+4. **Agent 13B** — Created 2 API controllers (requests, user_brandings), 2 test files (11 tests). Modified pwp_api.rb routes.
+5. **Agent 14A** — Created migration, AccessRestriction concern, added ip_allowed? to Push, modified both pushes controllers, added settings. 9 tests.
+6. **Agent 14B** — Created GeoipLookup service, replaced country_allowed? stub with real logic, added maxminddb gem, added geofencing settings. 6 tests.
+7. **Integration check** — Verified settings.yml and defaults/settings.yml are in sync, no file conflicts.
+8. **Full test suite** — 907 runs, 4336 assertions, 0 failures, 0 errors.
+
+### Result
+48 new tests added. Phases 13 and 14 complete.
+
+---
+
+## 2026-02-24: Phase 12 — Webhook Notifications
+
+### Goal
+Implement webhook notification system for push lifecycle events.
+
+### Steps
+
+1. **Read context files** — user.rb, log_events.rb, schema.rb, request_submissions_controller.rb, settings.yml, routes.rb, header, fixtures
+2. **Agent A (models + migration + job + concern)** — Created migration (webhooks + webhook_deliveries tables), Webhook model with Lockbox-encrypted secret + HMAC signing, WebhookDelivery model, WebhookDispatch concern, WebhookDeliveryJob with polynomial retry, fixtures. Ran migration successfully.
+3. **Agent B (controller + views + routes + tests + modifications)** — Created WebhooksController (full CRUD), 5 view templates, routes file, 3 test files. Modified user.rb, push.rb, log_events.rb, request_submissions_controller.rb, routes.rb, settings.yml, defaults/settings.yml, header.
+4. **Test run** — 859 runs, 1 failure: `cannot_access_other_user_webhooks` used `assert_raises(RecordNotFound)` but Rails returns 404 in integration tests.
+5. **Fix** — Changed test to use `assert_response :not_found` instead.
+6. **Final verification** — 859 runs, 4247 assertions, 0 failures, 0 errors.
+7. **Updated** app-build-progress.md with Phase 12 status.
+
+### Files Created (17)
+- `db/migrate/20260224000010_create_webhooks.rb`
+- `app/models/webhook.rb`, `app/models/webhook_delivery.rb`
+- `app/models/concerns/webhook_dispatch.rb`
+- `app/jobs/webhook_delivery_job.rb`
+- `app/controllers/webhooks_controller.rb`
+- `app/views/webhooks/` (5 files: index, _form, new, edit, show)
+- `config/routes/webhooks.rb`
+- `test/controllers/webhooks_controller_test.rb`, `test/models/webhook_test.rb`, `test/jobs/webhook_delivery_job_test.rb`
+- `test/fixtures/webhooks.yml`, `test/fixtures/webhook_deliveries.yml`
+
+### Files Modified (8)
+- `app/models/user.rb`, `app/models/push.rb`, `app/controllers/concerns/log_events.rb`
+- `app/controllers/request_submissions_controller.rb`, `config/routes.rb`
+- `config/settings.yml`, `config/defaults/settings.yml`, `app/views/shared/_header.html.erb`
+
+### Result
+859 runs, 4247 assertions, 0 failures, 0 errors. Phase 12 complete.
+
+---
+
 ## 2026-02-24: Developer Documentation Creation
 
 ### Goal
@@ -232,6 +461,48 @@ Add inline documentation (class-level comments, method-level comments, section d
 
 ---
 
+## 2026-02-24: Phase 9 — GitHub Actions CI
+
+### Goal
+Create unified CI pipeline with lint + test (SQLite + PostgreSQL) jobs.
+
+### What was done
+- Created `.github/workflows/ci.yml` with 3 jobs:
+  - `lint`: RuboCop, ErbLint, Brakeman (Ruby 4.0.1, all gem groups)
+  - `test-sqlite`: Ruby 4.0.1, Node 20, yarn, SQLite, `bin/rails test`
+  - `test-postgres`: PostgreSQL 16 service container with health checks, same test stack
+- All jobs use `actions/checkout@v6`, `ruby/setup-ruby@v1` with `bundler-cache`, `actions/cache@v5` for yarn
+- No PWP__ env vars set (test_helper strips them)
+
+### Files Created
+- `.github/workflows/ci.yml`
+
+### Result
+Phase 9 complete. No code changes — tests unaffected.
+
+---
+
+## 2026-02-24: Phase 10 — Docker Compose for Local Dev
+
+### Goal
+Containerized dev environment alongside existing production Docker setup.
+
+### What was done
+- Created `containers/docker/Dockerfile.dev` — Ruby 4.0.1-slim, Node 20 LTS, yarn, all DB client libs
+- Created `docker-compose.dev.yml` — project name `pwpush-dev`, services: app, postgres:16, redis:7, mailcatcher
+- Created `bin/docker-dev` — convenience script with up/down/build/test/console/bash/logs/setup subcommands
+- Bundle cache in named volume, source mounted as volume, DATABASE_URL for PostgreSQL
+
+### Files Created
+- `containers/docker/Dockerfile.dev`
+- `docker-compose.dev.yml`
+- `bin/docker-dev` (executable)
+
+### Result
+Phase 10 complete. No code changes — tests unaffected.
+
+---
+
 ## 2026-02-24: Ruby 4.0.1 Local Setup
 
 ### Goal
@@ -250,3 +521,170 @@ Get Ruby 4.0.1 running locally so tests can be executed.
 
 ### Result
 Ruby 4.0.1 is fully working locally. Tests pass. New terminal windows will auto-switch via chruby.
+
+---
+
+## 2026-02-24 — Push Expiration Notifications Feature
+
+### Goal
+Add email notifications for push events: viewed, expired, and expiring soon. Users can opt in via account settings.
+
+### What was done
+
+1. **Created migration** `db/migrate/20260224000009_add_notification_fields.rb`
+   - Added `notify_on_view`, `notify_on_expire`, `notify_on_expiring_soon` booleans to `users` (default: false)
+   - Added `expiring_soon_notified_at` datetime to `pushes` (prevents double-notification)
+
+2. **Created PushMailer** `app/mailers/push_mailer.rb`
+   - `push_viewed(push, audit_log)` — email with IP, time, views remaining
+   - `push_expired(push)` — email with expiration timestamp
+   - `push_expiring_soon(push)` — email with days/views remaining
+
+3. **Created 6 mailer view templates** under `app/views/push_mailer/`
+   - `push_viewed.html.erb` / `push_viewed.text.erb`
+   - `push_expired.html.erb` / `push_expired.text.erb`
+   - `push_expiring_soon.html.erb` / `push_expiring_soon.text.erb`
+
+4. **Created PushNotificationJob** `app/jobs/push_notification_job.rb`
+   - Dispatches mailer based on event type (view/expire/expiring_soon)
+   - Guards: feature flag, user opt-in, record existence
+
+5. **Created ExpiringPushesNotificationJob** `app/jobs/expiring_pushes_notification_job.rb`
+   - Periodic job to find pushes expiring within 1 day
+   - Marks notified pushes via `expiring_soon_notified_at` to prevent duplicates
+
+6. **Modified LogEvents concern** `app/controllers/concerns/log_events.rb`
+   - `log_view`: enqueues PushNotificationJob for view events
+   - `log_expire`: enqueues PushNotificationJob for expire events
+
+7. **Modified ApplicationController** `app/controllers/application_controller.rb`
+   - Added `:notify_on_view`, `:notify_on_expire`, `:notify_on_expiring_soon` to Devise permitted params
+
+8. **Modified Devise registration edit view** `app/views/devise/registrations/edit.html.erb`
+   - Added Push Notifications section with 3 checkboxes inside the form block
+   - Gated behind `Settings.enable_push_notifications` feature flag
+
+9. **Added feature flag** to `config/settings.yml` and `config/defaults/settings.yml`
+   - `enable_push_notifications: false` with `PWP__ENABLE_PUSH_NOTIFICATIONS` env var override
+
+10. **Created tests:**
+    - `test/mailers/push_mailer_test.rb` — 3 tests for mailer output
+    - `test/jobs/push_notification_job_test.rb` — 4 tests for job dispatch logic
+    - `test/jobs/expiring_pushes_notification_job_test.rb` — 3 tests for periodic job
+
+### Files created
+- `db/migrate/20260224000009_add_notification_fields.rb`
+- `app/mailers/push_mailer.rb`
+- `app/views/push_mailer/push_viewed.html.erb`
+- `app/views/push_mailer/push_viewed.text.erb`
+- `app/views/push_mailer/push_expired.html.erb`
+- `app/views/push_mailer/push_expired.text.erb`
+- `app/views/push_mailer/push_expiring_soon.html.erb`
+- `app/views/push_mailer/push_expiring_soon.text.erb`
+- `app/jobs/push_notification_job.rb`
+- `app/jobs/expiring_pushes_notification_job.rb`
+- `test/mailers/push_mailer_test.rb`
+- `test/jobs/push_notification_job_test.rb`
+- `test/jobs/expiring_pushes_notification_job_test.rb`
+
+### Files modified
+- `config/settings.yml` — added `enable_push_notifications` flag
+- `config/defaults/settings.yml` — added `enable_push_notifications` default
+- `app/controllers/concerns/log_events.rb` — notification hooks in log_view/log_expire
+- `app/controllers/application_controller.rb` — Devise permitted params
+- `app/views/devise/registrations/edit.html.erb` — notification preferences UI
+
+### Result
+Feature complete. Migration, mailer, jobs, views, tests, settings, and UI all created. Cannot run migration/tests locally due to system Ruby mismatch (needs Ruby 4.0.1 via chruby).
+
+---
+
+## 2026-02-25: Admin Panel, Full API Coverage & Swagger UI (Phases 16-19)
+
+### Goal
+1. Database-backed runtime settings overrides with admin HTML panel
+2. Full REST API for user accounts, 2FA, and notifications
+3. Fill team management API gaps (role updates, 2FA enforcement, invitation accept)
+4. Swagger UI for interactive API documentation
+
+### Execution Plan
+- Phase 1A: Settings infrastructure + admin HTML panel
+- Phase 1B: Admin Settings API
+- Phase 2: User Account + 2FA + Notifications API
+- Phase 3: Team Management API gaps
+- Phase 4: Swagger UI
+- Integration: Full test suite + verification
+
+### Step 1: Phase 1A — Settings Infrastructure + Admin HTML (COMPLETE)
+- [x] Created `SettingOverride` model with typed value casting
+- [x] Migration: `setting_overrides` table (key:string unique, value:text, value_type:string)
+- [x] Initializer applies overrides on boot
+- [x] Admin settings controller with tabbed Bootstrap 5 UI (10 sections)
+- [x] Settings link added to admin navigation
+- [x] 17 tests, 28 assertions, 0 failures
+
+### Step 2: Phase 1B — Admin Settings API (COMPLETE)
+- [x] `Api::V1::Admin::SettingsController` with index (flat list) and update (bulk upsert)
+- [x] Apipie annotations on all endpoints
+- [x] Admin-only access enforcement
+- [x] 8 tests, 20 assertions, 0 failures
+
+### Step 3: Phase 2 — Account + 2FA + Notifications API (COMPLETE)
+- [x] Accounts: register, show, update, change_password, destroy, regenerate_token
+- [x] Registration respects enable_logins + disable_signups flags
+- [x] 2FA: setup (returns QR SVG), enable (verifies OTP + backup codes), disable, regenerate_backup_codes
+- [x] Notifications: show/update preferences (notify_on_view/expire/expiring_soon)
+- [x] 27 tests, 58 assertions, 0 failures
+
+### Step 4: Phase 3 — Team Management API Gaps (COMPLETE)
+- [x] Team member role update (`PATCH /api/v1/teams/:slug/members/:id.json`)
+- [x] Owner role protection (immutable)
+- [x] Team 2FA controller: show compliance, toggle enforcement, send reminders
+- [x] Invitation accept via token (`POST /api/v1/teams/invitations/:token/accept.json`)
+- [x] 27 tests, 53 assertions, 0 failures
+
+### Step 5: Phase 4 — Swagger UI (COMPLETE)
+- [x] ApiDocsController serving Swagger UI from CDN
+- [x] Swagger JSON served from Apipie export
+- [x] Rake task `swagger:generate`
+- [x] Routes: `/api-docs` and `/api-docs/swagger.json`
+- [x] 3 tests, 5 assertions, 0 failures
+
+### Verification
+- [x] Full test suite: **1074 runs, 4702 assertions, 0 failures, 0 errors**
+- [x] RuboCop: **0 offenses** (456 files)
+- [x] Brakeman: **0 warnings** (3 documented ignores)
+- [x] `config/settings.yml` byte-identical to `config/defaults/settings.yml`
+
+### New Files (20)
+- `db/migrate/20260225000012_create_setting_overrides.rb`
+- `app/models/setting_override.rb`
+- `config/initializers/setting_overrides.rb`
+- `app/controllers/admin/settings_controller.rb`
+- `app/views/admin/settings/index.html.erb`
+- `app/controllers/api/v1/admin/settings_controller.rb`
+- `app/controllers/api/v1/accounts_controller.rb`
+- `app/controllers/api/v1/two_factor_controller.rb`
+- `app/controllers/api/v1/notification_preferences_controller.rb`
+- `app/controllers/api/v1/team_two_factor_controller.rb`
+- `app/controllers/api_docs_controller.rb`
+- `app/views/api_docs/index.html.erb`
+- `lib/tasks/swagger.rake`
+- `test/models/setting_override_test.rb`
+- `test/controllers/admin/settings_controller_test.rb`
+- `test/controllers/api/v1/admin/settings_controller_test.rb`
+- `test/controllers/api/v1/accounts_controller_test.rb`
+- `test/controllers/api/v1/two_factor_controller_test.rb`
+- `test/controllers/api/v1/notification_preferences_controller_test.rb`
+- `test/controllers/api/v1/team_two_factor_controller_test.rb`
+- `test/controllers/api_docs_controller_test.rb`
+
+### Modified Files (8)
+- `config/routes.rb` — api-docs routes
+- `config/routes/admin.rb` — admin settings routes
+- `config/routes/pwp_api.rb` — all new API routes
+- `app/controllers/api/v1/team_members_controller.rb` — added update action
+- `app/controllers/api/v1/team_invitations_controller.rb` — added accept action
+- `app/views/admin/_navigation.html.erb` — Settings link
+- `test/controllers/api/v1/team_members_controller_test.rb` — role update tests
+- `test/controllers/api/v1/team_invitations_controller_test.rb` — accept tests

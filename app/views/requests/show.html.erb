@@ -48,7 +48,7 @@
       <div class="card-body">
         <h5><%= _('Share this link') %></h5>
         <div class="input-group">
-          <input type="text" class="form-control" value="<%= request_submission_url(@request) %>" readonly id="request-link">
+          <input type="text" class="form-control" value="<%= request_submission_url(@request) %>" readonly id="request-link" autocomplete="off">
           <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('request-link').value)">
             <%= _('Copy') %>
           </button>

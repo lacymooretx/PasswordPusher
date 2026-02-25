@@ -43,7 +43,7 @@ class UserBrandingsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @user.user_branding
 
     patch user_branding_path, params: {
-      user_branding: { delivery_heading: "New Branding" }
+      user_branding: {delivery_heading: "New Branding"}
     }
     assert_redirected_to edit_user_branding_path
 
@@ -55,7 +55,7 @@ class UserBrandingsControllerTest < ActionDispatch::IntegrationTest
   test "should reject invalid color" do
     sign_in @user
     patch user_branding_path, params: {
-      user_branding: { primary_color: "not-valid" }
+      user_branding: {primary_color: "not-valid"}
     }
     assert_response :unprocessable_content
   end

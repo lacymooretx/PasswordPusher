@@ -128,6 +128,11 @@ All feature controllers inherit from `BaseController`, which extends
 | `enable_qr_pushes` | `PWP__ENABLE_QR_PUSHES` | false | QR code pushes (requires logins) |
 | `allow_anonymous` | `PWP__ALLOW_ANONYMOUS` | true | Allow anonymous push creation |
 | `disable_signups` | `PWP__DISABLE_SIGNUPS` | false | Prevent new user registration |
+| `enable_audit_dashboard` | `PWP__ENABLE_AUDIT_DASHBOARD` | false | Centralized audit log dashboard |
+| `enable_push_notifications` | `PWP__ENABLE_PUSH_NOTIFICATIONS` | false | Email notifications for push events |
+| `enable_webhooks` | `PWP__ENABLE_WEBHOOKS` | false | Webhook HTTP POST notifications |
+| `enable_ip_allowlisting` | `PWP__ENABLE_IP_ALLOWLISTING` | false | IP-based push access restriction |
+| `enable_geofencing` | `PWP__ENABLE_GEOFENCING` | false | Country-based push access restriction |
 
 ---
 
@@ -143,6 +148,18 @@ All feature controllers inherit from `BaseController`, which extends
 | 6 | Teams Foundation | COMPLETE |
 | 7 | Team Policies & Configuration | COMPLETE |
 | 8 | Team 2FA Enforcement | COMPLETE |
+| 9 | GitHub Actions CI | COMPLETE |
+| 10 | Docker Compose Dev | COMPLETE |
+| 11 | Audit Dashboard + Push Notifications | COMPLETE |
+| 12 | Webhook Notifications | COMPLETE |
+| 13 | Broader API Coverage | COMPLETE |
+| 14 | IP Allowlisting + Geofencing | COMPLETE |
+| 15 | CLI Tool | COMPLETE |
+| 16 | Admin Settings Panel + API | COMPLETE |
+| 17 | User Account + 2FA + Notifications API | COMPLETE |
+| 18 | Team Management API Gaps | COMPLETE |
+| 19 | Swagger UI | COMPLETE |
 
-All features gated behind flags. 820 tests, 4178 assertions, 0 failures.
+All features gated behind flags. 1074 tests, 4702 assertions, 0 failures.
+CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

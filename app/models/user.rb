@@ -21,6 +21,7 @@ class User < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :teams, through: :memberships
   has_many :owned_teams, class_name: "Team", foreign_key: :owner_id, dependent: :destroy
+  has_many :webhooks, dependent: :destroy
 
   has_encrypted :otp_secret
 

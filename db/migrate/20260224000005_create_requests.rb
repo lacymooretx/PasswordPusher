@@ -3,8 +3,8 @@
 class CreateRequests < ActiveRecord::Migration[8.1]
   def change
     create_table :requests do |t|
-      t.references :user, null: false, foreign_key: { on_delete: :cascade }
-      t.string :url_token, null: false, index: { unique: true }
+      t.references :user, null: false, foreign_key: {on_delete: :cascade}
+      t.string :url_token, null: false, index: {unique: true}
       t.string :name, null: false
       t.text :description
 

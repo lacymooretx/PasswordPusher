@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 require "addressable/uri"
+require "ipaddr"
 
 # Core model representing a shared secret (text, file, URL, or QR code).
 # Pushes auto-expire based on view count and age limits. Content is encrypted
 # at rest via Lockbox. Settings are resolved through a priority chain:
 # Team Forced > Team Default > User Policy > Global Settings.
 class Push < ApplicationRecord
+  include WebhookDispatch
+
   enum :kind, [:text, :file, :url, :qr], validate: true
 
   validate :check_enabled_push_kinds, on: :create
@@ -92,7 +95,8 @@ class Push < ApplicationRecord
     if file?
       file_list = {}
       files.each do |file|
-        # FIXME: default host?
+        # Relative path is intentional — API consumers combine with their base URL.
+        # Full URLs would require ActionMailer's default_url_options which isn't always configured.
         file_list[file.filename] = Rails.application.routes.url_helpers.rails_blob_url(file, only_path: true)
       end
       attr_hash["files"] = file_list.to_json
@@ -113,6 +117,34 @@ class Push < ApplicationRecord
     attr_hash.delete("deletable_by_viewer") if url?
 
     Oj.dump attr_hash
+  end
+
+  def ip_allowed?(request_ip)
+    return true if allowed_ips.blank?
+
+    allowed_list = allowed_ips.split(/[,\s]+/).map(&:strip).reject(&:blank?)
+    return true if allowed_list.empty?
+
+    request_addr = IPAddr.new(request_ip)
+    allowed_list.any? do |entry|
+      IPAddr.new(entry).include?(request_addr)
+    rescue IPAddr::InvalidAddressError
+      false
+    end
+  rescue IPAddr::InvalidAddressError
+    false
+  end
+
+  def country_allowed?(request_ip)
+    return true if allowed_countries.blank?
+
+    allowed_list = allowed_countries.split(/[,\s]+/).map(&:strip).map(&:upcase).reject(&:blank?)
+    return true if allowed_list.empty?
+
+    country = GeoipLookup.country_code(request_ip)
+    return true if country.nil? # Gracefully allow if lookup fails
+
+    allowed_list.include?(country.upcase)
   end
 
   def check_files_for_file
@@ -167,11 +199,11 @@ class Push < ApplicationRecord
     self.expire_after_days = resolve_setting(:expire_after_days) unless expire_after_days.present? && !team_forces?(:expire_after_days)
     self.expire_after_views = resolve_setting(:expire_after_views) unless expire_after_views.present? && !team_forces?(:expire_after_views)
 
-    unless self.expire_after_days.between?(settings_for_kind.expire_after_days_min, settings_for_kind.expire_after_days_max)
+    unless expire_after_days.between?(settings_for_kind.expire_after_days_min, settings_for_kind.expire_after_days_max)
       self.expire_after_days = settings_for_kind.expire_after_days_default
     end
 
-    unless self.expire_after_views.between?(settings_for_kind.expire_after_views_min, settings_for_kind.expire_after_views_max)
+    unless expire_after_views.between?(settings_for_kind.expire_after_views_min, settings_for_kind.expire_after_views_max)
       self.expire_after_views = settings_for_kind.expire_after_views_default
     end
   end

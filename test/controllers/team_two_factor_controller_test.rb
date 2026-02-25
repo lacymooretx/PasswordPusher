@@ -34,7 +34,7 @@ class TeamTwoFactorControllerTest < ActionDispatch::IntegrationTest
 
   test "update enables enforcement" do
     sign_in @user
-    patch team_two_factor_path(@team), params: { require_two_factor: "1" }
+    patch team_two_factor_path(@team), params: {require_two_factor: "1"}
     assert_response :redirect
     assert @team.reload.require_two_factor?
   end
@@ -42,7 +42,7 @@ class TeamTwoFactorControllerTest < ActionDispatch::IntegrationTest
   test "update disables enforcement" do
     @team.update!(require_two_factor: true)
     sign_in @user
-    patch team_two_factor_path(@team), params: { require_two_factor: "0" }
+    patch team_two_factor_path(@team), params: {require_two_factor: "0"}
     assert_response :redirect
     assert_not @team.reload.require_two_factor?
   end

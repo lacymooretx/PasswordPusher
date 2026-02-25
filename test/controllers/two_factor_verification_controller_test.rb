@@ -21,7 +21,7 @@ class TwoFactorVerificationControllerTest < ActionDispatch::IntegrationTest
 
   test "login redirects to OTP verification when 2FA is enabled" do
     post user_session_path, params: {
-      user: { email: @user.email, password: "password12345" }
+      user: {email: @user.email, password: "password12345"}
     }
     assert_redirected_to new_users_two_factor_verification_path
   end
@@ -34,13 +34,13 @@ class TwoFactorVerificationControllerTest < ActionDispatch::IntegrationTest
   test "OTP verification with valid code signs in user" do
     # First, authenticate with password
     post user_session_path, params: {
-      user: { email: @user.email, password: "password12345" }
+      user: {email: @user.email, password: "password12345"}
     }
     assert_redirected_to new_users_two_factor_verification_path
 
     # Then verify OTP
     totp = ROTP::TOTP.new(@user.otp_secret)
-    post users_two_factor_verification_path, params: { otp_code: totp.now }
+    post users_two_factor_verification_path, params: {otp_code: totp.now}
     assert_response :redirect
     assert_not_equal new_users_two_factor_verification_path, response.location
   end
@@ -48,24 +48,24 @@ class TwoFactorVerificationControllerTest < ActionDispatch::IntegrationTest
   test "OTP verification with invalid code shows error" do
     # First, authenticate with password
     post user_session_path, params: {
-      user: { email: @user.email, password: "password12345" }
+      user: {email: @user.email, password: "password12345"}
     }
     assert_redirected_to new_users_two_factor_verification_path
 
     # Then try invalid OTP
-    post users_two_factor_verification_path, params: { otp_code: "000000" }
+    post users_two_factor_verification_path, params: {otp_code: "000000"}
     assert_response :unprocessable_content
   end
 
   test "OTP verification with backup code works" do
     # First, authenticate with password
     post user_session_path, params: {
-      user: { email: @user.email, password: "password12345" }
+      user: {email: @user.email, password: "password12345"}
     }
     assert_redirected_to new_users_two_factor_verification_path
 
     # Then verify with backup code
-    post users_two_factor_verification_path, params: { otp_code: @backup_codes.first }
+    post users_two_factor_verification_path, params: {otp_code: @backup_codes.first}
     assert_response :redirect
   end
 
@@ -82,7 +82,7 @@ class TwoFactorVerificationControllerTest < ActionDispatch::IntegrationTest
     # Use the one user whose password we know
     @user.disable_two_factor!
     post user_session_path, params: {
-      user: { email: @user.email, password: "password12345" }
+      user: {email: @user.email, password: "password12345"}
     }
     # Should sign in normally
     assert_response :redirect

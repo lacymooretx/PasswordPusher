@@ -10,7 +10,7 @@ class RequestMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: I18n._("New submission received: %{name}") % { name: @request.name }
+      subject: I18n._("New submission received: %{name}") % {name: @request.name}
     )
   end
 end

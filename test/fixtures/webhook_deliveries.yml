@@ -1,0 +1,17 @@
+successful_delivery:
+  webhook: test_webhook
+  event: "push.viewed"
+  payload: '{"event": "push.viewed"}'
+  response_code: 200
+  response_body: "OK"
+  success: true
+  attempt: 1
+
+failed_delivery:
+  webhook: test_webhook
+  event: "push.expired"
+  payload: '{"event": "push.expired"}'
+  response_code: 500
+  response_body: "Internal Server Error"
+  success: false
+  attempt: 1

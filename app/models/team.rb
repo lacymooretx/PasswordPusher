@@ -10,9 +10,9 @@ class Team < ApplicationRecord
   has_many :team_invitations, dependent: :destroy
   has_many :pushes, dependent: :nullify
 
-  validates :name, presence: true, length: { maximum: 100 }
-  validates :slug, presence: true, uniqueness: true, length: { maximum: 100 },
-    format: { with: /\A[a-z0-9][a-z0-9\-]*[a-z0-9]\z/i, message: "must contain only letters, numbers, and hyphens" }
+  validates :name, presence: true, length: {maximum: 100}
+  validates :slug, presence: true, uniqueness: true, length: {maximum: 100},
+    format: {with: /\A[a-z0-9][a-z0-9-]*[a-z0-9]\z/i, message: "must contain only letters, numbers, and hyphens"}
 
   before_validation :generate_slug, on: :create
   after_create :add_owner_as_member
@@ -52,7 +52,7 @@ class Team < ApplicationRecord
   def two_factor_compliance_percentage
     total = member_count
     return 100 if total.zero?
-    compliant = memberships.joins(:user).where(users: { otp_required_for_login: true }).count
+    compliant = memberships.joins(:user).where(users: {otp_required_for_login: true}).count
     ((compliant.to_f / total) * 100).round
   end
 

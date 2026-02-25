@@ -388,6 +388,7 @@ GEM
       turbo-rails
     marcel (1.1.0)
     matrix (0.4.3)
+    maxminddb (0.1.22)
     method_source (1.1.0)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
@@ -478,7 +479,7 @@ GEM
     omniauth-oauth2 (1.8.0)
       oauth2 (>= 1.4, < 3)
       omniauth (~> 2.0)
-    omniauth-rails_csrf_protection (1.0.2)
+    omniauth-rails_csrf_protection (2.0.1)
       actionpack (>= 4.2)
       omniauth (~> 2.0)
     orm_adapter (0.5.0)
@@ -574,8 +575,8 @@ GEM
       activesupport (>= 5.0.0)
       minitest
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.6.2)
-      loofah (~> 2.21)
+    rails-html-sanitizer (1.7.0)
+      loofah (~> 2.25)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
     rails-i18n (8.1.0)
       i18n (>= 0.7, < 2)
@@ -845,6 +846,7 @@ DEPENDENCIES
   madmin
   mail_form (>= 1.9.0)
   mailbin
+  maxminddb
   minitest
   minitest-rails (>= 6.1.0)
   minitest-reporters
@@ -853,7 +855,7 @@ DEPENDENCIES
   oj
   omniauth-google-oauth2 (~> 1.2)
   omniauth-microsoft_graph (~> 2.0)
-  omniauth-rails_csrf_protection (~> 1.0)
+  omniauth-rails_csrf_protection (~> 2.0)
   overcommit
   overmind (~> 2.5)
   pg

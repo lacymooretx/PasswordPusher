@@ -17,9 +17,14 @@ Rails.application.routes.draw do
     draw :user_brandings
     draw :requests
     draw :teams
+    draw :audit_dashboard
+    draw :webhooks
     draw :pwp_api
 
     apipie
+
+    get "api-docs", to: "api_docs#index", as: :api_docs
+    get "api-docs/swagger.json", to: "api_docs#swagger_json", as: :api_docs_swagger
 
     get "/pages/*id" => "pages#show", :as => :page, :format => false
 

@@ -3,9 +3,11 @@
 class PushesController < BaseController
   include SetPushAttributes
   include LogEvents
+  include AccessRestriction
 
   before_action :set_push, except: %i[new create index]
   before_action :check_allowed
+  before_action :check_access_restrictions, only: %i[show preliminary passphrase access]
   before_action :load_user_branding, only: %i[show preliminary passphrase]
 
   def show
@@ -354,6 +356,13 @@ class PushesController < BaseController
     end
   end
 
+  def check_access_restrictions
+    return unless @push
+
+    check_ip_restriction(@push)
+    check_geo_restriction(@push)
+  end
+
   def set_push
     @push = Push.includes(:audit_logs).find_by!(url_token: params[:id])
   rescue ActiveRecord::RecordNotFound
@@ -375,13 +384,13 @@ class PushesController < BaseController
     case params.dig(:push, :kind)
     when "url"
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views,
-        :retrieval_step, :payload, :note, :passphrase)
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
     when "file"
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
     else
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase)
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
     end
   rescue => e
     Rails.logger.error("Error in push_params: #{e.message}")

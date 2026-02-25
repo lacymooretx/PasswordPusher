@@ -28,18 +28,19 @@ class TeamTwoFactorController < BaseController
 
   # POST /teams/:team_id/two_factor/remind - Send reminder emails
   def remind
-    @team.members_without_2fa.each do |user|
+    non_compliant = @team.members_without_2fa.to_a
+    non_compliant.each do |user|
       TeamMailer.two_factor_reminder(@team, user).deliver_later
     end
     redirect_to team_two_factor_path(@team),
-      notice: I18n._("Reminder emails sent to %{count} members.") % { count: @team.members_without_2fa.count }
+      notice: I18n._("Reminder emails sent to %{count} members.") % {count: non_compliant.size}
   end
 
   private
 
   def check_feature_enabled
     unless Settings.respond_to?(:enable_teams) && Settings.enable_teams &&
-           Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor
+        Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor
       redirect_to root_path, notice: I18n._("This feature is not enabled.")
     end
   end

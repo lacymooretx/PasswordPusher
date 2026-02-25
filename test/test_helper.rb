@@ -33,6 +33,10 @@ class ActiveSupport::TestCase
     assert push.audit_logs.where(kind: kind).exists?,
       "Expected audit log of kind #{kind} for push #{push.url_token}"
   end
+
+  def last_email
+    ActionMailer::Base.deliveries.last
+  end
 end
 
 module ActionDispatch

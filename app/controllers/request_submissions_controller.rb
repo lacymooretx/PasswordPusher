@@ -23,6 +23,7 @@ class RequestSubmissionsController < ApplicationController
     if push.save
       @request.record_submission!
       RequestMailer.submission_received(@request, push).deliver_later if defined?(RequestMailer)
+      Push.dispatch_webhook("request.submitted", push) if defined?(WebhookDispatch)
       render :thank_you
     else
       flash.now[:alert] = push.errors.full_messages.join(", ")

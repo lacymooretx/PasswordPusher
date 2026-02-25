@@ -40,6 +40,16 @@ production:
     queue: recurring
     schedule: every hour at minute 12
 
+  expiring_pushes_notification:
+    class: ExpiringPushesNotificationJob
+    queue: recurring
+    schedule: every 6 hours
+
+  webhook_delivery_cleanup:
+    class: WebhookDeliveryCleanupJob
+    queue: recurring
+    schedule: every day at 2am
+
 development:
   expire_pushes:
     class: ExpirePushesJob
@@ -65,3 +75,13 @@ development:
     class: CleanupCacheJob
     queue: recurring
     schedule: every 6 hours
+
+  expiring_pushes_notification:
+    class: ExpiringPushesNotificationJob
+    queue: recurring
+    schedule: every 6 hours
+
+  webhook_delivery_cleanup:
+    class: WebhookDeliveryCleanupJob
+    queue: recurring
+    schedule: every day at 2am

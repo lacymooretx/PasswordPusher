@@ -1,0 +1,70 @@
+<% title(_('Webhooks')) %>
+
+<main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><%= _('Webhooks') %></h2>
+    <%= link_to new_webhook_path, class: "btn btn-primary" do %>
+      <em class="bi bi-plus-circle"></em> <%= _('New Webhook') %>
+    <% end %>
+  </div>
+
+  <% if @webhooks.any? %>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th><%= _('URL') %></th>
+            <th><%= _('Events') %></th>
+            <th><%= _('Status') %></th>
+            <th><%= _('Last Success') %></th>
+            <th><%= _('Failures') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @webhooks.each do |webhook| %>
+            <tr>
+              <td class="text-truncate" style="max-width: 300px;">
+                <%= link_to webhook.url, webhook_path(webhook), class: "text-decoration-none" %>
+              </td>
+              <td>
+                <% Array(webhook.events).each do |event| %>
+                  <span class="badge bg-secondary"><%= event %></span>
+                <% end %>
+              </td>
+              <td>
+                <% if webhook.enabled? %>
+                  <span class="badge bg-success"><%= _('Active') %></span>
+                <% else %>
+                  <span class="badge bg-danger"><%= _('Disabled') %></span>
+                <% end %>
+              </td>
+              <td><%= webhook.last_success_at ? l(webhook.last_success_at, format: :short) : '-' %></td>
+              <td>
+                <% if webhook.failure_count > 0 %>
+                  <span class="text-danger"><%= webhook.failure_count %></span>
+                <% else %>
+                  0
+                <% end %>
+              </td>
+              <td>
+                <%= link_to webhook_path(webhook), class: "btn btn-sm btn-outline-primary me-1" do %>
+                  <em class="bi bi-eye"></em>
+                <% end %>
+                <%= link_to edit_webhook_path(webhook), class: "btn btn-sm btn-outline-secondary me-1" do %>
+                  <em class="bi bi-pencil"></em>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-5 text-muted">
+      <em class="bi bi-broadcast fs-1 d-block mb-3"></em>
+      <p><%= _('No webhooks configured yet.') %></p>
+      <p><%= _('Webhooks notify external services when events happen to your pushes.') %></p>
+    </div>
+  <% end %>
+</main>

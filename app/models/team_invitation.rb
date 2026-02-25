@@ -7,10 +7,10 @@ class TeamInvitation < ApplicationRecord
   belongs_to :team
   belongs_to :invited_by, class_name: "User"
 
-  enum :role, { member: 0, admin: 1 }
+  enum :role, {member: 0, admin: 1}
 
-  validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :email, uniqueness: { scope: :team_id, message: "has already been invited to this team" }
+  validates :email, presence: true, format: {with: URI::MailTo::EMAIL_REGEXP}
+  validates :email, uniqueness: {scope: :team_id, message: "has already been invited to this team"}
   validates :token, presence: true, uniqueness: true
   validates :expires_at, presence: true
 

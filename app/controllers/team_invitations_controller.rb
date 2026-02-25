@@ -16,7 +16,7 @@ class TeamInvitationsController < BaseController
 
     if @invitation.save
       TeamMailer.invitation_email(@invitation).deliver_later
-      redirect_to @team, notice: I18n._("Invitation sent to %{email}.") % { email: @invitation.email }
+      redirect_to @team, notice: I18n._("Invitation sent to %{email}.") % {email: @invitation.email}
     else
       redirect_to @team, alert: @invitation.errors.full_messages.join(", ")
     end
@@ -62,7 +62,7 @@ class TeamInvitationsController < BaseController
 
     if @invitation.accept!(current_user)
       TeamMailer.member_added(@invitation.team, current_user).deliver_later
-      redirect_to team_path(@invitation.team), notice: I18n._("You have joined %{team}.") % { team: @invitation.team.name }
+      redirect_to team_path(@invitation.team), notice: I18n._("You have joined %{team}.") % {team: @invitation.team.name}
     else
       redirect_to root_path, alert: I18n._("Unable to accept invitation.")
     end

@@ -36,7 +36,7 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     assert_difference "Team.count", 1 do
       post teams_path, params: {
-        team: { name: "New Test Team", description: "A test team" }
+        team: {name: "New Test Team", description: "A test team"}
       }
     end
     assert_response :redirect
@@ -66,7 +66,7 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
   test "update changes team" do
     sign_in @user
     patch team_path(@team), params: {
-      team: { name: "Updated Name" }
+      team: {name: "Updated Name"}
     }
     assert_response :redirect
     assert_equal "Updated Name", @team.reload.name

@@ -19,7 +19,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
   test "update changes role for admin" do
     sign_in @user # owner
     patch team_membership_path(@team, @admin_membership), params: {
-      membership: { role: "member" }
+      membership: {role: "member"}
     }
     assert_response :redirect
     assert_equal "member", @admin_membership.reload.role
@@ -29,7 +29,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user # owner
     owner_membership = memberships(:owner_membership)
     patch team_membership_path(@team, owner_membership), params: {
-      membership: { role: "member" }
+      membership: {role: "member"}
     }
     assert_response :redirect
     assert_equal "owner", owner_membership.reload.role

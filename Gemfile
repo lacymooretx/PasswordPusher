@@ -87,7 +87,7 @@ gem "devise", "~> 5.0"
 gem "rotp", "~> 6.3"
 gem "omniauth-google-oauth2", "~> 1.2"
 gem "omniauth-microsoft_graph", "~> 2.0"
-gem "omniauth-rails_csrf_protection", "~> 1.0"
+gem "omniauth-rails_csrf_protection", "~> 2.0"
 gem "foreman"
 gem "lograge"
 gem "mail_form", ">= 1.9.0"
@@ -123,3 +123,4 @@ gem "mission_control-jobs", "~> 1.1.0"
 gem "overmind", "~> 2.5", group: :development
 
 gem "dotenv", "~> 3.2"
+gem "maxminddb"
