@@ -1,0 +1,40 @@
+<h4 class="mb-3 border-bottom pb-2">
+  <em class="bi bi-inbox me-2 text-primary"></em><%= _('Request Defaults') %>
+</h4>
+<p class="text-muted small mb-3"><%= _('Default values applied when team members create new requests.') %></p>
+
+<% request_defaults = @policy.dig("defaults", "requests") || {} %>
+<% request_forced = @policy.dig("forced", "requests") || {} %>
+
+<% if request_defaults.any? || request_forced.any? %>
+  <div class="card">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <% if request_defaults["expire_after_days"].present? %>
+          <dt class="col-sm-7 fw-normal text-muted small"><%= _('Expire after days') %></dt>
+          <dd class="col-sm-5 mb-2 small">
+            <span class="fw-semibold"><%= request_defaults["expire_after_days"] %></span>
+            <% if request_forced["expire_after_days"] %>
+              <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+            <% end %>
+          </dd>
+        <% end %>
+        <% if request_defaults["expire_after_views"].present? %>
+          <dt class="col-sm-7 fw-normal text-muted small"><%= _('Expire after views') %></dt>
+          <dd class="col-sm-5 mb-2 small">
+            <span class="fw-semibold"><%= request_defaults["expire_after_views"] %></span>
+            <% if request_forced["expire_after_views"] %>
+              <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+            <% end %>
+          </dd>
+        <% end %>
+      </dl>
+    </div>
+  </div>
+<% else %>
+  <div class="card">
+    <div class="card-body">
+      <p class="text-muted fst-italic mb-0"><%= _('No request defaults configured. Global settings apply.') %></p>
+    </div>
+  </div>
+<% end %>

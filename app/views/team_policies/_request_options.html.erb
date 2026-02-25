@@ -1,0 +1,55 @@
+<h4 class="mb-3 border-bottom pb-2">
+  <em class="bi bi-toggles me-2 text-primary"></em><%= _('Request Options') %>
+</h4>
+<p class="text-muted small mb-3"><%= _('Boolean options for request forms.') %></p>
+
+<% request_defaults = @policy.dig("defaults", "requests") || {} %>
+<% request_forced = @policy.dig("forced", "requests") || {} %>
+<% has_retrieval = request_defaults.key?("retrieval_step") || request_forced.key?("retrieval_step") %>
+<% has_deletable = request_defaults.key?("deletable_pushes") || request_forced.key?("deletable_pushes") %>
+
+<% if has_retrieval || has_deletable %>
+  <div class="card">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <% if has_retrieval %>
+          <dt class="col-sm-7 fw-normal text-muted small"><%= _('Retrieval step') %></dt>
+          <dd class="col-sm-5 mb-2 small">
+            <% if request_defaults.key?("retrieval_step") %>
+              <span class="badge <%= request_defaults['retrieval_step'] ? 'bg-success' : 'bg-secondary' %>">
+                <%= request_defaults['retrieval_step'] ? _('Enabled') : _('Disabled') %>
+              </span>
+            <% else %>
+              <span class="text-muted fst-italic"><%= _('Not set') %></span>
+            <% end %>
+            <% if request_forced["retrieval_step"] %>
+              <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+            <% end %>
+          </dd>
+        <% end %>
+
+        <% if has_deletable %>
+          <dt class="col-sm-7 fw-normal text-muted small"><%= _('Deletable by viewer') %></dt>
+          <dd class="col-sm-5 mb-0 small">
+            <% if request_defaults.key?("deletable_pushes") %>
+              <span class="badge <%= request_defaults['deletable_pushes'] ? 'bg-success' : 'bg-secondary' %>">
+                <%= request_defaults['deletable_pushes'] ? _('Enabled') : _('Disabled') %>
+              </span>
+            <% else %>
+              <span class="text-muted fst-italic"><%= _('Not set') %></span>
+            <% end %>
+            <% if request_forced["deletable_pushes"] %>
+              <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+            <% end %>
+          </dd>
+        <% end %>
+      </dl>
+    </div>
+  </div>
+<% else %>
+  <div class="card">
+    <div class="card-body">
+      <p class="text-muted fst-italic mb-0"><%= _('No request options configured. Global defaults apply.') %></p>
+    </div>
+  </div>
+<% end %>

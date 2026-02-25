@@ -1,0 +1,70 @@
+<h4 class="mb-3 border-bottom pb-2">
+  <em class="bi bi-toggles me-2 text-primary"></em><%= _('Push Options') %>
+</h4>
+<p class="text-muted small mb-3"><%= _('Boolean options and their forced status per push kind.') %></p>
+
+<% kind_labels = { "pw" => _("Text"), "url" => _("URL"), "file" => _("File"), "qr" => _("QR Code") } %>
+<% kind_icons = { "pw" => "bi-lock", "url" => "bi-link-45deg", "file" => "bi-file-earmark", "qr" => "bi-qr-code" } %>
+
+<% has_any_options = false %>
+<div class="row g-3">
+  <% %w[pw url file qr].each do |kind| %>
+    <% defaults = @policy.dig("defaults", kind) || {} %>
+    <% forced = @policy.dig("forced", kind) || {} %>
+    <% has_retrieval = defaults.key?("retrieval_step") || forced.key?("retrieval_step") %>
+    <% has_deletable = defaults.key?("deletable_pushes") || forced.key?("deletable_pushes") %>
+    <% next unless has_retrieval || has_deletable %>
+    <% has_any_options = true %>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center">
+          <em class="bi <%= kind_icons[kind] %> me-2 text-primary"></em>
+          <h6 class="mb-0"><%= kind_labels[kind] %> <%= _('Pushes') %></h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <% if has_retrieval %>
+              <dt class="col-sm-7 fw-normal text-muted small"><%= _('Retrieval step') %></dt>
+              <dd class="col-sm-5 mb-2 small">
+                <% if defaults.key?("retrieval_step") %>
+                  <span class="badge <%= defaults['retrieval_step'] ? 'bg-success' : 'bg-secondary' %>">
+                    <%= defaults['retrieval_step'] ? _('Enabled') : _('Disabled') %>
+                  </span>
+                <% else %>
+                  <span class="text-muted fst-italic"><%= _('Not set') %></span>
+                <% end %>
+                <% if forced["retrieval_step"] %>
+                  <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+                <% end %>
+              </dd>
+            <% end %>
+
+            <% if has_deletable %>
+              <dt class="col-sm-7 fw-normal text-muted small"><%= _('Deletable by viewer') %></dt>
+              <dd class="col-sm-5 mb-0 small">
+                <% if defaults.key?("deletable_pushes") %>
+                  <span class="badge <%= defaults['deletable_pushes'] ? 'bg-success' : 'bg-secondary' %>">
+                    <%= defaults['deletable_pushes'] ? _('Enabled') : _('Disabled') %>
+                  </span>
+                <% else %>
+                  <span class="text-muted fst-italic"><%= _('Not set') %></span>
+                <% end %>
+                <% if forced["deletable_pushes"] %>
+                  <span class="badge bg-warning text-dark ms-1 small"><em class="bi bi-lock-fill"></em> <%= _('Forced') %></span>
+                <% end %>
+              </dd>
+            <% end %>
+          </dl>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% unless has_any_options %>
+  <div class="card">
+    <div class="card-body">
+      <p class="text-muted fst-italic mb-0"><%= _('No push options configured. Global defaults apply.') %></p>
+    </div>
+  </div>
+<% end %>

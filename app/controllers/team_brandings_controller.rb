@@ -11,8 +11,11 @@ class TeamBrandingsController < BaseController
 
   layout "team_settings"
 
+  ALLOWED_TABS = %w[assets retrieval passphrase delivery request_delivery request_ready expired].freeze
+
   def edit
     @team_branding = @team.team_branding || @team.build_team_branding
+    @current_tab = ALLOWED_TABS.include?(params[:tab]) ? params[:tab] : "assets"
   end
 
   def update
@@ -49,7 +52,11 @@ class TeamBrandingsController < BaseController
     params.require(:team_branding).permit(
       :delivery_heading, :delivery_message, :delivery_footer,
       :white_label, :brand_title, :brand_tagline,
-      :primary_color, :background_color, :logo
+      :primary_color, :background_color, :logo,
+      :retrieval_heading, :retrieval_message, :retrieval_footer,
+      :passphrase_heading, :passphrase_message,
+      :request_delivery_heading, :request_delivery_message,
+      :request_ready_message, :expired_message
     )
   end
 end

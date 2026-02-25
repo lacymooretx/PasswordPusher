@@ -1,3 +1,4 @@
+import ClipboardController from "./clipboard_controller"
 import CopyController from "./copy_controller"
 import CountdownController from "./countdown_controller"
 import FormController from "./form_controller"
@@ -9,6 +10,7 @@ import PasswordsController from "./passwords_controller"
 import ThemeController from "./theme_controller"
 import { application } from "./application"
 
+application.register("clipboard", ClipboardController)
 application.register("gdpr", GdprController)
 application.register("copy", CopyController)
 application.register("countdown", CountdownController)

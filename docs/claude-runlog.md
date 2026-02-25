@@ -1,5 +1,59 @@
 # Claude Execution Runlog — PasswordPusher Pro Features
 
+## 2026-02-25: Phases 23-28 — Vendor UI Match (push.aspendora.com)
+
+### Goal
+Match the vendor's polished UI across all major pages to close visual/UX gaps.
+
+### Execution (parallel — 3 agents)
+
+**Agent A (Phases 23 + 28):**
+- Redesigned header: removed nav icons, removed tagline, added What's New link, notification bell, team avatar dropdown, two-section account dropdown
+- Redesigned footer: removed dropdown menus, flat link layout, centered logo, FAQ link with fallback
+- Added settings: `brand.whats_new_url`, `brand.faq_url`, `brand.support_url`
+- Updated 2 tests, added 2 new tests
+
+**Agent B (Phases 25 + 26):**
+- Policy page: query-param-based navigation (`?view=push_defaults` etc.), vertical list-group sidebar, single section rendering per view
+- Created 6 partials: `_push_defaults`, `_push_limits`, `_push_options`, `_request_defaults`, `_request_options`, `_hidden_features`
+- Branding page: tabbed interface (7 tabs), migration adding 9 new columns, model validations, permitted params
+
+**Agent C (Phases 24 + 27):**
+- Pushes dashboard: breadcrumb header with team context, outline filter buttons, Share button with clipboard controller
+- Overview page: Edit Account button, team details card, enhanced members table with avatars, names, 2FA status, colored role badges
+- Created `clipboard_controller.js` Stimulus controller
+
+### Files Changed
+- `app/views/shared/_header.html.erb` — full redesign
+- `app/views/shared/_footer.html.erb` — simplified flat layout
+- `app/views/shared/_dashboard_header.html.erb` — breadcrumb header
+- `app/views/pushes/index.html.erb` — share button, removed duplicate heading
+- `app/views/team_policies/show.html.erb` — two-column layout
+- `app/views/team_policies/_category_nav.html.erb` — vertical list-group
+- `app/views/team_policies/_push_defaults.html.erb` (new)
+- `app/views/team_policies/_push_limits.html.erb` (new)
+- `app/views/team_policies/_push_options.html.erb` (new)
+- `app/views/team_policies/_request_defaults.html.erb` (new)
+- `app/views/team_policies/_request_options.html.erb` (new)
+- `app/views/team_policies/_hidden_features.html.erb` (new)
+- `app/views/team_brandings/edit.html.erb` — tabbed interface
+- `app/views/teams/show.html.erb` — enhanced overview
+- `app/controllers/team_policies_controller.rb` — `@current_view` + whitelist
+- `app/controllers/team_brandings_controller.rb` — `@current_tab` + new params
+- `app/models/team_branding.rb` — new field validations
+- `app/javascript/controllers/clipboard_controller.js` (new)
+- `app/javascript/controllers/index.js` — registered clipboard
+- `config/settings.yml` + `config/defaults/settings.yml` — 3 new brand URLs
+- `db/migrate/20260225000014_add_branding_tabs_to_team_brandings.rb` (new)
+- `test/integration/navigation_test.rb` — updated + 2 new tests
+
+### Verification
+- Settings files byte-identical: confirmed
+- Migration: successful
+- Test suite: **1112 tests, 4766 assertions, 0 failures**
+
+---
+
 ## 2026-02-25: Production Deployment to docker.aspendora.com
 
 ### Goal

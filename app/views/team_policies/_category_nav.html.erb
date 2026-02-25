@@ -1,21 +1,48 @@
-<nav class="mb-4">
-  <ul class="nav nav-pills flex-wrap gap-1">
-    <li class="nav-item">
-      <a class="nav-link" href="#pushes">
-        <em class="bi bi-clipboard me-1"></em><%= _('Pushes') %>
-      </a>
-    </li>
-    <% if Settings.respond_to?(:enable_requests) && Settings.enable_requests %>
-      <li class="nav-item">
-        <a class="nav-link" href="#requests">
-          <em class="bi bi-inbox me-1"></em><%= _('Requests') %>
-        </a>
-      </li>
+<div class="list-group list-group-flush">
+  <%# Pushes section header %>
+  <div class="list-group-item bg-transparent border-0 px-0 pt-0 pb-1">
+    <h6 class="text-muted text-uppercase small fw-semibold mb-2 px-3"><%= _('Pushes') %></h6>
+  </div>
+
+  <%= link_to team_policy_path(@team, view: "push_defaults"),
+        class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'push_defaults' ? 'active' : ''}" do %>
+    <em class="bi bi-sliders me-2"></em><%= _('Defaults') %>
+  <% end %>
+
+  <%= link_to team_policy_path(@team, view: "push_limits"),
+        class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'push_limits' ? 'active' : ''}" do %>
+    <em class="bi bi-speedometer2 me-2"></em><%= _('Limits') %>
+  <% end %>
+
+  <%= link_to team_policy_path(@team, view: "push_options"),
+        class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'push_options' ? 'active' : ''}" do %>
+    <em class="bi bi-toggles me-2"></em><%= _('Options') %>
+  <% end %>
+
+  <% if Settings.respond_to?(:enable_requests) && Settings.enable_requests %>
+    <%# Requests section header %>
+    <div class="list-group-item bg-transparent border-0 px-0 pt-2 pb-1">
+      <h6 class="text-muted text-uppercase small fw-semibold mb-2 px-3"><%= _('Requests') %></h6>
+    </div>
+
+    <%= link_to team_policy_path(@team, view: "request_defaults"),
+          class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'request_defaults' ? 'active' : ''}" do %>
+      <em class="bi bi-inbox me-2"></em><%= _('Defaults') %>
     <% end %>
-    <li class="nav-item">
-      <a class="nav-link" href="#hidden-features">
-        <em class="bi bi-eye-slash me-1"></em><%= _('Hidden Features') %>
-      </a>
-    </li>
-  </ul>
-</nav>
+
+    <%= link_to team_policy_path(@team, view: "request_options"),
+          class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'request_options' ? 'active' : ''}" do %>
+      <em class="bi bi-toggles me-2"></em><%= _('Options') %>
+    <% end %>
+  <% end %>
+
+  <%# Hidden Features link %>
+  <div class="list-group-item bg-transparent border-0 px-0 pt-2 pb-1">
+    <h6 class="text-muted text-uppercase small fw-semibold mb-2 px-3"><%= _('Visibility') %></h6>
+  </div>
+
+  <%= link_to team_policy_path(@team, view: "hidden_features"),
+        class: "list-group-item list-group-item-action border-0 rounded-2 mb-1 px-3 py-2 #{@current_view == 'hidden_features' ? 'active' : ''}" do %>
+    <em class="bi bi-eye-slash me-2"></em><%= _('Hidden Features') %>
+  <% end %>
+</div>

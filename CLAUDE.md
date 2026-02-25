@@ -162,7 +162,13 @@ All feature controllers inherit from `BaseController`, which extends
 | 20 | Organization Settings Hub | COMPLETE |
 | 21 | Passphrase Password Generator | COMPLETE |
 | 22 | Teams-Oriented Navigation & Polish | COMPLETE |
+| 23 | Header & Account Dropdown Redesign | COMPLETE |
+| 24 | Pushes Dashboard Redesign | COMPLETE |
+| 25 | Policy & Settings Query Param Nav | COMPLETE |
+| 26 | Branding Page Tabbed Interface | COMPLETE |
+| 27 | Overview Page - Team Details + Members | COMPLETE |
+| 28 | Footer Redesign | COMPLETE |
 
-All features gated behind flags. 1110 tests, 4762 assertions, 0 failures.
+All features gated behind flags. 1112 tests, 4766 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

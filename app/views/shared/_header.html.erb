@@ -16,8 +16,6 @@
       </div>
       <div>
         <span class="fs-4 display-1"><%= Settings.brand.title %></span>
-        <br>
-        <span class="fs-6 text-muted"><%= Settings.brand.tagline %></span>
       </div>
     <% end %>
 
@@ -26,8 +24,7 @@
         <% if current_user %>
           <%# Top-level Pushes nav item %>
           <li class="nav-item">
-            <%= link_to pushes_path, class: "nav-link d-flex align-items-center #{'active' if current_page?(pushes_path)}" do %>
-              <em class="bi bi-send me-1"></em>
+            <%= link_to pushes_path, class: "nav-link #{'active' if current_page?(pushes_path)}" do %>
               <%= _('Pushes') %>
             <% end %>
           </li>
@@ -35,125 +32,142 @@
           <%# Top-level Requests nav item (if enabled) %>
           <% if Settings.respond_to?(:enable_requests) && Settings.enable_requests %>
             <li class="nav-item">
-              <%= link_to requests_path, class: "nav-link d-flex align-items-center #{'active' if current_page?(requests_path)}" do %>
-                <em class="bi bi-inbox me-1"></em>
+              <%= link_to requests_path, class: "nav-link #{'active' if current_page?(requests_path)}" do %>
                 <%= _('Requests') %>
               <% end %>
             </li>
           <% end %>
 
-          <%# Teams dropdown / team switcher (if enabled and user has teams) %>
-          <% if Settings.respond_to?(:enable_teams) && Settings.enable_teams %>
-            <% user_teams = current_user.teams.order(:name) %>
-            <% if user_teams.any? %>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="teamSwitcherDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <em class="bi bi-people me-1"></em>
-                  <% primary_team = user_teams.first %>
-                  <%= truncate(primary_team.name, length: 20) %>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="teamSwitcherDropdown">
-                  <% user_teams.each do |team| %>
+          <%# What's New link (if configured) %>
+          <% if Settings.brand.respond_to?(:whats_new_url) && Settings.brand.whats_new_url.present? %>
+            <li class="nav-item">
+              <%= link_to _("What's New"), Settings.brand.whats_new_url, target: "_blank", rel: "noopener noreferrer", class: "nav-link" %>
+            </li>
+          <% end %>
+
+          <%# Notification bell (if push notifications enabled) %>
+          <% if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications %>
+            <li class="nav-item me-2">
+              <a href="#" class="nav-link position-relative" aria-label="<%= _('Notifications') %>">
+                <em class="bi bi-bell"></em>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">
+                  &nbsp;
+                  <span class="visually-hidden"><%= _('new notifications') %></span>
+                </span>
+              </a>
+            </li>
+          <% end %>
+
+          <%# Account dropdown with team/user avatar %>
+          <% user_teams = current_user.teams.order(:name) if Settings.respond_to?(:enable_teams) && Settings.enable_teams %>
+          <% user_teams ||= [] %>
+          <% primary_team = user_teams.first %>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="accountDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <% if primary_team %>
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                  <%= primary_team.name.first.upcase %>
+                </span>
+                <span class="d-none d-md-inline"><%= truncate(primary_team.name, length: 20) %></span>
+              <% else %>
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                  <%= current_user.email.first.upcase %>
+                </span>
+                <span class="d-none d-md-inline"><%= truncate(current_user.email, length: 24) %></span>
+              <% end %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdownMenuLink">
+              <%# === Team Section === %>
+              <% if primary_team %>
+                <li>
+                  <h6 class="dropdown-header d-flex align-items-center">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                      <%= primary_team.name.first.upcase %>
+                    </span>
+                    <%= primary_team.name %>
+                  </h6>
+                </li>
+                <li>
+                  <%= link_to team_path(primary_team), class: "dropdown-item" do %>
+                    <%= _('Account Overview') %>
+                  <% end %>
+                </li>
+                <% if primary_team.admin?(current_user) %>
+                  <li>
+                    <%= link_to edit_team_policy_path(primary_team), class: "dropdown-item" do %>
+                      <%= _('Policy & Settings') %>
+                    <% end %>
+                  </li>
+                  <% if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding %>
                     <li>
-                      <%= link_to team_path(team), class: "dropdown-item d-flex align-items-center" do %>
-                        <em class="bi bi-people me-2"></em>
-                        <%= team.name %>
-                        <% membership = team.membership_for(current_user) %>
-                        <% if membership %>
-                          <span class="badge bg-secondary ms-auto"><%= membership.role.humanize %></span>
-                        <% end %>
+                      <%= link_to edit_team_branding_path(primary_team), class: "dropdown-item" do %>
+                        <%= _('Branding') %>
                       <% end %>
                     </li>
                   <% end %>
+                  <li>
+                    <%= link_to team_path(primary_team, anchor: 'invite'), class: "dropdown-item" do %>
+                      <%= _('Invite a User') %>
+                    <% end %>
+                  </li>
+                <% end %>
+                <% if current_user.admin? %>
+                  <li>
+                    <%= link_to admin_root_path, class: "dropdown-item" do %>
+                      <%= _('Admin Center') %>
+                    <% end %>
+                  </li>
+                <% end %>
+                <% if user_teams.size > 1 %>
                   <li><hr class="dropdown-divider"></li>
                   <li>
-                    <%= link_to teams_path, class: "dropdown-item d-flex align-items-center" do %>
-                      <em class="bi bi-grid me-2"></em>
-                      <%= _('All Teams') %>
+                    <%= link_to teams_path, class: "dropdown-item" do %>
+                      <%= _('Switch Account') %>
                     <% end %>
                   </li>
-                  <li>
-                    <%= link_to new_team_path, class: "dropdown-item d-flex align-items-center" do %>
-                      <em class="bi bi-plus-circle me-2"></em>
-                      <%= _('Create Team') %>
-                    <% end %>
-                  </li>
-                </ul>
-              </li>
-            <% else %>
-              <li class="nav-item">
-                <%= link_to teams_path, class: "nav-link d-flex align-items-center" do %>
-                  <em class="bi bi-people me-1"></em>
-                  <%= _('Teams') %>
                 <% end %>
-              </li>
-            <% end %>
-          <% end %>
-
-          <%# Account dropdown (slimmed down) %>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="accountDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <em class='bi bi-person-circle'></em>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdownMenuLink">
-              <% if current_user.admin? %>
-                <li>
-                  <%= link_to admin_root_path, class: "dropdown-item d-flex align-items-center" do %>
-                    <em class="bi bi-shield-check me-2"></em>
-                    <%= _('Administration Center') %>
-                  <% end %>
-                </li>
                 <li><hr class="dropdown-divider"></li>
-              <% end %>
-              <li>
-                <%= link_to edit_user_registration_path, class: "dropdown-item d-flex align-items-center" do %>
-                  <em class="bi bi-pencil-square me-2"></em>
-                  <%= _('Edit Login Details') %>
+              <% else %>
+                <% if current_user.admin? %>
+                  <li>
+                    <%= link_to admin_root_path, class: "dropdown-item" do %>
+                      <%= _('Admin Center') %>
+                    <% end %>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
                 <% end %>
+              <% end %>
+
+              <%# === User Section === %>
+              <li>
+                <h6 class="dropdown-header d-flex align-items-center">
+                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                    <%= current_user.email.first.upcase %>
+                  </span>
+                  <%= truncate(current_user.email, length: 28) %>
+                </h6>
               </li>
               <li>
-                <%= link_to token_user_registration_path, class: "dropdown-item d-flex align-items-center" do %>
-                  <em class="bi bi-key me-2"></em>
-                  <%= _('API Token') %>
+                <%= link_to edit_user_registration_path, class: "dropdown-item" do %>
+                  <%= _('Profile') %>
                 <% end %>
               </li>
-              <% if Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies %>
+              <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
                 <li>
-                  <%= link_to edit_user_policy_path, class: "dropdown-item d-flex align-items-center" do %>
-                    <em class="bi bi-sliders me-2"></em>
-                    <%= _('Push Defaults') %>
+                  <%= link_to setup_users_two_factor_path, class: "dropdown-item" do %>
+                    <%= _('Password & 2FA') %>
                   <% end %>
                 </li>
               <% end %>
-              <% if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding %>
-                <li>
-                  <%= link_to edit_user_branding_path, class: "dropdown-item d-flex align-items-center" do %>
-                    <em class="bi bi-palette me-2"></em>
-                    <%= _('Branding') %>
-                  <% end %>
-                </li>
-              <% end %>
-              <% if Settings.respond_to?(:enable_audit_dashboard) && Settings.enable_audit_dashboard %>
-                <li>
-                  <%= link_to audit_dashboard_index_path, class: "dropdown-item d-flex align-items-center" do %>
-                    <em class="bi bi-clipboard-data me-2"></em>
-                    <%= _('Audit Log') %>
-                  <% end %>
-                </li>
-              <% end %>
-              <% if Settings.respond_to?(:enable_webhooks) && Settings.enable_webhooks %>
-                <li>
-                  <%= link_to webhooks_path, class: "dropdown-item d-flex align-items-center" do %>
-                    <em class="bi bi-lightning me-2"></em>
-                    <%= _('Webhooks') %>
-                  <% end %>
-                </li>
-              <% end %>
+              <li>
+                <%= link_to token_user_registration_path, class: "dropdown-item" do %>
+                  <%= _('API Tokens') %>
+                <% end %>
+              </li>
               <li><hr class="dropdown-divider"></li>
               <li>
-                <%= button_to destroy_user_session_path, method: :delete, class: "dropdown-item d-flex align-items-center w-100", form_class: "d-inline w-100" do %>
-                  <em class="bi bi-box-arrow-right me-2"></em>
-                  <%= _('Log Out') %>
+                <%= button_to destroy_user_session_path, method: :delete, class: "dropdown-item w-100", form_class: "d-inline w-100" do %>
+                  <%= _('Sign Out') %>
                 <% end %>
               </li>
             </ul>

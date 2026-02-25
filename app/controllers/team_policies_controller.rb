@@ -13,8 +13,11 @@ class TeamPoliciesController < BaseController
 
   layout "team_settings"
 
+  ALLOWED_VIEWS = %w[push_defaults push_limits push_options request_defaults request_options hidden_features].freeze
+
   def show
     @policy = @team.policy || {}
+    @current_view = ALLOWED_VIEWS.include?(params[:view]) ? params[:view] : "push_defaults"
   end
 
   def edit

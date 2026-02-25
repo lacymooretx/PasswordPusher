@@ -7,19 +7,42 @@
       <p class="text-muted mb-0"><%= @team.description %></p>
     <% end %>
   </div>
+  <% if @team.admin?(current_user) %>
+    <%= link_to edit_team_path(@team), class: 'btn btn-outline-primary btn-sm' do %>
+      <em class="bi bi-pencil me-1"></em><%= _('Edit Account') %>
+    <% end %>
+  <% end %>
+</div>
+
+<!-- Team Details -->
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3 text-muted"><%= _('Data Region') %></dt>
+      <dd class="col-sm-9"><%= _('United States') %></dd>
+      <dt class="col-sm-3 text-muted"><%= _('Members') %></dt>
+      <dd class="col-sm-9"><%= @team.member_count %></dd>
+    </dl>
+  </div>
 </div>
 
 <!-- Members Section -->
 <div id="members" class="card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0"><em class="bi bi-people me-2"></em><%= _('Members') %></h5>
+    <h5 class="mb-0"><%= _('Members') %></h5>
   </div>
   <div class="card-body p-0">
+    <% colors = %w[bg-primary bg-success bg-info bg-warning bg-danger bg-secondary] %>
     <table class="table table-hover mb-0">
       <thead>
         <tr>
+          <th style="width: 50px;"></th>
+          <th><%= _('Name') %></th>
           <th><%= _('Email') %></th>
           <th><%= _('Role') %></th>
+          <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
+            <th class="text-center"><%= _('2FA') %></th>
+          <% end %>
           <th><%= _('Joined') %></th>
           <th class="text-end"><%= _('Actions') %></th>
         </tr>
@@ -28,22 +51,38 @@
         <% @memberships.each do |membership| %>
           <tr>
             <td>
-              <%= membership.user.email %>
+              <% color = colors[membership.user.email.bytes.sum % colors.length] %>
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle <%= color %> text-white fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                <%= membership.user.email[0].upcase %>
+              </span>
+            </td>
+            <td>
+              <%= membership.user.email.split('@').first.gsub(/[._]/, ' ').titleize %>
               <% if membership.user == current_user %>
                 <span class="badge bg-info"><%= _('You') %></span>
               <% end %>
             </td>
+            <td><%= membership.user.email %></td>
             <td>
               <% if @team.admin?(current_user) && !membership.owner? && membership.user != current_user %>
                 <%= form_with(model: membership, url: team_membership_path(@team, membership), method: :patch, class: 'd-inline') do |f| %>
                   <%= f.select :role, Membership.roles.keys.reject { |r| r == "owner" }.map { |r| [r.humanize, r] }, {}, class: 'form-select form-select-sm d-inline-block w-auto', onchange: 'this.form.submit()' %>
                 <% end %>
               <% else %>
-                <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'warning' : 'secondary' %>">
+                <span class="badge bg-<%= membership.owner? ? 'primary' : membership.admin? ? 'info' : 'secondary' %>">
                   <%= membership.role.humanize %>
                 </span>
               <% end %>
             </td>
+            <% if Settings.respond_to?(:enable_two_factor) && Settings.enable_two_factor %>
+              <td class="text-center">
+                <% if membership.user.otp_required_for_login? %>
+                  <em class="bi bi-check-circle-fill text-success"></em>
+                <% else %>
+                  <em class="bi bi-x-circle text-muted"></em>
+                <% end %>
+              </td>
+            <% end %>
             <td><%= I18n.l membership.created_at.in_time_zone(Settings.timezone), format: :short %></td>
             <td class="text-end">
               <% current_membership = @team.membership_for(current_user) %>
@@ -118,7 +157,7 @@
 <!-- Team Pushes Section -->
 <div class="card mb-4">
   <div class="card-header">
-    <h5 class="mb-0"><em class="bi bi-clipboard-data me-2"></em><%= _('Team Pushes') %></h5>
+    <h5 class="mb-0"><%= _('Team Pushes') %></h5>
   </div>
   <div class="card-body">
     <% if @pushes.empty? %>

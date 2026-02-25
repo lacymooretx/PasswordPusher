@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_000013) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_000014) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -268,7 +268,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_000013) do
     t.string "delivery_footer"
     t.string "delivery_heading"
     t.text "delivery_message"
+    t.text "expired_message"
+    t.string "passphrase_heading"
+    t.text "passphrase_message"
     t.string "primary_color"
+    t.string "request_delivery_heading"
+    t.text "request_delivery_message"
+    t.text "request_ready_message"
+    t.string "retrieval_footer"
+    t.string "retrieval_heading"
+    t.text "retrieval_message"
     t.integer "team_id", null: false
     t.datetime "updated_at", null: false
     t.boolean "white_label", default: false

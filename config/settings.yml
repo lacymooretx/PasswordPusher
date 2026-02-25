@@ -899,6 +899,36 @@ brand:
   # terms_url:
   # best_practices_url:
 
+  ### What's New Link
+  #
+  # Optional URL for a "What's New" link in the header navigation.
+  # Leave blank/unset to hide the link.
+  #
+  # Environment variable override:
+  # PWP__BRAND__WHATS_NEW_URL='https://example.com/changelog'
+  #
+  # whats_new_url:
+
+  ### FAQ URL
+  #
+  # Optional URL for the FAQ link in the footer.
+  # Defaults to PasswordPusher documentation if not set.
+  #
+  # Environment variable override:
+  # PWP__BRAND__FAQ_URL='https://example.com/faq'
+  #
+  # faq_url:
+
+  ### Support URL
+  #
+  # Optional URL for a Support link in the footer.
+  # Leave blank/unset to hide the link.
+  #
+  # Environment variable override:
+  # PWP__BRAND__SUPPORT_URL='https://example.com/support'
+  #
+  # support_url:
+
   ### Site logo
   #
   # ..for both a light and dark theme

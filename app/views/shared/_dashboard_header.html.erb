@@ -1,16 +1,30 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark rounded-3 mb-5">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">📊 <%= _('Dashboard') %></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <div class="btn-group">
-        <%= link_to _('All'), pushes_path, class: "btn btn-primary #{ 'active' if @filter.blank? }" %>
-        <%= link_to _('Active'), pushes_path(filter: :active), class: "btn btn-primary #{ 'active' if @filter == "active" }" %>
-        <%= link_to _('Expired'), pushes_path(filter: :expired), class: "btn btn-primary #{ 'active' if @filter == "expired" }" %>
-      </div>
-      <%= link_to _('New'), new_push_path, class: "btn btn-success ms-3" %>
+<div class="mb-4">
+  <div class="d-flex justify-content-between align-items-start mb-2">
+    <div>
+      <h1 class="h3 mb-1">
+        <% if Settings.respond_to?(:enable_teams) && Settings.enable_teams && current_user&.teams&.any? %>
+          <% primary_team = current_user.teams.order(:name).first %>
+          <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-2" style="width: 32px; height: 32px; font-size: 0.85rem;">
+            <%= primary_team.name[0].upcase %>
+          </span>
+          <span class="text-muted fw-normal"><%= primary_team.name %></span>
+          <span class="text-muted fw-normal">/</span>
+        <% end %>
+        <%= _('Pushes') %>
+      </h1>
+      <% if Settings.respond_to?(:enable_teams) && Settings.enable_teams && current_user&.teams&.any? %>
+        <p class="text-muted mb-0"><%= _('This page shows all pushes created under %{team}.') % { team: primary_team.name } %></p>
+      <% end %>
     </div>
+    <%= link_to new_push_path, class: "btn btn-primary" do %>
+      <em class="bi bi-plus-lg me-1"></em><%= _('New Push') %>
+    <% end %>
   </div>
-</nav>
+
+  <!-- Filter Tabs -->
+  <div class="btn-group" role="group" aria-label="<%= _('Push filters') %>">
+    <%= link_to _('All'), pushes_path, class: "btn btn-outline-primary #{'active' if @filter.blank?}" %>
+    <%= link_to _('Active'), pushes_path(filter: :active), class: "btn btn-outline-primary #{'active' if @filter == 'active'}" %>
+    <%= link_to _('Expired'), pushes_path(filter: :expired), class: "btn btn-outline-primary #{'active' if @filter == 'expired'}" %>
+  </div>
+</div>

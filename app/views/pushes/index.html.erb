@@ -15,22 +15,10 @@
     </p>
     <p class='text-center'>
       <%= link_to new_push_path(tab: "text"), class: 'btn btn-primary' do %>
-        <em class="bi bi-stars"></em>
         <%= _('Push a Password Now') %>
       <% end %>
     </p>
   <% else %>
-    <div class="text-center my-3">
-      <h1 class="display-6">
-        <% if @filter == "active" %>
-          <%= _('Active Pushes') %>
-        <% elsif @filter == "expired" %>
-          <%= _('Expired Pushes') %>
-        <% else %>
-          <%= _('All Pushes') %>
-        <% end %>
-      </h1>
-    </div>
     <table class="table table-striped table-bordered table-sm table-hover caption-top align-middle" aria-label='<%= _('Active Pushes') %>'>
       <thead>
       <tr>
@@ -82,6 +70,8 @@
                 <%= link_to preview_push_path(push), class: 'btn btn-primary btn-sm', rel: 'nofollow' do %>
                   <%= _('Preview') %>
                 <% end %>
+                <%= button_tag _('Share'), type: 'button', class: 'btn btn-outline-secondary btn-sm',
+                  data: { controller: 'clipboard', clipboard_text_value: push_url(push), action: 'click->clipboard#copy' } %>
                 <%= link_to edit_push_path(push), class: 'btn btn-warning btn-sm', rel: 'nofollow' do %>
                   <%= _('Edit') %>
                 <% end %>

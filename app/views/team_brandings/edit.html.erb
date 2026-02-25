@@ -3,9 +3,55 @@
 <div class="d-flex justify-content-between align-items-start mb-4">
   <div>
     <h1 class="h3 mb-1"><%= _('Team Branding') %></h1>
-    <p class="text-muted mb-0"><%= _('Customize how push delivery pages appear to recipients of this team\'s pushes.') %></p>
+    <p class="text-muted mb-0"><%= _('Customize how pages appear to recipients.') %></p>
   </div>
 </div>
+
+<%# Tabs %>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "assets"),
+          class: "nav-link #{'active' if @current_tab == 'assets'}" do %>
+      <em class="bi bi-palette me-1"></em><%= _('Assets') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "retrieval"),
+          class: "nav-link #{'active' if @current_tab == 'retrieval'}" do %>
+      <em class="bi bi-hand-index me-1"></em><%= _('1-Click Retrieval') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "passphrase"),
+          class: "nav-link #{'active' if @current_tab == 'passphrase'}" do %>
+      <em class="bi bi-key me-1"></em><%= _('Passphrase') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "delivery"),
+          class: "nav-link #{'active' if @current_tab == 'delivery'}" do %>
+      <em class="bi bi-send me-1"></em><%= _('Push Delivery') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "request_delivery"),
+          class: "nav-link #{'active' if @current_tab == 'request_delivery'}" do %>
+      <em class="bi bi-inbox me-1"></em><%= _('Request Delivery') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "request_ready"),
+          class: "nav-link #{'active' if @current_tab == 'request_ready'}" do %>
+      <em class="bi bi-check-circle me-1"></em><%= _('Request Ready') %>
+    <% end %>
+  </li>
+  <li class="nav-item">
+    <%= link_to edit_team_branding_path(@team, tab: "expired"),
+          class: "nav-link #{'active' if @current_tab == 'expired'}" do %>
+      <em class="bi bi-clock-history me-1"></em><%= _('Expired') %>
+    <% end %>
+  </li>
+</ul>
 
 <%= form_for(@team_branding, url: team_branding_path(@team), html: { method: :patch, multipart: true }) do |f| %>
   <% if @team_branding.errors.any? %>
@@ -16,77 +62,186 @@
     </div>
   <% end %>
 
-  <p class="my-3 py-3 lead border-bottom"><%= _('Delivery Page') %></p>
-
-  <div class="mb-3">
-    <%= f.label :delivery_heading, _('Heading'), class: "form-label" %>
-    <%= f.text_field :delivery_heading, class: "form-control", placeholder: _("e.g. Secure message from Acme Corp") %>
-    <div class="form-text"><%= _("Shown at the top of the delivery page when recipients view team pushes.") %></div>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :delivery_message, _('Message'), class: "form-label" %>
-    <%= f.text_area :delivery_message, class: "form-control", rows: 3, placeholder: _("e.g. This secure message was sent by our team...") %>
-    <div class="form-text"><%= _("Optional message displayed below the heading.") %></div>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :delivery_footer, _('Footer Text'), class: "form-label" %>
-    <%= f.text_field :delivery_footer, class: "form-control", placeholder: _("e.g. © 2026 Acme Corp") %>
-  </div>
-
-  <p class="my-3 py-3 lead border-bottom"><%= _('Logo') %></p>
-
-  <div class="mb-3">
-    <% if @team_branding.logo.attached? %>
-      <div class="mb-2">
-        <strong><%= _('Current logo:') %></strong><br>
-        <%= image_tag @team_branding.logo, style: "max-height: 80px; max-width: 200px;" %>
-      </div>
-    <% end %>
-    <%= f.label :logo, _('Upload Logo'), class: "form-label" %>
-    <%= f.file_field :logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
-    <div class="form-text"><%= _("PNG, JPEG, SVG, or WebP. Displayed on team delivery pages.") %></div>
-  </div>
-
-  <p class="my-3 py-3 lead border-bottom"><%= _('White Label') %></p>
-
-  <div class="form-check mb-3">
-    <%= f.check_box :white_label, class: "form-check-input" %>
-    <%= f.label :white_label, _('Enable white-label mode'), class: "form-check-label" %>
-    <div class="form-text"><%= _("Hides PasswordPusher branding and replaces it with your team's custom branding.") %></div>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :brand_title, _('Brand Title'), class: "form-label" %>
-    <%= f.text_field :brand_title, class: "form-control", placeholder: _("e.g. Acme Secure Share") %>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :brand_tagline, _('Brand Tagline'), class: "form-label" %>
-    <%= f.text_field :brand_tagline, class: "form-control", placeholder: _("e.g. Secure password sharing for teams") %>
-  </div>
-
-  <p class="my-3 py-3 lead border-bottom"><%= _('Colors') %></p>
-
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <%= f.label :primary_color, _('Primary Color'), class: "form-label" %>
-      <div class="input-group">
-        <%= f.color_field :primary_color, class: "form-control form-control-color", value: @team_branding.primary_color || "#0d6efd" %>
-        <%= f.text_field :primary_color, class: "form-control", placeholder: "#0d6efd", id: nil %>
+  <% case @current_tab %>
+  <% when "assets" %>
+    <%# Logo %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Logo') %></h6></div>
+      <div class="card-body">
+        <% if @team_branding.logo.attached? %>
+          <div class="mb-3">
+            <strong class="small text-muted"><%= _('Current logo:') %></strong><br>
+            <%= image_tag @team_branding.logo, style: "max-height: 80px; max-width: 200px;", class: "mt-1" %>
+          </div>
+        <% end %>
+        <%= f.label :logo, _('Upload Logo'), class: "form-label" %>
+        <%= f.file_field :logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
+        <div class="form-text"><%= _("PNG, JPEG, SVG, or WebP. Displayed on team delivery pages.") %></div>
       </div>
     </div>
-    <div class="col-md-6">
-      <%= f.label :background_color, _('Background Color'), class: "form-label" %>
-      <div class="input-group">
-        <%= f.color_field :background_color, class: "form-control form-control-color", value: @team_branding.background_color || "#ffffff" %>
-        <%= f.text_field :background_color, class: "form-control", placeholder: "#ffffff", id: nil %>
+
+    <%# Brand Identity %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Brand Identity') %></h6></div>
+      <div class="card-body">
+        <div class="mb-3">
+          <%= f.label :brand_title, _('Brand Title'), class: "form-label" %>
+          <%= f.text_field :brand_title, class: "form-control", placeholder: _("e.g. Acme Secure Share") %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :brand_tagline, _('Brand Tagline'), class: "form-label" %>
+          <%= f.text_field :brand_tagline, class: "form-control", placeholder: _("e.g. Secure password sharing for teams") %>
+        </div>
+
+        <div class="form-check">
+          <%= f.check_box :white_label, class: "form-check-input" %>
+          <%= f.label :white_label, _('Enable white-label mode'), class: "form-check-label" %>
+          <div class="form-text"><%= _("Hides PasswordPusher branding and replaces it with your team's custom branding.") %></div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <%# Colors %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Colors') %></h6></div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :primary_color, _('Primary Color'), class: "form-label" %>
+            <div class="input-group">
+              <%= f.color_field :primary_color, class: "form-control form-control-color", value: @team_branding.primary_color || "#0d6efd" %>
+              <%= f.text_field :primary_color, class: "form-control", placeholder: "#0d6efd", id: nil %>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :background_color, _('Background Color'), class: "form-label" %>
+            <div class="input-group">
+              <%= f.color_field :background_color, class: "form-control form-control-color", value: @team_branding.background_color || "#ffffff" %>
+              <%= f.text_field :background_color, class: "form-control", placeholder: "#ffffff", id: nil %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <% when "retrieval" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('1-Click Retrieval Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the page shown when recipients click a 1-click retrieval link.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :retrieval_heading, _('Heading'), class: "form-label" %>
+          <%= f.text_field :retrieval_heading, class: "form-control", placeholder: _("e.g. Click to reveal your secure message") %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :retrieval_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :retrieval_message, class: "form-control", rows: 3, placeholder: _("e.g. Your message will be displayed after clicking the button below.") %>
+          <div class="form-text"><%= _("Displayed below the heading on the retrieval page.") %></div>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :retrieval_footer, _('Footer Text'), class: "form-label" %>
+          <%= f.text_field :retrieval_footer, class: "form-control", placeholder: _("e.g. Powered by Acme Corp") %>
+        </div>
+      </div>
+    </div>
+
+  <% when "passphrase" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Passphrase Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the page shown when recipients must enter a passphrase.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :passphrase_heading, _('Heading'), class: "form-label" %>
+          <%= f.text_field :passphrase_heading, class: "form-control", placeholder: _("e.g. Enter your passphrase") %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :passphrase_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :passphrase_message, class: "form-control", rows: 3, placeholder: _("e.g. A passphrase is required to view this secure message.") %>
+          <div class="form-text"><%= _("Displayed on the passphrase entry page.") %></div>
+        </div>
+      </div>
+    </div>
+
+  <% when "delivery" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Push Delivery Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the page shown when recipients view a push.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :delivery_heading, _('Heading'), class: "form-label" %>
+          <%= f.text_field :delivery_heading, class: "form-control", placeholder: _("e.g. Secure message from Acme Corp") %>
+          <div class="form-text"><%= _("Shown at the top of the delivery page when recipients view team pushes.") %></div>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :delivery_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :delivery_message, class: "form-control", rows: 3, placeholder: _("e.g. This secure message was sent by our team...") %>
+          <div class="form-text"><%= _("Optional message displayed below the heading.") %></div>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :delivery_footer, _('Footer Text'), class: "form-label" %>
+          <%= f.text_field :delivery_footer, class: "form-control", placeholder: _("e.g. \u00A9 2026 Acme Corp") %>
+        </div>
+      </div>
+    </div>
+
+  <% when "request_delivery" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Request Delivery Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the page shown when someone receives a request form.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :request_delivery_heading, _('Heading'), class: "form-label" %>
+          <%= f.text_field :request_delivery_heading, class: "form-control", placeholder: _("e.g. Secure submission requested") %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :request_delivery_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :request_delivery_message, class: "form-control", rows: 3, placeholder: _("e.g. Please submit the requested information using the form below.") %>
+          <div class="form-text"><%= _("Displayed on the request delivery page.") %></div>
+        </div>
+      </div>
+    </div>
+
+  <% when "request_ready" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Request Ready Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the confirmation shown after a request submission is completed.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :request_ready_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :request_ready_message, class: "form-control", rows: 3, placeholder: _("e.g. Thank you! Your submission has been securely received.") %>
+          <div class="form-text"><%= _("Displayed after a request submission is completed.") %></div>
+        </div>
+      </div>
+    </div>
+
+  <% when "expired" %>
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="mb-0"><%= _('Expired Page') %></h6></div>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><%= _('Customize the page shown when a push or request has expired.') %></p>
+
+        <div class="mb-3">
+          <%= f.label :expired_message, _('Message'), class: "form-label" %>
+          <%= f.text_area :expired_message, class: "form-control", rows: 3, placeholder: _("e.g. This link has expired and is no longer available.") %>
+          <div class="form-text"><%= _("Displayed when a push or request link has expired.") %></div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <div class="my-3">
-    <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Save Team Branding') %></button>
+    <button class="w-100 btn btn-lg btn-primary mt-3" type="submit"><%= _('Save') %></button>
   </div>
 <% end %>

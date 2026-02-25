@@ -15,6 +15,8 @@ class NavigationTest < ActionDispatch::IntegrationTest
     Settings.enable_logins = false
     Settings.enable_teams = false
     Settings.enable_requests = false
+    # Reset brand settings that may have been changed
+    Settings.brand.whats_new_url = nil if Settings.brand.respond_to?(:whats_new_url=)
   end
 
   # --- Header Navigation ---
@@ -42,21 +44,22 @@ class NavigationTest < ActionDispatch::IntegrationTest
     assert_select "a.nav-link", text: /Requests/, count: 0
   end
 
-  test "header shows team switcher when user has teams" do
+  test "header shows account dropdown with team info when user has teams" do
     Settings.enable_teams = true
     sign_in @user
     get root_path
     assert_response :success
-    assert_select "#teamSwitcherDropdown"
+    assert_select "#accountDropdownMenuLink"
+    # Team section should be present in dropdown
+    assert_select ".dropdown-menu .dropdown-header", minimum: 1
   end
 
-  test "header shows simple Teams link when user has no teams" do
+  test "header shows account dropdown without team section when user has no teams" do
     Settings.enable_teams = true
     sign_in users(:luca)
     get root_path
     assert_response :success
-    assert_select "#teamSwitcherDropdown", count: 0
-    assert_select "a.nav-link", text: /Teams/
+    assert_select "#accountDropdownMenuLink"
   end
 
   test "header shows account dropdown" do
@@ -70,6 +73,13 @@ class NavigationTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "a.nav-link", text: /Log In/
+  end
+
+  test "header hides What's New link when URL not set" do
+    sign_in @user
+    get root_path
+    assert_response :success
+    assert_select "a.nav-link", text: /What's New/, count: 0
   end
 
   # --- Team Index ---
@@ -88,5 +98,11 @@ class NavigationTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "a", text: /API Documentation/
+  end
+
+  test "footer shows FAQ link" do
+    get root_path
+    assert_response :success
+    assert_select "a", text: /FAQ/
   end
 end

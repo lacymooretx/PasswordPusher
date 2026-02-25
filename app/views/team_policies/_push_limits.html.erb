@@ -1,0 +1,44 @@
+<h4 class="mb-3 border-bottom pb-2">
+  <em class="bi bi-speedometer2 me-2 text-primary"></em><%= _('Push Limits') %>
+</h4>
+<p class="text-muted small mb-3"><%= _('Maximum values that team members cannot exceed when creating pushes.') %></p>
+
+<% kind_labels = { "pw" => _("Text"), "url" => _("URL"), "file" => _("File"), "qr" => _("QR Code") } %>
+<% kind_icons = { "pw" => "bi-lock", "url" => "bi-link-45deg", "file" => "bi-file-earmark", "qr" => "bi-qr-code" } %>
+
+<% has_any_limits = false %>
+<div class="row g-3">
+  <% %w[pw url file qr].each do |kind| %>
+    <% limits = @policy.dig("limits", kind) || {} %>
+    <% next if limits.empty? %>
+    <% has_any_limits = true %>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center">
+          <em class="bi <%= kind_icons[kind] %> me-2 text-primary"></em>
+          <h6 class="mb-0"><%= kind_labels[kind] %> <%= _('Pushes') %></h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <% if limits["expire_after_days_max"].present? %>
+              <dt class="col-sm-7 fw-normal text-muted small"><%= _('Max days') %></dt>
+              <dd class="col-sm-5 mb-2 small fw-semibold"><%= limits["expire_after_days_max"] %></dd>
+            <% end %>
+            <% if limits["expire_after_views_max"].present? %>
+              <dt class="col-sm-7 fw-normal text-muted small"><%= _('Max views') %></dt>
+              <dd class="col-sm-5 mb-0 small fw-semibold"><%= limits["expire_after_views_max"] %></dd>
+            <% end %>
+          </dl>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% unless has_any_limits %>
+  <div class="card">
+    <div class="card-body">
+      <p class="text-muted fst-italic mb-0"><%= _('No limits configured. Global defaults apply.') %></p>
+    </div>
+  </div>
+<% end %>

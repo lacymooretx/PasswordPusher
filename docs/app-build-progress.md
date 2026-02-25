@@ -26,6 +26,52 @@
 | 20 | Organization Settings Hub | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 21 | Passphrase Password Generator | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 22 | Teams-Oriented Navigation & Polish | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 23 | Header & Account Dropdown Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 24 | Pushes Dashboard Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 25 | Policy & Settings Query Param Nav | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 26 | Branding Page Tabbed Interface | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 27 | Overview Page - Team Details + Members | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 28 | Footer Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
+
+---
+
+## Phases 23-28: Vendor UI Match (push.aspendora.com)
+
+### Goal
+Match the vendor's polished UI across header, dropdown, pushes dashboard, policy page, branding page, overview page, and footer.
+
+### Phase 23: Header & Account Dropdown Redesign
+- [x] `app/views/shared/_header.html.erb` — removed nav icons, removed tagline, added What's New link, notification bell, team avatar dropdown, two-section account dropdown (team + user)
+- [x] `config/settings.yml` + `config/defaults/settings.yml` — added `brand.whats_new_url`, `brand.faq_url`, `brand.support_url` (byte-identical)
+- [x] `test/integration/navigation_test.rb` — updated 2 tests, added 2 new tests
+
+### Phase 24: Pushes Dashboard Redesign
+- [x] `app/views/shared/_dashboard_header.html.erb` — replaced dark navbar with clean breadcrumb header (team avatar + name / Pushes), outline filter buttons, New Push button
+- [x] `app/views/pushes/index.html.erb` — removed duplicate heading, added Share button (clipboard copy)
+- [x] `app/javascript/controllers/clipboard_controller.js` — new Stimulus controller for copy-to-clipboard
+- [x] `app/javascript/controllers/index.js` — registered clipboard controller
+
+### Phase 25: Policy & Settings Query Param Navigation
+- [x] `app/controllers/team_policies_controller.rb` — added `@current_view` from `params[:view]` with `ALLOWED_VIEWS` whitelist
+- [x] `app/views/team_policies/_category_nav.html.erb` — replaced horizontal nav-pills with vertical list-group sidebar
+- [x] `app/views/team_policies/show.html.erb` — two-column layout, single section rendering per view
+- [x] New partials: `_push_defaults`, `_push_limits`, `_push_options`, `_request_defaults`, `_request_options`, `_hidden_features`
+
+### Phase 26: Branding Page Tabbed Interface
+- [x] `db/migrate/20260225000014_add_branding_tabs_to_team_brandings.rb` — added 9 new columns
+- [x] `app/models/team_branding.rb` — added validations for new fields
+- [x] `app/controllers/team_brandings_controller.rb` — added `@current_tab`, permitted new params
+- [x] `app/views/team_brandings/edit.html.erb` — 7 tabs: Assets, 1-Click Retrieval, Passphrase, Push Delivery, Request Delivery, Request Ready, Expired
+
+### Phase 27: Overview Page - Team Details + Members Table
+- [x] `app/views/teams/show.html.erb` — added Edit Account button, team details card (Data Region, Members count), enhanced members table with avatar, name, 2FA status, colored role badges
+
+### Phase 28: Footer Redesign
+- [x] `app/views/shared/_footer.html.erb` — removed Resources/About dropdowns, flat link layout (Best Practices, API Docs, FAQ, Help), centered logo, legal links, copyright
+
+### Verification
+- 1112 tests, 4766 assertions, 0 failures
+- Settings files byte-identical: confirmed
 
 ---
 
