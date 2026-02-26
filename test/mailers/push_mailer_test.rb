@@ -24,4 +24,21 @@ class PushMailerTest < ActionMailer::TestCase
     assert_equal ["giuliana@example.org"], email.to
     assert_equal "Your push is expiring soon", email.subject
   end
+
+  test "push_dispatched sends email to recipient" do
+    push = pushes(:test_push)
+    secret_url = "https://pwpush.test/p/#{push.url_token}"
+    email = PushMailer.push_dispatched(push, secret_url, "recipient@example.com")
+    assert_equal ["recipient@example.com"], email.to
+    assert_equal "A secret has been shared with you", email.subject
+    assert_match secret_url, email.body.encoded
+  end
+
+  test "push_dispatched includes push name when present" do
+    push = pushes(:test_push)
+    push.name = "Server Credentials"
+    secret_url = "https://pwpush.test/p/#{push.url_token}"
+    email = PushMailer.push_dispatched(push, secret_url, "recipient@example.com")
+    assert_match "Server Credentials", email.body.encoded
+  end
 end

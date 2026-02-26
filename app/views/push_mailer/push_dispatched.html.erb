@@ -1,0 +1,8 @@
+<h2>A secret has been shared with you</h2>
+<% if @push.name.present? %>
+  <p><strong>Name:</strong> <%= @push.name %></p>
+<% end %>
+<p>Use the following secret link to access it:</p>
+<p><a href="<%= @secret_url %>"><%= @secret_url %></a></p>
+<p><strong>Expires in:</strong> <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %></p>
+<p><em>This link will be permanently deleted after expiration.</em></p>

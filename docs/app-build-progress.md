@@ -32,6 +32,7 @@
 | 26 | Branding Page Tabbed Interface | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 27 | Overview Page - Team Details + Members | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 28 | Footer Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
+| 29 | New Push Page Redesign + Auto Dispatch | COMPLETE | 2026-02-26 | 2026-02-26 |
 
 ---
 
@@ -931,3 +932,49 @@ Interactive API documentation via Swagger UI served at `/api-docs`.
 - [x] `config/settings.yml` and `config/defaults/settings.yml` remain in sync
 
 **PHASE 16-19 COMPLETE — awaiting approval to proceed.**
+
+---
+
+## Phase 29: New Push Page Redesign + Auto Dispatch
+
+### Goal
+Redesign the text/password push form with better UX, add file attachment support for text pushes, and implement Auto Dispatch email feature.
+
+### Deliverables
+- [x] Feature flag `enable_auto_dispatch` + `auto_dispatch.max_recipients` setting
+- [x] Tab label changed from "Passwords" to "Passwords & Text"
+- [x] Compartmentalization tip below character counter
+- [x] File attachment section on text pushes (when `enable_file_pushes && user_signed_in?`)
+- [x] Passphrase Lockdown restyled with `<fieldset>` and `<legend>`
+- [x] Collapsible "Additional Options" with Auto Dispatch email input
+- [x] Sidebar redesign: better labels, info bullets with icons, account policy link
+- [x] Controller: `files: []` added to text push params, dispatch email processing
+- [x] `AutoDispatchJob` — background job to send secret link emails
+- [x] `PushMailer#push_dispatched` — HTML and text email templates
+- [x] Show page: display attached files on text pushes
+- [x] Model: file count validation for text pushes
+- [x] 11 new tests (5 integration, 4 job, 2 mailer)
+
+### Files Created
+- `app/jobs/auto_dispatch_job.rb`
+- `app/views/push_mailer/push_dispatched.html.erb`
+- `app/views/push_mailer/push_dispatched.text.erb`
+- `test/integration/password/password_with_files_test.rb`
+- `test/jobs/auto_dispatch_job_test.rb`
+
+### Files Modified
+- `config/settings.yml` + `config/defaults/settings.yml` — `enable_auto_dispatch`, `auto_dispatch.max_recipients`
+- `app/views/shared/_topnav.html.erb` — tab label
+- `app/views/pushes/_form.html.erb` — full redesign
+- `app/controllers/pushes_controller.rb` — files in text params, dispatch logic
+- `app/models/push.rb` — `check_optional_files_for_text` validation
+- `app/mailers/push_mailer.rb` — `push_dispatched` method
+- `app/views/pushes/show.html.erb` — file display for text pushes
+- `test/mailers/push_mailer_test.rb` — 2 new tests
+- `test/controllers/password_controller_test.rb` — updated assertion text
+
+### Verification
+- [x] **1123 runs, 4798 assertions, 0 failures, 0 errors**
+- [x] `config/settings.yml` and `config/defaults/settings.yml` remain byte-identical
+
+**PHASE 29 COMPLETE — awaiting approval to proceed.**

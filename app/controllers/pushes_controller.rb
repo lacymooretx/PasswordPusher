@@ -136,6 +136,18 @@ class PushesController < BaseController
     if @push.save
       log_creation(@push)
 
+      # Auto Dispatch: email the secret link to specified recipients
+      if Settings.enable_auto_dispatch && user_signed_in? && params[:dispatch_emails].present?
+        emails = params[:dispatch_emails].split(/[,;\s]+/).map(&:strip).reject(&:blank?)
+        valid_emails = emails.select { |e| e.match?(URI::MailTo::EMAIL_REGEXP) }
+
+        if valid_emails.any?
+          secret_url = helpers.secret_url(@push)
+          AutoDispatchJob.perform_later(@push.id, secret_url, valid_emails)
+          flash[:notice] = I18n._("Secret link will be emailed to %{count} recipient(s).") % {count: valid_emails.size}
+        end
+      end
+
       redirect_to preview_push_path(@push)
     else
       if @push.kind == "text"
@@ -390,7 +402,7 @@ class PushesController < BaseController
         :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
     else
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
     end
   rescue => e
     Rails.logger.error("Error in push_params: #{e.message}")
@@ -408,7 +420,7 @@ class PushesController < BaseController
         :retrieval_step, :payload, :note, :passphrase, files: [])
     else
       params.require(:push).permit(:name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase)
+        :retrieval_step, :payload, :note, :passphrase, files: [])
     end
   rescue => e
     Rails.logger.error("Error in update_params: #{e.message}")

@@ -133,6 +133,7 @@ All feature controllers inherit from `BaseController`, which extends
 | `enable_webhooks` | `PWP__ENABLE_WEBHOOKS` | false | Webhook HTTP POST notifications |
 | `enable_ip_allowlisting` | `PWP__ENABLE_IP_ALLOWLISTING` | false | IP-based push access restriction |
 | `enable_geofencing` | `PWP__ENABLE_GEOFENCING` | false | Country-based push access restriction |
+| `enable_auto_dispatch` | `PWP__ENABLE_AUTO_DISPATCH` | false | Auto-email secret links to recipients on push creation |
 
 ---
 
@@ -168,7 +169,8 @@ All feature controllers inherit from `BaseController`, which extends
 | 26 | Branding Page Tabbed Interface | COMPLETE |
 | 27 | Overview Page - Team Details + Members | COMPLETE |
 | 28 | Footer Redesign | COMPLETE |
+| 29 | New Push Page Redesign + Auto Dispatch | COMPLETE |
 
-All features gated behind flags. 1112 tests, 4766 assertions, 0 failures.
+All features gated behind flags. 1123 tests, 4798 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

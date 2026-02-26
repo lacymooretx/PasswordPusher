@@ -29,7 +29,7 @@
     data-pwgen-passphrase-include-number-default-value="<%= Settings.gen.passphrase_include_number %>"
     data-knobs-ga-enabled-value="<%= ENV.key?('GA_ENABLE') %>">
 <%= render partial: "shared/topnav" %>
-<%= form_for @push, data: { action: 'form#submit' } do |f| %>
+<%= form_for @push, html: { multipart: true }, data: { action: 'form#submit' } do |f| %>
     <%= render partial: "pushes/error", locals: {push: @push} %>
 
     <%= f.hidden_field :kind, value: :text unless action_name == 'edit' %>
@@ -64,8 +64,39 @@
                     <span id="maximum" data-passwords-target="maximumChars">/ 1048576 <%= _('Characters') %></span>
                 </div>
             </div>
+            <p class="fst-italic text-muted small mt-2 mb-0">
+                <em class="bi bi-lightbulb"></em>
+                <%= _('Tip: For maximum security, send usernames, passwords and locations in separate pushes.') %>
+            </p>
         </div>
     </div>
+
+    <% if Settings.enable_file_pushes && user_signed_in? && action_name != 'edit' %>
+        <div class='row mt-3'>
+            <div class='col'>
+                <div class="card">
+                    <h5 class="card-header"><em class="bi bi-paperclip"></em> <%= _('Attach Files') %></h5>
+                    <div class="card-body">
+                        <div id="progress-bars" class="list-group"></div>
+                        <div data-controller="multi-upload" data-multi-upload-max-files-value="<%= Settings.files.max_file_uploads %>">
+                            <div id="selected-files" data-multi-upload-target="files" class="list-group"></div>
+                            <div class="file my-3">
+                                <%= file_field_tag "push[files][]",
+                                                   multiple: true,
+                                                   direct_upload: true,
+                                                   class: "form-control",
+                                                   "data-action": "multi-upload#addFile" %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <%= _('Optional: You can attach up to %{count} files to this push.') % { count: Settings.files.max_file_uploads } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% end %>
+
     <div class='row'>
         <div class='col-12 col-sm-8 p-3'>
             <div class='row'>
@@ -134,14 +165,48 @@
             </div>
             <div class='row mb-3'>
                 <div class='col'>
-                    <div class="input-group">
-                        <span class="input-group-text"><%= _('Passphrase Lockdown') %></span>
+                    <fieldset class="border rounded p-3">
+                        <legend class="float-none w-auto px-2 fs-6 mb-0">
+                            <em class="bi bi-lock"></em> <%= _('Passphrase Lockdown') %>
+                        </legend>
                         <%= f.text_field(:passphrase, { class: "form-control",
                                                         autocomplete: "off",
                                                         placeholder: _('Optional: Require recipients to enter a passphrase to view this push') }) %>
-                    </div>
+                    </fieldset>
                 </div>
             </div>
+
+            <% if Settings.enable_auto_dispatch && user_signed_in? && action_name != 'edit' %>
+                <div class='row mb-3'>
+                    <div class='col'>
+                        <hr>
+                        <p class="d-inline-flex gap-1 mb-2">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#additionalOptions" aria-expanded="false" aria-controls="additionalOptions">
+                                <em class="bi bi-gear"></em> <%= _('Additional Options') %> &mdash; <%= _('Show / Hide') %>
+                            </button>
+                        </p>
+                        <div class="collapse" id="additionalOptions">
+                            <div class="card">
+                                <div class="card-header">
+                                    <em class="bi bi-send"></em> <%= _('Auto Dispatch: Send This Secret Link To...') %>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted small mb-2">
+                                        <%= _('Enter email addresses separated by commas. The secret link will be emailed to each recipient after the push is created.') %>
+                                    </p>
+                                    <%= text_field_tag 'dispatch_emails', nil, class: "form-control",
+                                        placeholder: _('e.g. alice@example.com, bob@example.com'),
+                                        autocomplete: "off" %>
+                                    <div class="form-text">
+                                        <%= _('Maximum %{count} recipients.') % { count: Settings.auto_dispatch.max_recipients } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% end %>
+
             <% unless action_name == 'edit' %>
                 <div class='row'>
                     <div class='col'>
@@ -156,45 +221,53 @@
         </div>
         <div class='col-12 col-sm-4 p-3 mt-3'>
             <div class="row mb-3">
-                <div class="btn-group mb-3" role="group" aria-label="Password Generator button group with nested dropdown">
-                    <button class="btn btn-secondary w-75" type="button"
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-secondary flex-grow-1" type="button"
                         id='generate_password'
                         data-knobs-target="generatePasswordButton"
-                        data-action="pwgen#producePassword passwords#updateCharacterCount"><em class="bi bi-cpu"></em> <%= _('Generate Password') %></button>
+                        data-action="pwgen#producePassword passwords#updateCharacterCount">
+                        <em class="bi bi-cpu"></em> <%= _('Generate Password') %>
+                    </button>
                     <button class="btn btn-secondary" type="button" id='configure_generator'
                         data-action="pwgen#configureGenerator"
                         data-bs-toggle="modal" data-bs-target="#configureModal">
                         <em class="bi bi-gear"></em>
                     </button>
                 </div>
-                <p class='fst-italic fw-light'><%= _('Use the button above to generate a random password.') %></p>
             </div>
             <% if user_signed_in? %>
                 <div class='row mb-3'>
-                    <div class="input-group">
-                        <span class="input-group-text"><%= Push.human_attribute_name(:name) %></span>
-                        <%= f.text_field(:name, { class: "form-control",
-                                                placeholder: _('Optional'),
-                                                autocomplete: "off" }) %>
-                    </div>
-                    <div class="form-text" id="basic-addon4"><%= _('A name shown in the dashboard, notifications and emails.') %></div>
+                    <label for="push_name" class="form-label fw-semibold"><%= Push.human_attribute_name(:name) %></label>
+                    <%= f.text_field(:name, { class: "form-control",
+                                            placeholder: _('e.g. Server login for client X'),
+                                            autocomplete: "off" }) %>
+                    <div class="form-text"><%= _('A name shown in the dashboard, notifications and emails.') %></div>
                 </div>
                 <div class='row mb-3'>
-                    <div class="input-group">
-                        <span class="input-group-text"><%= _('Reference Note') %></span>
-                        <%= f.text_area(:note, { class: "form-control",
-                                                rows: 1,
-                                                placeholder: _('Optional'),
-                                                autocomplete: "off" }) %>
-                    </div>
-                    <div class="form-text" id="basic-addon4"><%= _('Encrypted and visible only to you') %></div>
+                    <label for="push_note" class="form-label fw-semibold"><%= _('Reference Note') %></label>
+                    <%= f.text_area(:note, { class: "form-control",
+                                            rows: 2,
+                                            placeholder: _('e.g. Sent to John for the migration project'),
+                                            autocomplete: "off" }) %>
+                    <div class="form-text"><%= _('Encrypted and visible only to you') %></div>
                 </div>
             <% end %>
             <div class='row my-3 px-5'> <hr> </div>
             <div class='row mb-3'>
-                <p class='fst-italic'><%= _('Tip: Only enter a password into the box.  Other identifying information can compromise security.') %></p>
-                <p class='fst-italic fw-light'><%= _('All passwords are encrypted prior to storage and are available to only those with the secret link.  Once expired, encrypted passwords are unequivocally deleted from the database.') %></p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><em class="bi bi-shield-lock text-primary"></em> <%= _('All content is encrypted and available only via the secret link.') %></li>
+                    <li class="mb-2"><em class="bi bi-trash text-primary"></em> <%= _('Once expired, encrypted content is permanently deleted.') %></li>
+                    <li class="mb-2"><em class="bi bi-journal-text text-primary"></em> <%= _('An audit log of all access is available for your pushes.') %></li>
+                    <li class="mb-2"><em class="bi bi-sliders text-primary"></em> <%= _('Configure expiration, passphrases and more above.') %></li>
+                </ul>
             </div>
+            <% if Settings.respond_to?(:enable_user_policies) && Settings.enable_user_policies && user_signed_in? %>
+                <div class='row mb-3'>
+                    <%= link_to edit_user_policy_path, class: "btn btn-outline-secondary btn-sm w-100" do %>
+                        <em class="bi bi-sliders2"></em> <%= _('Manage Account Policy Defaults') %>
+                    <% end %>
+                </div>
+            <% end %>
         </div>
     </div>
     <div class='row'>

@@ -70,6 +70,21 @@
           <%= render partial: 'pushes/show_qr', locals: { push: @push } %>
         <% end %>
       <% end %>
+      <% if @push.text? && @push.files.attached? %>
+        <div class='text-center m-3'>
+          <p><strong><%= _('Attached Files') %></strong></p>
+          <% @push.files.each do |file| %>
+            <div class="list-group">
+              <%= link_to rails_blob_url(file), target: '_blank', class: 'list-group-item list-group-item-action' do %>
+                <%= file.filename %>
+                (<%= filesize(file.blob.byte_size) %>)
+                &nbsp;
+                <em class="bi bi-box-arrow-up-right"></em>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
       <div class='text-center m-3'>
         <p class="text-muted mt-5">
           <%= _("This secret link and all content will be deleted in") %>

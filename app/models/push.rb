@@ -16,6 +16,7 @@ class Push < ApplicationRecord
   validates :url_token, presence: true, uniqueness: true
 
   validate :check_payload_for_text, if: :text?
+  validate :check_optional_files_for_text, if: :text?
   validate :check_files_for_file, if: :file?
   validate :check_payload_for_url, if: :url?
   validate :check_payload_for_qr, if: :qr?
@@ -145,6 +146,15 @@ class Push < ApplicationRecord
     return true if country.nil? # Gracefully allow if lookup fails
 
     allowed_list.include?(country.upcase)
+  end
+
+  def check_optional_files_for_text
+    return unless files.attached?
+
+    max = Settings.files.max_file_uploads
+    if files.count { |file| !(file.is_a?(String) && file.empty?) } > max
+      errors.add(:files, I18n._("You can only attach up to %{count} files per push.") % {count: max})
+    end
   end
 
   def check_files_for_file

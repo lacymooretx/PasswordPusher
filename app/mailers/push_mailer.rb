@@ -16,4 +16,10 @@ class PushMailer < ApplicationMailer
     @push = push
     mail(to: push.user.email, subject: "Your push is expiring soon")
   end
+
+  def push_dispatched(push, secret_url, recipient_email)
+    @push = push
+    @secret_url = secret_url
+    mail(to: recipient_email, subject: "A secret has been shared with you")
+  end
 end

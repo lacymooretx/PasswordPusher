@@ -952,3 +952,42 @@ Full test suite: 1101 runs, 4743 assertions, 0 failures, 0 errors, 0 skips.
 - `bin/rails test`: 1110 runs, 4762 assertions, 0 failures, 0 errors
 - `erblint`: 0 errors on modified files
 - `diff config/settings.yml config/defaults/settings.yml`: no differences
+
+---
+
+## 2026-02-26: Phase 29 — New Push Page Redesign + Auto Dispatch
+
+### Goal
+Redesign text/password push form, add file attachments for text pushes, implement Auto Dispatch email feature.
+
+### Steps Completed
+1. **Settings**: Added `enable_auto_dispatch` flag and `auto_dispatch.max_recipients` config to both settings files
+2. **Tab Label**: Changed "Passwords" → "Passwords & Text" in `_topnav.html.erb`
+3. **Form Redesign**: Full rewrite of `_form.html.erb` — compartmentalization tip, file upload section, fieldset passphrase, collapsible additional options with auto dispatch, sidebar with info bullets
+4. **Controller**: Added `files: []` to text push params, dispatch email processing in `create` action
+5. **Job + Mailer**: Created `AutoDispatchJob`, added `push_dispatched` to `PushMailer`, created HTML/text email templates
+6. **Show Page**: Added file display block for text pushes with attached files
+7. **Model**: Added `check_optional_files_for_text` validation
+8. **Tests**: 11 new tests (5 integration, 4 job, 2 mailer), fixed 2 existing tests
+
+### Files Created
+- `app/jobs/auto_dispatch_job.rb`
+- `app/views/push_mailer/push_dispatched.html.erb`
+- `app/views/push_mailer/push_dispatched.text.erb`
+- `test/integration/password/password_with_files_test.rb`
+- `test/jobs/auto_dispatch_job_test.rb`
+
+### Files Modified
+- `config/settings.yml` + `config/defaults/settings.yml`
+- `app/views/shared/_topnav.html.erb`
+- `app/views/pushes/_form.html.erb`
+- `app/controllers/pushes_controller.rb`
+- `app/models/push.rb`
+- `app/mailers/push_mailer.rb`
+- `app/views/pushes/show.html.erb`
+- `test/mailers/push_mailer_test.rb`
+- `test/controllers/password_controller_test.rb`
+
+### Verification
+- `bin/rails test`: 1123 runs, 4798 assertions, 0 failures, 0 errors
+- `diff config/settings.yml config/defaults/settings.yml`: no differences

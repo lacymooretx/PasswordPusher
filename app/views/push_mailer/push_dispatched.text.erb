@@ -1,0 +1,10 @@
+A secret has been shared with you.
+<% if @push.name.present? %>
+Name: <%= @push.name %>
+<% end %>
+Use the following secret link to access it:
+<%= @secret_url %>
+
+Expires in: <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %>
+
+This link will be permanently deleted after expiration.

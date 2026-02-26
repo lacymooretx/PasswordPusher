@@ -21,7 +21,7 @@ class PasswordControllerTest < ActionDispatch::IntegrationTest
   test "New push form is available anonymous" do
     get new_push_path(tab: "text")
     assert_response :success
-    assert response.body.include?("Tip: Only enter a password into the box")
+    assert response.body.include?("All content is encrypted and available only via the secret link.")
   end
 
   test '"index" should redirect anonymous to user sign in' do
@@ -57,7 +57,7 @@ class PasswordControllerTest < ActionDispatch::IntegrationTest
 
     get new_push_path(tab: "text")
     assert_response :success
-    assert response.body.include?("Tip: Only enter a password into the box")
+    assert response.body.include?("All content is encrypted and available only via the secret link.")
 
     # rubocop:disable Layout/LineLength
     post pushes_path params: {

@@ -101,6 +101,24 @@ enable_audit_dashboard: false
 #
 enable_push_notifications: false
 
+### Auto Dispatch
+#
+# When enabled, users can enter email addresses when creating a push to
+# automatically send the secret link to those recipients.
+#
+# Environment variable override:
+# PWP__ENABLE_AUTO_DISPATCH='false'
+#
+enable_auto_dispatch: false
+
+### Auto Dispatch Configuration
+#
+# Settings for auto dispatch behavior.
+#
+auto_dispatch:
+  # Maximum number of recipients per push
+  max_recipients: 10
+
 ### Webhooks
 #
 # When enabled, users can register webhook URLs to receive HTTP POST
