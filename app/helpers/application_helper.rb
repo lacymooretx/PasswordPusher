@@ -44,6 +44,18 @@ module ApplicationHelper
     raw_url
   end
 
+  # Returns the current user's teams with eager-loaded branding and logo.
+  # Memoized so header and footer share a single query.
+  def current_user_teams
+    return @_current_user_teams if defined?(@_current_user_teams)
+
+    @_current_user_teams = if current_user && Settings.respond_to?(:enable_teams) && Settings.enable_teams
+      current_user.teams.includes(team_branding: {logo_attachment: :blob}).order(:name)
+    else
+      Team.none
+    end
+  end
+
   # qr_code
   #
   # Generates a QR code for the given URL

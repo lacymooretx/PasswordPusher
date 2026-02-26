@@ -49,7 +49,7 @@
     <% end %>
 
     <% if Settings.respond_to?(:enable_push_notifications) && Settings.enable_push_notifications %>
-      <p class='my-3 py-3 lead border-bottom'><%= _('Push Notifications') %></p>
+      <p id="push-notifications" class='my-3 py-3 lead border-bottom'><%= _('Push Notifications') %></p>
       <p class="text-muted"><%= _('Choose which email notifications you want to receive about your pushes.') %></p>
       <div class="form-check mb-2">
         <%= f.check_box :notify_on_view, class: "form-check-input", id: "notify_on_view" %>

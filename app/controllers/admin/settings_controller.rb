@@ -33,7 +33,8 @@ module Admin
         qr.retrieval_step_default qr.deletable_pushes_default
       ],
       "Branding" => %w[
-        brand.title brand.tagline brand.disclaimer brand.show_footer_menu
+        brand.title brand.tagline
+        brand.disclaimer brand.show_footer_menu
       ],
       "Mail / SMTP" => %w[
         mail.raise_delivery_errors mail.smtp_address mail.smtp_port
