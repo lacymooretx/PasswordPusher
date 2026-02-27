@@ -25,13 +25,21 @@
   <div class="container-fluid d-flex flex-column min-vh-100 justify-content-center align-items-center">
     <%= render partial: 'shared/alerts' %>
     <main class="col-12 col-sm-8 col-md-6 col-lg-4 text-center">
+      <% login_branding = TeamBranding.joins(:logo_attachment).first if defined?(TeamBranding) && Settings.respond_to?(:enable_teams) && Settings.enable_teams %>
       <%= link_to root_path(locale: locale.to_s), hreflang: locale.to_s do %>
-        <% if Settings.brand.nil? || Settings.brand.light_logo.nil? %>
-          <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="max-height: 120px; max-width: 100%; height: auto;" class="light-logo">
-          <img src="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="max-height: 120px; max-width: 100%; height: auto;" class="dark-logo">
-        <% else %>
+        <% if login_branding&.logo&.attached? %>
+          <% if login_branding.dark_logo.attached? %>
+            <%= image_tag login_branding.logo, alt: login_branding.brand_title || _('Logo'), style: "max-height: 120px; max-width: 100%; height: auto;", class: "light-logo" %>
+            <%= image_tag login_branding.dark_logo, alt: login_branding.brand_title || _('Logo'), style: "max-height: 120px; max-width: 100%; height: auto;", class: "dark-logo" %>
+          <% else %>
+            <%= image_tag login_branding.logo, alt: login_branding.brand_title || _('Logo'), style: "max-height: 120px; max-width: 100%; height: auto;" %>
+          <% end %>
+        <% elsif Settings.brand.present? && Settings.brand.light_logo.present? %>
           <img src="<%= Settings.brand.light_logo %>" alt="" style="max-height: 120px; max-width: 100%; height: auto;" class="light-logo">
           <img src="<%= Settings.brand.dark_logo %>" alt="" style="max-height: 120px; max-width: 100%; height: auto;" class="dark-logo">
+        <% else %>
+          <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="max-height: 120px; max-width: 100%; height: auto;" class="light-logo">
+          <img src="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="max-height: 120px; max-width: 100%; height: auto;" class="dark-logo">
         <% end %>
       <% end %>
 
