@@ -6,6 +6,9 @@ class PasswordWithFilesTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
+    @orig_enable_logins = Settings.enable_logins
+    @orig_enable_file_pushes = Settings.enable_file_pushes
+    @orig_allow_anonymous = Settings.allow_anonymous
     Settings.enable_logins = true
     Settings.enable_file_pushes = true
     Rails.application.reload_routes!
@@ -16,6 +19,9 @@ class PasswordWithFilesTest < ActionDispatch::IntegrationTest
 
   teardown do
     sign_out :user
+    Settings.enable_logins = @orig_enable_logins
+    Settings.enable_file_pushes = @orig_enable_file_pushes
+    Settings.allow_anonymous = @orig_allow_anonymous
   end
 
   def test_text_push_with_file_attachment
@@ -97,8 +103,6 @@ class PasswordWithFilesTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_not response.body.include?("Attach Files")
-
-    Settings.enable_file_pushes = true
   end
 
   def test_file_section_hidden_for_anonymous_users
@@ -109,7 +113,5 @@ class PasswordWithFilesTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_not response.body.include?("Attach Files")
-
-    Settings.allow_anonymous = false
   end
 end

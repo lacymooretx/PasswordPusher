@@ -1,10 +1,13 @@
-A secret has been shared with you.
+<%= @sender_name %> has shared a secret with you via <%= @brand_title %>.
 <% if @push.name.present? %>
-Name: <%= @push.name %>
+Label: <%= @push.name %>
 <% end %>
-Use the following secret link to access it:
+Access it securely using this link:
 <%= @secret_url %>
 
-Expires in: <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %>
+Expires in: <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %> (whichever comes first).
 
-This link will be permanently deleted after expiration.
+This link and all content will be permanently deleted after expiration.
+
+--
+Sent via <%= @brand_title %>

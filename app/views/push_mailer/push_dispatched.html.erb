@@ -1,8 +1,24 @@
-<h2>A secret has been shared with you</h2>
-<% if @push.name.present? %>
-  <p><strong>Name:</strong> <%= @push.name %></p>
-<% end %>
-<p>Use the following secret link to access it:</p>
-<p><a href="<%= @secret_url %>"><%= @secret_url %></a></p>
-<p><strong>Expires in:</strong> <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %></p>
-<p><em>This link will be permanently deleted after expiration.</em></p>
+<div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333;">
+  <div style="background-color: #0d6efd; padding: 20px 30px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: #fff; margin: 0; font-size: 20px;"><%= @brand_title %></h1>
+  </div>
+  <div style="padding: 30px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="font-size: 16px; margin-top: 0;"><strong><%= @sender_name %></strong> has shared a secret with you.</p>
+    <% if @push.name.present? %>
+      <p style="color: #555;"><strong>Label:</strong> <%= @push.name %></p>
+    <% end %>
+    <p>Click the button below to securely access it:</p>
+    <p style="text-align: center; margin: 25px 0;">
+      <a href="<%= @secret_url %>" style="display: inline-block; background-color: #0d6efd; color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-size: 16px; font-weight: 600;">View Secret</a>
+    </p>
+    <p style="font-size: 13px; color: #888; word-break: break-all;">Or copy this link: <a href="<%= @secret_url %>" style="color: #0d6efd;"><%= @secret_url %></a></p>
+    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+    <p style="font-size: 13px; color: #888; margin-bottom: 0;">
+      <strong>Expires in:</strong> <%= @push.days_remaining %> <%= @push.days_remaining == 1 ? "day" : "days" %> or <%= @push.views_remaining %> <%= @push.views_remaining == 1 ? "view" : "views" %> (whichever comes first).<br>
+      This link and all content will be permanently deleted after expiration.
+    </p>
+  </div>
+  <div style="text-align: center; padding: 15px; font-size: 12px; color: #aaa;">
+    Sent via <a href="<%= Settings.override_base_url || 'https://pwpush.com' %>" style="color: #aaa;"><%= @brand_title %></a>
+  </div>
+</div>

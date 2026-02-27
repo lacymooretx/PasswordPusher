@@ -20,6 +20,23 @@ class PushMailer < ApplicationMailer
   def push_dispatched(push, secret_url, recipient_email)
     @push = push
     @secret_url = secret_url
-    mail(to: recipient_email, subject: "A secret has been shared with you")
+    @sender_name = push.user&.email || Settings.brand.title
+    @brand_title = Settings.brand.title
+
+    from_name = if push.user&.email.present?
+      "#{push.user.email} via #{Settings.brand.title}"
+    else
+      Settings.brand.title
+    end
+
+    from_address = Settings.mail.mailer_sender || "oss@pwpush.com"
+    # Extract just the email address if it includes a name
+    from_email = from_address[/<(.+)>/, 1] || from_address
+
+    mail(
+      to: recipient_email,
+      from: "#{from_name} <#{from_email}>",
+      subject: "#{push.user&.email || Settings.brand.title} has shared a secret with you"
+    )
   end
 end

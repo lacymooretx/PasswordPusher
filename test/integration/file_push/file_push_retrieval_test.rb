@@ -63,9 +63,9 @@ class FilePushRetrievalTest < ActionDispatch::IntegrationTest
     get "#{request.url}/r"
     assert_response :success
 
-    links = css_select "a"
+    links = css_select "a.btn-primary"
     assert(links)
     assert_equal 1, links.length
-    assert_equal "Click Here to Proceed", links.first.content
+    assert links.first.content.include?("View Secret")
   end
 end
