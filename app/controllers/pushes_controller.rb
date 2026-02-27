@@ -364,7 +364,8 @@ class PushesController < BaseController
 
   def load_user_branding
     if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding
-      @user_branding = @push&.user&.user_branding
+      # Prefer team branding (has logo), fall back to user's personal branding
+      @user_branding = @push&.team&.team_branding || @push&.user&.user_branding
     end
   end
 
