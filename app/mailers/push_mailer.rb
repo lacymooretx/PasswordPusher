@@ -23,6 +23,18 @@ class PushMailer < ApplicationMailer
     @sender_name = push.user&.email || Settings.brand.title
     @brand_title = Settings.brand.title
 
+    # Load branding for logo in email
+    @branding = if Settings.respond_to?(:enable_user_branding) && Settings.enable_user_branding
+      push.team&.team_branding ||
+        push.user&.teams&.first&.team_branding ||
+        push.user&.user_branding
+    end
+
+    # Attach logo as inline image if branding has one
+    if @branding&.logo&.attached?
+      attachments.inline["logo.png"] = @branding.logo.download
+    end
+
     from_name = if push.user&.email.present?
       "#{push.user.email} via #{Settings.brand.title}"
     else

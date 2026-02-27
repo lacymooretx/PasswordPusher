@@ -1,5 +1,9 @@
 <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333;">
-  <div style="background-color: #0d6efd; padding: 20px 30px; border-radius: 8px 8px 0 0;">
+  <div style="background-color: <%= @branding&.primary_color.presence || '#0d6efd' %>; padding: 20px 30px; border-radius: 8px 8px 0 0; text-align: center;">
+    <% if @branding&.logo&.attached? %>
+      <%= image_tag attachments["logo.png"].url, style: "max-height: 50px; max-width: 250px; margin-bottom: 8px;", alt: @brand_title %>
+      <br>
+    <% end %>
     <h1 style="color: #fff; margin: 0; font-size: 20px;"><%= @brand_title %></h1>
   </div>
   <div style="padding: 30px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
