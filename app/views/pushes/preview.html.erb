@@ -79,7 +79,12 @@
           "data-turbolinks": false,
           "data-turbo": false,
           rel: "no-prefetch" %>
-        <%= _('(will burn a view) or') %>
+        <% if user_signed_in? && @push.user_id == current_user.id %>
+          <%= _('(owner view — won\'t burn a view)') %>
+        <% else %>
+          <%= _('(will burn a view)') %>
+        <% end %>
+        <%= _('or') %>
         <% if @push.url? %>
           <%= link_to _('Push Another'), new_push_path(tab: "url") %>
         <% elsif @push.file? %>
