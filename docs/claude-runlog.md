@@ -1016,3 +1016,53 @@ Redesign text/password push form, add file attachments for text pushes, implemen
 ### Verification
 - `bin/rails test`: 1123 runs, 4798 assertions, 0 failures, 0 errors
 - `diff config/settings.yml config/defaults/settings.yml`: no differences
+
+---
+
+## 2026-02-27 — Phase 30: Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos
+
+### Goal
+Three enhancements: SSO avatar display, manual dark mode toggle, dark logo branding support.
+
+### Steps Completed
+
+1. **User Avatar Migration + Model** — added `avatar_url` string column to users, `from_omniauth` extracts `auth.info.image`
+2. **Avatar in Header** — shows avatar image when present, falls back to initial circle (2 places)
+3. **Dark Mode Toggle** — rewrote `theme_controller.js` for 3-mode cycle (system/light/dark) with localStorage
+4. **Toggle Button in Header** — sun/moon icon, `click->theme#toggle`
+5. **Dark Logo Model + Forms** — `has_one_attached :dark_logo` on UserBranding and TeamBranding, upload fields, controller permits
+6. **Logo Display + CSS** — `.light-logo`/`.dark-logo` classes with `[data-bs-theme]` selectors in `default.css`
+7. **API** — dark_logo in branding API response
+8. **Deployed** — built with `containers/docker/Dockerfile`, migrated
+
+### Post-Deployment Fixes
+
+9. **Dark mode CSS not working** — all dark CSS was only in `@media (prefers-color-scheme: dark)`, duplicated under `[data-bs-theme="dark"]` in both `default.css` and `admin/_javascript.html.erb`
+10. **Logo disappearing in dark mode** — `light-logo` class applied even when no dark_logo existed; fixed to only apply switching classes when both variants present
+11. **Team settings/admin not in dark mode** — added `data-controller="theme"` to `team_settings.html.erb` and `admin.html.erb`
+12. **Delivery page logo missing** — `load_user_branding` now resolves through user's team memberships (pushes don't have `team_id` set via web UI)
+13. **Dispatch email logo** — branding logo attached inline to emails, uses branding primary_color
+14. **Owner view text misleading** — preview page now shows "(owner view — won't burn a view)" for push creators
+15. **Team avatar upload** — `has_one_attached :avatar` on Team, upload in edit form, displayed in sidebar + header
+16. **Login page logo** — resolves from first TeamBranding with logo, falls back to Settings.brand URLs, then defaults
+
+### Files Modified
+- `db/migrate/20260227000015_add_avatar_url_to_users.rb` (new)
+- `app/models/user.rb`, `app/models/team.rb`, `app/models/user_branding.rb`, `app/models/team_branding.rb`
+- `app/javascript/controllers/theme_controller.js` (rewritten)
+- `app/views/shared/_header.html.erb`, `_footer.html.erb`, `_user_branding.html.erb`
+- `app/views/layouts/login.html.erb`, `team_settings.html.erb`, `admin.html.erb`, `naked.html.erb`
+- `app/views/pushes/preview.html.erb`
+- `app/views/user_brandings/edit.html.erb`, `app/views/team_brandings/edit.html.erb`
+- `app/views/teams/_form.html.erb`, `app/views/teams/_settings_nav.html.erb`
+- `app/views/push_mailer/push_dispatched.html.erb`
+- `app/views/admin/_javascript.html.erb`
+- `app/controllers/pushes_controller.rb`, `teams_controller.rb`, `user_brandings_controller.rb`, `team_brandings_controller.rb`
+- `app/controllers/api/v1/user_brandings_controller.rb`
+- `app/mailers/push_mailer.rb`
+- `app/assets/stylesheets/themes/default.css`
+- `app/assets/images/logo-brand-dark.png` (new), `aspendora-avatar.png` (generated)
+
+### Verification
+- `bin/rails test`: 1124 runs, 4807 assertions, 0 failures, 0 errors
+- All deployed to pwpush.aspendora.com via 10 production deploys

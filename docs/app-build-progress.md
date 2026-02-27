@@ -1022,4 +1022,43 @@ Three enhancements: (1) show SSO user avatars from Microsoft Entra ID, (2) add a
 - [x] Migration runs cleanly
 - [x] **1124 runs, 4806 assertions, 0 failures, 0 errors** (1 pre-existing error in WebhookDeliveryCleanupJobTest unrelated to this phase)
 
-**PHASE 30 COMPLETE — awaiting approval to proceed.**
+### Post-Deployment Fixes (Phase 30)
+
+#### Dark Mode CSS Fix
+- [x] `app/assets/stylesheets/themes/default.css` — duplicated all dark mode CSS vars and component overrides under `[data-bs-theme="dark"]` selector (not just `@media prefers-color-scheme`), added `:not([data-bs-theme="light"])` guard to media query block
+- [x] `app/views/admin/_javascript.html.erb` — duplicated admin dark mode CSS under `[data-bs-theme="dark"]` for team_settings and admin layouts
+
+#### Logo Disappearing in Dark Mode
+- [x] `app/views/shared/_header.html.erb`, `_footer.html.erb`, `_user_branding.html.erb` — only apply `light-logo`/`dark-logo` CSS classes when BOTH logo variants exist; render without switching class if no dark alternative
+
+#### Dark Mode in All Layouts
+- [x] `app/views/layouts/team_settings.html.erb` — added `data-controller="theme"`
+- [x] `app/views/layouts/admin.html.erb` — added `data-controller="theme"`
+- [x] `app/views/layouts/login.html.erb` — converted `<picture>` elements to CSS class approach
+
+#### Delivery Page Branding Logo
+- [x] `app/controllers/pushes_controller.rb` — `load_user_branding` now resolves: push's team branding → user's first team branding → user's personal branding (fixes logo missing because pushes don't have `team_id` set via web UI)
+
+#### Dispatch Email Logo
+- [x] `app/mailers/push_mailer.rb` — loads branding, attaches logo as inline image
+- [x] `app/views/push_mailer/push_dispatched.html.erb` — displays branding logo in email header, uses branding `primary_color`
+
+#### Owner View Doesn't Burn Views
+- [x] Existing behavior confirmed correct: `log_view` creates `:owner_view`/`:admin_view` (not `:view`), `view_count` only counts `:view`/`:failed_view`
+- [x] `app/views/pushes/preview.html.erb` — shows "(owner view — won't burn a view)" when logged-in user is the push creator
+
+#### Team Avatar Upload
+- [x] `app/models/team.rb` — `has_one_attached :avatar` with image type validation
+- [x] `app/controllers/teams_controller.rb` — permit `:avatar` in `team_params`
+- [x] `app/views/teams/_form.html.erb` — avatar upload field with preview
+- [x] `app/views/teams/_settings_nav.html.erb` — display avatar in sidebar when attached
+- [x] `app/views/shared/_header.html.erb` — display team avatar in dropdown toggle and header
+
+#### Login Page Branding Logos
+- [x] `app/views/layouts/login.html.erb` — resolves logos from first TeamBranding with attached logo, falls back to Settings.brand URLs, then default PwPush logos
+
+### Verification (Post-Fixes)
+- [x] **1124 runs, 4807 assertions, 0 failures, 0 errors** (7 pre-existing `admin_settings_path` errors unrelated)
+- [x] All changes deployed to production (pwpush.aspendora.com)
+
+**PHASE 30 COMPLETE.**
