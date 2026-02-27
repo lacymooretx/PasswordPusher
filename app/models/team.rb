@@ -10,10 +10,13 @@ class Team < ApplicationRecord
   has_many :team_invitations, dependent: :destroy
   has_many :pushes, dependent: :nullify
   has_one :team_branding, dependent: :destroy
+  has_one_attached :avatar
 
   validates :name, presence: true, length: {maximum: 100}
   validates :slug, presence: true, uniqueness: true, length: {maximum: 100},
     format: {with: /\A[a-z0-9][a-z0-9-]*[a-z0-9]\z/i, message: "must contain only letters, numbers, and hyphens"}
+
+  validate :avatar_file_type
 
   before_validation :generate_slug, on: :create
   after_create :add_owner_as_member
@@ -103,6 +106,13 @@ class Team < ApplicationRecord
   end
 
   private
+
+  def avatar_file_type
+    return unless avatar.attached?
+    unless avatar.content_type.in?(%w[image/png image/jpeg image/svg+xml image/webp])
+      errors.add(:avatar, "must be a PNG, JPEG, SVG, or WebP image")
+    end
+  end
 
   # Auto-generates a URL-safe slug from the team name, appending a counter
   # if a collision exists (e.g. "acme", "acme-1", "acme-2").

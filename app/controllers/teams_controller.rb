@@ -73,6 +73,6 @@ class TeamsController < BaseController
   end
 
   def team_params
-    params.require(:team).permit(:name, :description)
+    params.require(:team).permit(:name, :description, :avatar)
   end
 end

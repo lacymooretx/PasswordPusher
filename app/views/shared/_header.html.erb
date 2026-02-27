@@ -73,9 +73,13 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="accountDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <% if primary_team %>
-                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                  <%= primary_team.name.first.upcase %>
-                </span>
+                <% if primary_team.avatar.attached? %>
+                  <%= image_tag primary_team.avatar, class: "rounded-circle me-1", style: "width: 28px; height: 28px; object-fit: cover;" %>
+                <% else %>
+                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <%= primary_team.name.first.upcase %>
+                  </span>
+                <% end %>
                 <span class="d-none d-md-inline"><%= truncate(primary_team.name, length: 20) %></span>
               <% else %>
                 <% if current_user.avatar_url.present? %>
@@ -93,9 +97,13 @@
               <% if primary_team %>
                 <li>
                   <h6 class="dropdown-header d-flex align-items-center">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
-                      <%= primary_team.name.first.upcase %>
-                    </span>
+                    <% if primary_team.avatar.attached? %>
+                      <%= image_tag primary_team.avatar, class: "rounded-circle me-2", style: "width: 24px; height: 24px; object-fit: cover;" %>
+                    <% else %>
+                      <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                        <%= primary_team.name.first.upcase %>
+                      </span>
+                    <% end %>
                     <%= primary_team.name %>
                   </h6>
                 </li>

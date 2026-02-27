@@ -2,9 +2,13 @@
 <div class="d-flex flex-column justify-content-center align-items-center gap-2 mt-4 pb-4 border-bottom px-3">
   <div>
     <%= link_to team_path(@team) do %>
-      <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-        <em class="bi bi-people-fill text-primary fs-4"></em>
-      </div>
+      <% if @team.avatar.attached? %>
+        <%= image_tag @team.avatar, class: "rounded-circle", style: "width: 56px; height: 56px; object-fit: cover;" %>
+      <% else %>
+        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+          <em class="bi bi-people-fill text-primary fs-4"></em>
+        </div>
+      <% end %>
     <% end %>
   </div>
   <div class="text-center">
