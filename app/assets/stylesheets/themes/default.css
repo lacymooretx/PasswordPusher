@@ -296,3 +296,9 @@ pre {
   }
 }
 
+/* Dark mode logo switching via data-bs-theme */
+[data-bs-theme="light"] .dark-logo,
+html:not([data-bs-theme="dark"]) .dark-logo { display: none !important; }
+[data-bs-theme="dark"] .light-logo { display: none !important; }
+[data-bs-theme="dark"] .dark-logo { display: inline !important; }
+

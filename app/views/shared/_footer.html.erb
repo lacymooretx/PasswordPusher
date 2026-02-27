@@ -23,19 +23,16 @@
     <div class="d-flex justify-content-center my-3">
       <%= link_to root_path(locale: locale.to_s), class: "link-dark text-decoration-none" do %>
         <% if footer_branding&.logo&.attached? %>
-          <%= image_tag footer_branding.logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;' %>
+          <%= image_tag footer_branding.logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;', class: 'light-logo' %>
+          <% if footer_branding.dark_logo.attached? %>
+            <%= image_tag footer_branding.dark_logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;', class: 'dark-logo' %>
+          <% end %>
         <% elsif Settings.brand.present? && Settings.brand.light_logo.present? %>
-          <picture>
-            <source srcset="<%= Settings.brand.light_logo %>" media="(prefers-color-scheme: light) or (prefers-color-scheme: no-preference)">
-            <source srcset="<%= Settings.brand.dark_logo %>" media="(prefers-color-scheme: dark)">
-            <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style='height: 40px;'>
-          </picture>
+          <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 40px;" class="light-logo">
+          <img src="<%= Settings.brand.dark_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 40px;" class="dark-logo">
         <% else %>
-          <picture>
-            <source srcset="<%= asset_path('logo-transparent-sm-bare.png') %>" media="(prefers-color-scheme: light) or (prefers-color-scheme: no-preference)">
-            <source srcset="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" media="(prefers-color-scheme: dark)">
-            <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style='height: 40px;'>
-          </picture>
+          <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="height: 40px;" class="light-logo">
+          <img src="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="height: 40px;" class="dark-logo">
         <% end %>
       <% end %>
     </div>

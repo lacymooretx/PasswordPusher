@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_000014) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_000015) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -353,6 +353,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_000014) do
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false
     t.string "authentication_token", limit: 30
+    t.string "avatar_url"
     t.datetime "confirmation_sent_at", precision: nil
     t.string "confirmation_token"
     t.datetime "confirmed_at", precision: nil

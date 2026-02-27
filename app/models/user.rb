@@ -92,13 +92,18 @@ class User < ApplicationRecord
   # Priority: match by provider+uid, then by email (links SSO to existing account),
   # then create a new pre-confirmed user with a random password.
   def self.from_omniauth(auth)
+    avatar = auth.info.image
+
     user = find_by(provider: auth.provider, uid: auth.uid)
-    return user if user
+    if user
+      user.update!(avatar_url: avatar) if avatar.present? && user.avatar_url != avatar
+      return user
+    end
 
     # Try to find existing user by email and link the SSO account
     user = find_by(email: auth.info.email)
     if user
-      user.update!(provider: auth.provider, uid: auth.uid)
+      user.update!(provider: auth.provider, uid: auth.uid, avatar_url: avatar)
       return user
     end
 
@@ -107,6 +112,7 @@ class User < ApplicationRecord
       email: auth.info.email,
       provider: auth.provider,
       uid: auth.uid,
+      avatar_url: avatar,
       password: Devise.friendly_token[0, 30],
       confirmed_at: Time.current # SSO users are pre-confirmed
     )

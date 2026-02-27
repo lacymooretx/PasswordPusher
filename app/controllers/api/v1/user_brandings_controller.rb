@@ -61,7 +61,8 @@ class Api::V1::UserBrandingsController < Api::BaseController
   def branding_params
     params.require(:user_branding).permit(
       :brand_title, :brand_tagline, :primary_color, :background_color,
-      :delivery_heading, :delivery_message, :delivery_footer, :white_label
+      :delivery_heading, :delivery_message, :delivery_footer, :white_label,
+      :logo, :dark_logo
     )
   end
 
@@ -75,7 +76,8 @@ class Api::V1::UserBrandingsController < Api::BaseController
       delivery_message: branding.delivery_message,
       delivery_footer: branding.delivery_footer,
       white_label: branding.white_label,
-      has_logo: branding.logo.attached?
+      has_logo: branding.logo.attached?,
+      has_dark_logo: branding.dark_logo.attached?
     }
   end
 end

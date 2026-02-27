@@ -7,6 +7,7 @@
 class UserBranding < ApplicationRecord
   belongs_to :user
   has_one_attached :logo
+  has_one_attached :dark_logo
 
   validates :user_id, uniqueness: true
   validates :delivery_heading, length: {maximum: 200}, allow_blank: true
@@ -17,6 +18,7 @@ class UserBranding < ApplicationRecord
   validates :primary_color, format: {with: /\A#[0-9a-fA-F]{6}\z/, message: "must be a valid hex color (e.g. #336699)"}, allow_blank: true
   validates :background_color, format: {with: /\A#[0-9a-fA-F]{6}\z/, message: "must be a valid hex color (e.g. #f5f5f5)"}, allow_blank: true
   validate :logo_file_type
+  validate :dark_logo_file_type
 
   private
 
@@ -24,6 +26,13 @@ class UserBranding < ApplicationRecord
     return unless logo.attached?
     unless logo.content_type.in?(%w[image/png image/jpeg image/svg+xml image/webp])
       errors.add(:logo, "must be a PNG, JPEG, SVG, or WebP image")
+    end
+  end
+
+  def dark_logo_file_type
+    return unless dark_logo.attached?
+    unless dark_logo.content_type.in?(%w[image/png image/jpeg image/svg+xml image/webp])
+      errors.add(:dark_logo, "must be a PNG, JPEG, SVG, or WebP image")
     end
   end
 end

@@ -1,5 +1,30 @@
 # Claude Execution Runlog — PasswordPusher Pro Features
 
+## 2026-02-27: Phase 30 — Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos
+
+### Goal
+Three enhancements: SSO avatars, manual dark mode toggle, dark mode branding logos.
+
+### Steps
+1. **Migration** — `20260227000015_add_avatar_url_to_users.rb` adds `avatar_url` string column
+2. **User model** — `from_omniauth` now extracts `auth.info.image` and stores/updates `avatar_url`
+3. **Header avatar** — Shows `<img>` when `avatar_url` present, falls back to initial circle (2 places)
+4. **Theme controller** — Rewritten for 3-mode cycle (system/light/dark) with localStorage persistence
+5. **Toggle button** — Sun/moon icon in header nav, calls `theme#toggle`
+6. **Dark logo models** — `has_one_attached :dark_logo` + validation on UserBranding and TeamBranding
+7. **Dark logo forms** — Upload fields in user and team branding edit pages
+8. **Dark logo controllers** — `:dark_logo` permitted in web + API controllers
+9. **Logo switching CSS** — `.light-logo`/`.dark-logo` rules in `default.css` using `[data-bs-theme]`
+10. **Logo switching views** — Header, footer, user_branding partial all use CSS class approach
+11. **Dark logo asset** — Copied source file to `app/assets/images/logo-brand-dark.png`
+12. **API update** — `has_dark_logo` added to branding JSON response
+
+### Result
+- Migration runs cleanly
+- 1124 runs, 4806 assertions, 0 failures (1 pre-existing error in WebhookDeliveryCleanupJobTest)
+
+---
+
 ## 2026-02-25: Phases 23-28 — Vendor UI Match (push.aspendora.com)
 
 ### Goal

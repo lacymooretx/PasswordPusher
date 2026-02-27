@@ -33,7 +33,7 @@ class UserBrandingsController < BaseController
     params.require(:user_branding).permit(
       :delivery_heading, :delivery_message, :delivery_footer,
       :white_label, :brand_title, :brand_tagline,
-      :primary_color, :background_color, :logo
+      :primary_color, :background_color, :logo, :dark_logo
     )
   end
 end

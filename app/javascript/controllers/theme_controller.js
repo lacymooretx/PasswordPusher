@@ -1,27 +1,50 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+  static targets = ["icon"]
 
   connect() {
     this.prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)")
-    
-    // Initial check
-    this.handleThemeChange(this.prefersDarkScheme)
-    
-    // Listen for changes
-    this.prefersDarkScheme.addEventListener('change', this.handleThemeChange.bind(this))
+    this.mode = localStorage.getItem("theme") || "system"
+    this.applyTheme()
+    this._handleSystemChange = this.handleSystemChange.bind(this)
+    this.prefersDarkScheme.addEventListener("change", this._handleSystemChange)
   }
 
   disconnect() {
-    // Clean up event listener when controller disconnects
-    this.prefersDarkScheme.removeEventListener('change', this.handleThemeChange.bind(this))
+    this.prefersDarkScheme.removeEventListener("change", this._handleSystemChange)
   }
 
-  handleThemeChange(e) {
-    if (e.matches) {
-      document.documentElement.setAttribute('data-bs-theme', 'dark')
+  toggle() {
+    if (this.mode === "system") {
+      this.mode = this.prefersDarkScheme.matches ? "light" : "dark"
+    } else if (this.mode === "light") {
+      this.mode = "dark"
     } else {
-      document.documentElement.setAttribute('data-bs-theme', 'light')
+      this.mode = "system"
+    }
+    localStorage.setItem("theme", this.mode)
+    this.applyTheme()
+  }
+
+  applyTheme() {
+    let isDark
+    if (this.mode === "system") {
+      isDark = this.prefersDarkScheme.matches
+    } else {
+      isDark = this.mode === "dark"
+    }
+    document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light")
+    this.updateIcon(isDark)
+  }
+
+  handleSystemChange() {
+    if (this.mode === "system") this.applyTheme()
+  }
+
+  updateIcon(isDark) {
+    if (this.hasIconTarget) {
+      this.iconTarget.className = isDark ? "bi bi-moon-fill" : "bi bi-sun-fill"
     }
   }
-} 
+}

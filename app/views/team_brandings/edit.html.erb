@@ -77,6 +77,18 @@
         <%= f.label :logo, _('Upload Logo'), class: "form-label" %>
         <%= f.file_field :logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
         <div class="form-text"><%= _("PNG, JPEG, SVG, or WebP. Displayed on team delivery pages.") %></div>
+
+        <hr class="my-3">
+
+        <% if @team_branding.dark_logo.attached? %>
+          <div class="mb-3">
+            <strong class="small text-muted"><%= _('Current dark mode logo:') %></strong><br>
+            <%= image_tag @team_branding.dark_logo, style: "max-height: 80px; max-width: 200px; background: #333; padding: 8px; border-radius: 4px;", class: "mt-1" %>
+          </div>
+        <% end %>
+        <%= f.label :dark_logo, _('Upload Dark Mode Logo'), class: "form-label" %>
+        <%= f.file_field :dark_logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
+        <div class="form-text"><%= _("Displayed when the user is in dark mode. If not set, the regular logo is used.") %></div>
       </div>
     </div>
 

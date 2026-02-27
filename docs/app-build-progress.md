@@ -33,6 +33,7 @@
 | 27 | Overview Page - Team Details + Members | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 28 | Footer Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE | 2026-02-26 | 2026-02-26 |
+| 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE | 2026-02-27 | 2026-02-27 |
 
 ---
 
@@ -978,3 +979,47 @@ Redesign the text/password push form with better UX, add file attachment support
 - [x] `config/settings.yml` and `config/defaults/settings.yml` remain byte-identical
 
 **PHASE 29 COMPLETE — awaiting approval to proceed.**
+
+---
+
+## Phase 30: Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos
+
+### Goal
+Three enhancements: (1) show SSO user avatars from Microsoft Entra ID, (2) add a manual dark mode toggle, (3) support dark mode logo variants in branding.
+
+### Changes
+
+#### 1. User Avatar (Entra ID SSO)
+- [x] `db/migrate/20260227000015_add_avatar_url_to_users.rb` — adds `avatar_url` string column
+- [x] `app/models/user.rb` — `from_omniauth` extracts `auth.info.image` into `avatar_url`, updates on subsequent logins
+- [x] `app/views/shared/_header.html.erb` — shows avatar image when `avatar_url` present, falls back to initial circle
+
+#### 2. Dark Mode Toggle
+- [x] `app/javascript/controllers/theme_controller.js` — rewritten for 3-mode cycle (system → light → dark), stores in localStorage, bound event listener cleanup
+- [x] `app/views/shared/_header.html.erb` — toggle button with sun/moon icon before account dropdown
+
+#### 3. Dark Mode Logo in Branding
+- [x] `app/models/user_branding.rb` — `has_one_attached :dark_logo` + validation
+- [x] `app/models/team_branding.rb` — `has_one_attached :dark_logo` + validation
+- [x] `app/views/user_brandings/edit.html.erb` — dark logo upload field
+- [x] `app/views/team_brandings/edit.html.erb` — dark logo upload field in Assets tab
+- [x] `app/controllers/user_brandings_controller.rb` — permit `:dark_logo`
+- [x] `app/controllers/team_brandings_controller.rb` — permit `:dark_logo`
+- [x] `app/controllers/api/v1/user_brandings_controller.rb` — permit `:logo`, `:dark_logo`, response includes `has_dark_logo`
+- [x] `app/views/shared/_header.html.erb` — CSS class-based logo switching (`light-logo`/`dark-logo`)
+- [x] `app/views/shared/_footer.html.erb` — same CSS class-based logo switching
+- [x] `app/views/shared/_user_branding.html.erb` — dark logo on delivery pages
+- [x] `app/assets/stylesheets/themes/default.css` — `.light-logo`/`.dark-logo` rules using `[data-bs-theme]`
+- [x] `app/assets/images/logo-brand-dark.png` — dark mode logo asset copied from source
+
+### Architectural Decisions
+- `avatar_url` is a string (URL from Microsoft CDN), not an ActiveStorage attachment
+- CSS class-based switching with `[data-bs-theme]` selectors — works with both manual toggle and OS preference
+- 3-mode theme toggle: system/light/dark cycle stored in localStorage, no backend storage needed
+- `dark_logo` uses ActiveStorage (polymorphic), no migration needed for DB columns
+
+### Verification
+- [x] Migration runs cleanly
+- [x] **1124 runs, 4806 assertions, 0 failures, 0 errors** (1 pre-existing error in WebhookDeliveryCleanupJobTest unrelated to this phase)
+
+**PHASE 30 COMPLETE — awaiting approval to proceed.**

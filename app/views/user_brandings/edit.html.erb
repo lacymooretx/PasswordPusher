@@ -46,6 +46,18 @@
       <div class="form-text"><%= _("PNG, JPEG, SVG, or WebP. Displayed on your delivery pages.") %></div>
     </div>
 
+    <div class="mb-3">
+      <% if @user_branding.dark_logo.attached? %>
+        <div class="mb-2">
+          <strong><%= _('Current dark mode logo:') %></strong><br>
+          <%= image_tag @user_branding.dark_logo, style: "max-height: 80px; max-width: 200px; background: #333; padding: 8px; border-radius: 4px;" %>
+        </div>
+      <% end %>
+      <%= f.label :dark_logo, _('Upload Dark Mode Logo'), class: "form-label" %>
+      <%= f.file_field :dark_logo, class: "form-control", accept: "image/png,image/jpeg,image/svg+xml,image/webp" %>
+      <div class="form-text"><%= _("Displayed when the user is in dark mode. If not set, the regular logo is used.") %></div>
+    </div>
+
     <p class="my-3 py-3 lead border-bottom"><%= _('White Label') %></p>
 
     <div class="form-check mb-3">

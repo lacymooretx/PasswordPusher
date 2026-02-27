@@ -7,6 +7,7 @@
 class TeamBranding < ApplicationRecord
   belongs_to :team
   has_one_attached :logo
+  has_one_attached :dark_logo
 
   validates :team_id, uniqueness: true
   validates :delivery_heading, length: {maximum: 200}, allow_blank: true
@@ -26,6 +27,7 @@ class TeamBranding < ApplicationRecord
   validates :request_ready_message, length: {maximum: 2000}, allow_blank: true
   validates :expired_message, length: {maximum: 2000}, allow_blank: true
   validate :logo_file_type
+  validate :dark_logo_file_type
 
   private
 
@@ -33,6 +35,13 @@ class TeamBranding < ApplicationRecord
     return unless logo.attached?
     unless logo.content_type.in?(%w[image/png image/jpeg image/svg+xml image/webp])
       errors.add(:logo, "must be a PNG, JPEG, SVG, or WebP image")
+    end
+  end
+
+  def dark_logo_file_type
+    return unless dark_logo.attached?
+    unless dark_logo.content_type.in?(%w[image/png image/jpeg image/svg+xml image/webp])
+      errors.add(:dark_logo, "must be a PNG, JPEG, SVG, or WebP image")
     end
   end
 end

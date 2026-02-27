@@ -52,7 +52,7 @@ class TeamBrandingsController < BaseController
     params.require(:team_branding).permit(
       :delivery_heading, :delivery_message, :delivery_footer,
       :white_label, :brand_title, :brand_tagline,
-      :primary_color, :background_color, :logo,
+      :primary_color, :background_color, :logo, :dark_logo,
       :retrieval_heading, :retrieval_message, :retrieval_footer,
       :passphrase_heading, :passphrase_message,
       :request_delivery_heading, :request_delivery_message,

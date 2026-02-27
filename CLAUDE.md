@@ -170,7 +170,8 @@ All feature controllers inherit from `BaseController`, which extends
 | 27 | Overview Page - Team Details + Members | COMPLETE |
 | 28 | Footer Redesign | COMPLETE |
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE |
+| 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE |
 
-All features gated behind flags. 1123 tests, 4798 assertions, 0 failures.
+All features gated behind flags. 1124 tests, 4806 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

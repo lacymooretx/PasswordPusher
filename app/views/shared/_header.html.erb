@@ -6,19 +6,16 @@
     <%= link_to root_path, class: 'd-flex align-items-center mb-3 mb-md-0 me-md-auto text-body-emphasis text-decoration-none', hreflang: locale.to_s do %>
       <div class='me-2'>
       <% if header_branding&.logo&.attached? %>
-        <%= image_tag header_branding.logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;' %>
+        <%= image_tag header_branding.logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;', class: 'light-logo' %>
+        <% if header_branding.dark_logo.attached? %>
+          <%= image_tag header_branding.dark_logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;', class: 'dark-logo' %>
+        <% end %>
       <% elsif Settings.brand.present? && Settings.brand.light_logo.present? %>
-        <picture>
-          <source srcset="<%= Settings.brand.light_logo %>" media="(prefers-color-scheme: light) or (prefers-color-scheme: no-preference)">
-          <source srcset="<%= Settings.brand.dark_logo %>" media="(prefers-color-scheme: dark)">
-          <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style='height: 50px;'>
-        </picture>
+        <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 50px;" class="light-logo">
+        <img src="<%= Settings.brand.dark_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 50px;" class="dark-logo">
       <% else %>
-        <picture>
-          <source srcset="<%= asset_path('logo-transparent-sm-bare.png') %>" media="(prefers-color-scheme: light) or (prefers-color-scheme: no-preference)">
-          <source srcset="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" media="(prefers-color-scheme: dark)">
-          <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style='height: 50px;'>
-        </picture>
+        <img src="<%= asset_path('logo-transparent-sm-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="height: 50px;" class="light-logo">
+        <img src="<%= asset_path('logo-transparent-sm-dark-bare.png') %>" alt="<%= _('Password Pusher Logo') %>" style="height: 50px;" class="dark-logo">
       <% end %>
       </div>
       <div>
@@ -61,6 +58,13 @@
             </li>
           <% end %>
 
+          <%# Dark mode toggle %>
+          <li class="nav-item me-2">
+            <button class="nav-link btn btn-link" data-action="click->theme#toggle" title="<%= _('Toggle dark mode') %>" aria-label="<%= _('Toggle dark mode') %>">
+              <em class="bi bi-sun-fill" data-theme-target="icon"></em>
+            </button>
+          </li>
+
           <%# Account dropdown with team/user avatar %>
           <% user_teams = current_user_teams %>
           <% primary_team = header_primary_team %>
@@ -72,9 +76,13 @@
                 </span>
                 <span class="d-none d-md-inline"><%= truncate(primary_team.name, length: 20) %></span>
               <% else %>
-                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                  <%= current_user.email.first.upcase %>
-                </span>
+                <% if current_user.avatar_url.present? %>
+                  <img src="<%= current_user.avatar_url %>" alt="" class="rounded-circle me-1" style="width: 28px; height: 28px; object-fit: cover;">
+                <% else %>
+                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold me-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <%= current_user.email.first.upcase %>
+                  </span>
+                <% end %>
                 <span class="d-none d-md-inline"><%= truncate(current_user.email, length: 24) %></span>
               <% end %>
             </a>
@@ -143,9 +151,13 @@
               <%# === User Section === %>
               <li>
                 <h6 class="dropdown-header d-flex align-items-center">
-                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
-                    <%= current_user.email.first.upcase %>
-                  </span>
+                  <% if current_user.avatar_url.present? %>
+                    <img src="<%= current_user.avatar_url %>" alt="" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                  <% else %>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white fw-bold me-2" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                      <%= current_user.email.first.upcase %>
+                    </span>
+                  <% end %>
                   <%= truncate(current_user.email, length: 28) %>
                 </h6>
               </li>
