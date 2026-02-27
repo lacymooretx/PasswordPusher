@@ -23,9 +23,11 @@
     <div class="d-flex justify-content-center my-3">
       <%= link_to root_path(locale: locale.to_s), class: "link-dark text-decoration-none" do %>
         <% if footer_branding&.logo&.attached? %>
-          <%= image_tag footer_branding.logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;', class: 'light-logo' %>
           <% if footer_branding.dark_logo.attached? %>
+            <%= image_tag footer_branding.logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;', class: 'light-logo' %>
             <%= image_tag footer_branding.dark_logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;', class: 'dark-logo' %>
+          <% else %>
+            <%= image_tag footer_branding.logo, alt: footer_branding.brand_title || _('Logo'), style: 'height: 40px;' %>
           <% end %>
         <% elsif Settings.brand.present? && Settings.brand.light_logo.present? %>
           <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 40px;" class="light-logo">

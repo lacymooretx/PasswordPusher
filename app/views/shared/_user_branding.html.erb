@@ -13,9 +13,11 @@
 
   <div class="text-center mb-4">
     <% if @user_branding.logo.attached? %>
-      <%= image_tag @user_branding.logo, style: "max-height: 80px; max-width: 250px;", alt: @user_branding.brand_title || "", class: "mb-2 light-logo" %>
       <% if @user_branding.dark_logo.attached? %>
+        <%= image_tag @user_branding.logo, style: "max-height: 80px; max-width: 250px;", alt: @user_branding.brand_title || "", class: "mb-2 light-logo" %>
         <%= image_tag @user_branding.dark_logo, style: "max-height: 80px; max-width: 250px;", alt: @user_branding.brand_title || "", class: "mb-2 dark-logo" %>
+      <% else %>
+        <%= image_tag @user_branding.logo, style: "max-height: 80px; max-width: 250px;", alt: @user_branding.brand_title || "", class: "mb-2" %>
       <% end %>
     <% end %>
 

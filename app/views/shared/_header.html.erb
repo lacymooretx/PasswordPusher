@@ -6,9 +6,11 @@
     <%= link_to root_path, class: 'd-flex align-items-center mb-3 mb-md-0 me-md-auto text-body-emphasis text-decoration-none', hreflang: locale.to_s do %>
       <div class='me-2'>
       <% if header_branding&.logo&.attached? %>
-        <%= image_tag header_branding.logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;', class: 'light-logo' %>
         <% if header_branding.dark_logo.attached? %>
+          <%= image_tag header_branding.logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;', class: 'light-logo' %>
           <%= image_tag header_branding.dark_logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;', class: 'dark-logo' %>
+        <% else %>
+          <%= image_tag header_branding.logo, alt: header_branding.brand_title || _('Logo'), style: 'height: 50px;' %>
         <% end %>
       <% elsif Settings.brand.present? && Settings.brand.light_logo.present? %>
         <img src="<%= Settings.brand.light_logo %>" alt="<%= _('Password Pusher Logo') %>" style="height: 50px;" class="light-logo">
