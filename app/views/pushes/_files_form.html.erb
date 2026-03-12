@@ -1,7 +1,9 @@
 <% title(_('Securely Send Files')) %>
 
+<% encryption_enabled = Settings.files.enable_encryption %>
 <div class='container'
-    data-controller="knobs form"
+    data-controller="knobs form<%= ' encrypted-upload' if encryption_enabled %>"
+    <%= "data-encrypted-upload-enabled-value=true data-encrypted-upload-direct-upload-url-value=#{rails_direct_uploads_url}" if encryption_enabled %>
     data-knobs-tab-name-value="file"
     data-knobs-lang-day-value="<%= _('Day') %>"
     data-knobs-lang-days-value="<%= _('Days') %>"
@@ -16,7 +18,7 @@
     data-knobs-ga-enabled-value="<%= ENV.key?('GA_ENABLE') %>">
 <%= render partial: "shared/topnav" %>
 
-<%= form_for @push, data: { action: 'form#submit' } do |f| %>
+<%= form_for @push, data: { action: "form#submit#{' submit->encrypted-upload#handleSubmit' if encryption_enabled}" } do |f| %>
     <%= render partial: "pushes/error", locals: {push: @push} %>
 
     <%= f.hidden_field :kind, value: :file unless action_name == 'edit' %>
@@ -68,13 +70,18 @@
                                     <%= f.file_field :files,
                                                      multiple: true,
                                                      required: !@push.persisted?,
-                                                     direct_upload: true,
+                                                     direct_upload: !encryption_enabled,
                                                      class: "form-control",
                                                      "data-action": "multi-upload#addFile" %>
                                 </div>
                             </div>
                         </div>
-                        <div id="file-count-footer" class="card-footer text-muted"> <%= _('You can upload up to %{count} files per push.') % { count: @push.settings_for_kind.max_file_uploads } %> </div>
+                        <div id="file-count-footer" class="card-footer text-muted">
+                            <%= _('You can upload up to %{count} files per push.') % { count: @push.settings_for_kind.max_file_uploads } %>
+                            <% if encryption_enabled %>
+                                <span class="badge bg-success ms-2"><i class="bi bi-shield-lock"></i> <%= _('End-to-end encrypted') %></span>
+                            <% end %>
+                        </div>
                     </div>
                 </div>
             </div>

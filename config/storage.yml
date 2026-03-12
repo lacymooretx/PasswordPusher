@@ -30,6 +30,7 @@ backblaze_b2:
   secret_access_key: <%= Settings.files.s3.secret_access_key %>
   region: <%= Settings.files.s3.region %>
   bucket: <%= Settings.files.s3.bucket %>
+  force_path_style: true
 
 cloudflare_r2:
   service: S3

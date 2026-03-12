@@ -144,6 +144,7 @@ class FilePushJsonRetrievalTest < ActionDispatch::IntegrationTest
     "deleted" => false,
     "deletable_by_viewer" => true,
     "payload" => nil,
+    "files_encrypted" => false,
     "files" => []}
   end
 end

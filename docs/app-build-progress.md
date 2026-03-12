@@ -34,6 +34,55 @@
 | 28 | Footer Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE | 2026-02-26 | 2026-02-26 |
 | 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE | 2026-02-27 | 2026-02-27 |
+| 31 | Backblaze B2 Encrypted File Storage | PHASE COMPLETE | 2026-03-12 | |
+
+---
+
+## Phase 31: Backblaze B2 Encrypted File Storage
+
+### Goal
+Support large file uploads (1.57 GB+) with client-side AES-256-GCM encryption, stored in Backblaze B2 via Active Storage direct upload. Files are encrypted in the browser before upload and decrypted client-side on download. Per-push encryption keys stored in DB via Lockbox.
+
+### Sub-phases
+- [x] 31a: B2 bucket + Active Storage configuration
+- [x] 31b: Database migration + Push model changes (encryption key)
+- [x] 31c: Client-side encryption (chunked AES-256-GCM upload)
+- [x] 31d: Client-side decryption (download flow)
+- [x] 31e: View updates (upload form, download page, encryption indicators)
+- [ ] 31f: Nginx + production deployment config
+- [x] 31g: Testing + verification (1124 tests, 4807 assertions, 0 failures)
+
+### Implementation Details
+
+**B2 Bucket:**
+- Bucket: `pwpush-files` (ID: `8e278110b3eae62a9ec8011c`)
+- Region: `us-west-004`, SSE-B2 (AES256) enabled
+- CORS: pwpush.aspendora.com + localhost:5100
+- Scoped app key created (ID: `004e7103a6ae81c0000000002`)
+
+**Encryption Architecture:**
+- Client-side AES-256-GCM encryption via Web Crypto API
+- 5 MB chunk size for streaming large files
+- Binary format: [PWPE header (29 bytes)][encrypted chunks with per-chunk IV]
+- Per-push encryption key stored in `file_encryption_key_ciphertext` (Lockbox-encrypted)
+- Key generated in browser, sent to server, stored encrypted in DB
+- On download: encrypted file fetched from B2, decrypted client-side
+
+**Files Changed:**
+- `db/migrate/20260312000001_add_file_encryption_to_pushes.rb` — new column
+- `app/models/push.rb` — `has_encrypted :file_encryption_key`, `files_encrypted?`, expire clears key
+- `config/settings.yml` + `config/defaults/settings.yml` — `enable_encryption` flag, updated storage docs
+- `config/storage.yml` — `force_path_style: true` for B2
+- `app/controllers/pushes_controller.rb` — permit `file_encryption_key` param
+- `app/controllers/api/v1/pushes_controller.rb` — permit `file_encryption_key` param
+- `app/views/pushes/_push.json.jbuilder` — include `files_encrypted` + key in JSON
+- `app/javascript/controllers/encrypted_upload_controller.js` — NEW: client-side encryption + DirectUpload
+- `app/javascript/controllers/encrypted_download_controller.js` — NEW: client-side decryption + download
+- `app/javascript/controllers/index.js` — register new controllers
+- `app/views/pushes/_files_form.html.erb` — encrypted upload integration + badge
+- `app/views/pushes/_form.html.erb` — encrypted upload integration for text push file attachments
+- `app/views/pushes/show.html.erb` — encrypted download links + badge
+- 4 test files updated with `files_encrypted` field expectations
 
 ---
 

@@ -105,7 +105,7 @@ class QrJsonRetrievalTest < ActionDispatch::IntegrationTest
     assert_equal 0, res["views_remaining"]
     assert res.key?("expire_after_views")
     assert_equal 2, res["expire_after_views"]
-    assert_equal res.keys.sort, ["created_at", "days_remaining", "deletable_by_viewer", "deleted", "expire_after_days", "expire_after_views", "expired", "expired_on", "files", "html_url", "json_url", "passphrase", "payload", "retrieval_step", "updated_at", "url_token", "views_remaining"].sort
+    assert_equal res.keys.sort, ["created_at", "days_remaining", "deletable_by_viewer", "deleted", "expire_after_days", "expire_after_views", "expired", "expired_on", "files", "files_encrypted", "html_url", "json_url", "passphrase", "payload", "retrieval_step", "updated_at", "url_token", "views_remaining"].sort
     assert_equal res.except("url_token", "created_at", "updated_at", "expired_on", "html_url", "json_url"), {"expire_after_views" => 2,
       "expired" => true,
       "deletable_by_viewer" => true,
@@ -116,6 +116,7 @@ class QrJsonRetrievalTest < ActionDispatch::IntegrationTest
       "views_remaining" => 0,
       "deleted" => false,
       "payload" => nil,
+      "files_encrypted" => false,
       "files" => []}
   end
 end

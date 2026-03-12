@@ -639,18 +639,36 @@ files:
   #
   max_file_uploads: 10
 
+  # Client-Side File Encryption
+  #
+  # When enabled, files are encrypted in the browser using AES-256-GCM before
+  # being uploaded. The per-push encryption key is stored in the database
+  # encrypted by Lockbox. Files cannot be read by the storage provider.
+  #
+  # default: true
+  #
+  # Environment variable override:
+  # PWP__FILES__ENABLE_ENCRYPTION='true'
+  #
+  enable_encryption: true
+
   # File Storage
   #
-  # Password Pusher can store uploaded files into Amazon S3, Google Cloud Services
-  # or Microsoft Azure.
+  # Password Pusher can store uploaded files into Amazon S3, Google Cloud Services,
+  # Microsoft Azure, or any S3-compatible service (Backblaze B2, Cloudflare R2, etc.).
   #
   # Choose your file storage preference by setting the following option to
   # one of the following values:
-  #   * local     - use local disk (likely won't work in container environments)
-  #   * amazon    - use Amazon S3 (and provide 's3' credentials below)
-  #   * minio     - use Minio S3 (and provide 's3' credentials below)
-  #   * google    - use Google Cloud Storage (and provide 'gcs' credentials below)
-  #   * microsoft - use Microsoft Azure Storage (and provide 'as' credentials below)
+  #   * local              - use local disk (likely won't work in container environments)
+  #   * amazon             - use Amazon S3 (and provide 's3' credentials below)
+  #   * minio              - use Minio S3 (and provide 's3' credentials below)
+  #   * backblaze_b2       - use Backblaze B2 (and provide 's3' credentials below)
+  #   * cloudflare_r2      - use Cloudflare R2 (and provide 's3' credentials below)
+  #   * digitalocean_spaces - use DigitalOcean Spaces (and provide 's3' credentials below)
+  #   * linode_object_storage - use Linode Object Storage (and provide 's3' credentials below)
+  #   * wasabi             - use Wasabi (and provide 's3' credentials below)
+  #   * google             - use Google Cloud Storage (and provide 'gcs' credentials below)
+  #   * microsoft          - use Microsoft Azure Storage (and provide 'as' credentials below)
   #
   # Environment variable override:
   # PWP__FILES__STORAGE='local'

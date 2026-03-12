@@ -31,13 +31,17 @@ class Push < ApplicationRecord
   belongs_to :request, optional: true
   belongs_to :team, optional: true
 
-  has_encrypted :payload, :note, :passphrase
+  has_encrypted :payload, :note, :passphrase, :file_encryption_key
 
   has_many :audit_logs, -> { order(created_at: :asc) }, dependent: :destroy
   has_many_attached :files, dependent: :destroy
 
   def to_param
     url_token.to_s
+  end
+
+  def files_encrypted?
+    file_encryption_key.present?
   end
 
   def days_old
@@ -69,6 +73,7 @@ class Push < ApplicationRecord
     # Delete content
     self.payload = nil
     self.passphrase = nil
+    self.file_encryption_key = nil
     files.purge
 
     # Mark as expired
@@ -101,6 +106,8 @@ class Push < ApplicationRecord
         file_list[file.filename] = Rails.application.routes.url_helpers.rails_blob_url(file, only_path: true)
       end
       attr_hash["files"] = file_list.to_json
+      attr_hash["files_encrypted"] = files_encrypted?
+      attr_hash["file_encryption_key"] = file_encryption_key if files_encrypted? && payload
     end
 
     # Remove unnecessary fields
@@ -230,6 +237,7 @@ class Push < ApplicationRecord
     # Delete content
     self.payload = nil
     self.passphrase = nil
+    self.file_encryption_key = nil
     files.purge
 
     # Mark as expired

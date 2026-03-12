@@ -402,10 +402,10 @@ class PushesController < BaseController
         :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
     when "file"
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, files: [])
     else
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, files: [])
     end
   rescue => e
     Rails.logger.error("Error in push_params: #{e.message}")
@@ -420,10 +420,10 @@ class PushesController < BaseController
         :retrieval_step, :payload, :note, :passphrase)
     when "file"
       params.require(:push).permit(:name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :file_encryption_key, files: [])
     else
       params.require(:push).permit(:name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :file_encryption_key, files: [])
     end
   rescue => e
     Rails.logger.error("Error in update_params: #{e.message}")

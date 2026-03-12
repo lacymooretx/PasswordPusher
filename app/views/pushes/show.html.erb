@@ -26,6 +26,24 @@
       <div class='text-center m-3'>
         <% if @push.files.attached? %>
           <p><strong><%= _('Attached Files') %></strong></p>
+          <% if @push.files_encrypted? %>
+            <p class="text-muted small"><span class="badge bg-success"><i class="bi bi-shield-lock"></i> <%= _('End-to-end encrypted') %></span></p>
+            <div data-controller="encrypted-download" data-encrypted-download-key-value="<%= @push.file_encryption_key %>">
+              <% @push.files.each do |file| %>
+                <div class="list-group">
+                  <a href="#" class="list-group-item list-group-item-action"
+                     data-action="encrypted-download#download"
+                     data-encrypted-url="<%= rails_blob_url(file) %>"
+                     data-filename="<%= file.filename %>">
+                    <i class="bi bi-file-earmark-lock"></i>
+                    <%= file.filename %>
+                    &nbsp;
+                    <em class="bi bi-download"></em>
+                  </a>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
             <% @push.files.each do |file| %>
               <div class="list-group">
                   <%= link_to rails_blob_url(file), target: '_blank', class: 'list-group-item list-group-item-action' do %>
@@ -36,6 +54,7 @@
                   <% end %>
               </div>
             <% end %>
+          <% end %>
         <% end %>
         <p class="text-muted mt-5">
           <%= _("This secret link and all content will be deleted in") %>
@@ -73,15 +92,34 @@
       <% if @push.text? && @push.files.attached? %>
         <div class='text-center m-3'>
           <p><strong><%= _('Attached Files') %></strong></p>
-          <% @push.files.each do |file| %>
-            <div class="list-group">
-              <%= link_to rails_blob_url(file), target: '_blank', class: 'list-group-item list-group-item-action' do %>
-                <%= file.filename %>
-                (<%= filesize(file.blob.byte_size) %>)
-                &nbsp;
-                <em class="bi bi-box-arrow-up-right"></em>
+          <% if @push.files_encrypted? %>
+            <p class="text-muted small"><span class="badge bg-success"><i class="bi bi-shield-lock"></i> <%= _('End-to-end encrypted') %></span></p>
+            <div data-controller="encrypted-download" data-encrypted-download-key-value="<%= @push.file_encryption_key %>">
+              <% @push.files.each do |file| %>
+                <div class="list-group">
+                  <a href="#" class="list-group-item list-group-item-action"
+                     data-action="encrypted-download#download"
+                     data-encrypted-url="<%= rails_blob_url(file) %>"
+                     data-filename="<%= file.filename %>">
+                    <i class="bi bi-file-earmark-lock"></i>
+                    <%= file.filename %>
+                    &nbsp;
+                    <em class="bi bi-download"></em>
+                  </a>
+                </div>
               <% end %>
             </div>
+          <% else %>
+            <% @push.files.each do |file| %>
+              <div class="list-group">
+                <%= link_to rails_blob_url(file), target: '_blank', class: 'list-group-item list-group-item-action' do %>
+                  <%= file.filename %>
+                  (<%= filesize(file.blob.byte_size) %>)
+                  &nbsp;
+                  <em class="bi bi-box-arrow-up-right"></em>
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
         </div>
       <% end %>

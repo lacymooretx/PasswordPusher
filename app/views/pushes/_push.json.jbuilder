@@ -23,10 +23,16 @@ end
 if controller.action_name == "show"
   json.payload push.payload
 
+  json.files_encrypted push.files_encrypted?
+  if push.files_encrypted?
+    json.file_encryption_key push.file_encryption_key
+  end
+
   json.files do
     json.array! push.files do |file|
       json.filename file.filename.to_s
       json.content_type file.content_type
+      json.byte_size file.byte_size
       json.url rails_blob_url(file)
     end
   end
