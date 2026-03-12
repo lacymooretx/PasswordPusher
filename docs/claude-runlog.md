@@ -50,7 +50,31 @@ Support large file uploads (1.57 GB+) with client-side AES-256-GCM encryption, s
 13. **Documentation** — Created `docs/b2-encrypted-storage.md` with architecture, format spec, deploy steps
 
 ### Remaining
-- [ ] Production deployment (nginx config, env vars, rebuild Docker image)
+- [x] Production deployment (deployed, migration ran, site confirmed HTTP 200)
+
+---
+
+## 2026-03-12: Upstream Cherry-Picks (Safe Commits Only)
+
+### Goal
+Integrate safe upstream PasswordPusher changes (dependency bumps, doc fixes) without touching any destructive v2.0.0 changes.
+
+### Steps
+
+1. **Alpine fix** — Cherry-picked `06be0497` (libffi-dev dependency for Docker)
+2. **GitHub Actions bumps** (7 commits) — Cherry-picked with one conflict resolution in dependabot-automerge.yml (added checkout step):
+   - actions/checkout v4→v6
+   - actions/upload-artifact v6→v7
+   - docker/login-action v3→v4, metadata-action v5→v6, setup-buildx-action v3→v4, build-push-action v6→v7, setup-qemu-action v3→v4
+3. **JS dependency bumps** (2 commits) — minimatch 10.2.2→10.2.4, immutable 5.1.4→5.1.5
+4. **Doc link fix** — Manually applied e957103c (login setup link → docs.pwpush.com)
+5. **Ruby gem updates** — SKIPPED. `bundle update` fails due to apipie-rails git source conflict with mission_control-jobs. Needs separate investigation.
+6. **Tests** — 1124 runs, 4807 assertions, 0 failures, 0 errors
+
+### Remaining
+- [ ] Push to GitHub
+- [ ] Rebuild and redeploy production
+- [ ] Investigate bundle update conflict (apipie-rails git source + mission_control-jobs)
 
 ---
 
