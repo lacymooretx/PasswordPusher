@@ -25,7 +25,7 @@
 #
 if ENV.key?("PWPUSH_MASTER_KEY")
   Lockbox.master_key = ENV.fetch("PWPUSH_MASTER_KEY")
-elsif Rails.env.production?
+elsif Rails.env.production? && !ENV.key?("SECRET_KEY_BASE_DUMMY")
   raise <<~MSG
     PWPUSH_MASTER_KEY is not set!
 
@@ -36,7 +36,7 @@ elsif Rails.env.production?
     Then set:           export PWPUSH_MASTER_KEY=<your key>
   MSG
 else
-  # Development/test fallback — safe because no real data at risk
+  # Development/test/build fallback — safe because no real data at risk
   Lockbox.master_key = "749b1022e1cb83fb04f3022eacaf3bfef60c6d47f83e6fb41f534a05fc69929f"
 end
 
