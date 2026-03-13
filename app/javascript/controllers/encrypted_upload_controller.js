@@ -139,7 +139,7 @@ export default class extends Controller {
         submitButton.disabled = false
         submitButton.textContent = "Push It!"
       }
-      alert(`Upload failed: ${error.message}. Please try again.`)
+      alert(`Upload failed: ${error.message || error}. Please try again.`)
     }
   }
 
@@ -196,11 +196,23 @@ export default class extends Controller {
               onProgress((event.loaded / event.total) * 100)
             }
           })
+          request.addEventListener("error", () => {
+            console.error("DirectUpload XHR error:", request.status, request.statusText, request.responseText)
+          })
+          request.addEventListener("load", () => {
+            if (request.status >= 400) {
+              console.error("DirectUpload XHR failed:", request.status, request.statusText, request.responseText)
+            }
+          })
         }
       })
       upload.create((error, blob) => {
-        if (error) reject(error)
-        else resolve(blob.signed_id)
+        if (error) {
+          console.error("DirectUpload error:", error)
+          reject(error)
+        } else {
+          resolve(blob.signed_id)
+        }
       })
     })
   }
