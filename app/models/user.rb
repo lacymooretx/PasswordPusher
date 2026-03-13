@@ -86,29 +86,33 @@ class User < ApplicationRecord
   end
 
   # --- SSO / OmniAuth ---
-  # Supports linking SSO identities to existing accounts by matching email.
+
+  # Result object for from_omniauth — lets the controller distinguish outcomes.
+  OmniauthResult = Struct.new(:user, :status, keyword_init: true)
 
   # Finds or creates a user from an OmniAuth callback hash.
-  # Priority: match by provider+uid, then by email (links SSO to existing account),
-  # then create a new pre-confirmed user with a random password.
+  # Returns an OmniauthResult with status:
+  #   :found      — existing SSO user matched by provider+uid
+  #   :conflict   — email matches an existing local account (needs password verification)
+  #   :created    — new user created with SSO credentials
   def self.from_omniauth(auth)
     avatar = auth.info.image
 
+    # 1. Match by provider+uid — already linked
     user = find_by(provider: auth.provider, uid: auth.uid)
     if user
       user.update!(avatar_url: avatar) if avatar.present? && user.avatar_url != avatar
-      return user
+      return OmniauthResult.new(user: user, status: :found)
     end
 
-    # Try to find existing user by email and link the SSO account
-    user = find_by(email: auth.info.email)
-    if user
-      user.update!(provider: auth.provider, uid: auth.uid, avatar_url: avatar)
-      return user
+    # 2. Email matches existing account — require password verification before linking
+    existing = find_by(email: auth.info.email)
+    if existing
+      return OmniauthResult.new(user: existing, status: :conflict)
     end
 
-    # Create new user with SSO credentials
-    create!(
+    # 3. Create new user with SSO credentials
+    new_user = create!(
       email: auth.info.email,
       provider: auth.provider,
       uid: auth.uid,
@@ -116,6 +120,12 @@ class User < ApplicationRecord
       password: Devise.friendly_token[0, 30],
       confirmed_at: Time.current # SSO users are pre-confirmed
     )
+    OmniauthResult.new(user: new_user, status: :created)
+  end
+
+  # Link an SSO identity to this account after ownership has been verified.
+  def link_omniauth!(provider:, uid:, avatar_url: nil)
+    update!(provider: provider, uid: uid, avatar_url: avatar_url)
   end
 
   # Returns true if this account was created/linked via an SSO provider.

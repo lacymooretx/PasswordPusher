@@ -25,21 +25,25 @@ class UserOmniauthTest < ActiveSupport::TestCase
       info: OmniAuth::AuthHash::InfoHash.new(email: @luca.email)
     )
 
-    user = User.from_omniauth(auth)
-    assert_equal @luca.id, user.id
+    result = User.from_omniauth(auth)
+    assert_equal :found, result.status
+    assert_equal @luca.id, result.user.id
   end
 
-  test "from_omniauth links SSO to existing user by email" do
+  test "from_omniauth returns conflict when email matches existing local account" do
     auth = OmniAuth::AuthHash.new(
       provider: "google_oauth2",
       uid: "new-uid-123",
       info: OmniAuth::AuthHash::InfoHash.new(email: @luca.email)
     )
 
-    user = User.from_omniauth(auth)
-    assert_equal @luca.id, user.id
-    assert_equal "google_oauth2", user.provider
-    assert_equal "new-uid-123", user.uid
+    result = User.from_omniauth(auth)
+    assert_equal :conflict, result.status
+    assert_equal @luca.id, result.user.id
+    # Provider/uid should NOT be updated yet
+    @luca.reload
+    assert_nil @luca.provider
+    assert_nil @luca.uid
   end
 
   test "from_omniauth creates new user when no match found" do
@@ -50,12 +54,13 @@ class UserOmniauthTest < ActiveSupport::TestCase
     )
 
     assert_difference "User.count", 1 do
-      user = User.from_omniauth(auth)
-      assert user.persisted?
-      assert_equal "newuser@example.com", user.email
-      assert_equal "microsoft_graph", user.provider
-      assert_equal "ms-uid-456", user.uid
-      assert user.confirmed_at.present? # SSO users are pre-confirmed
+      result = User.from_omniauth(auth)
+      assert_equal :created, result.status
+      assert result.user.persisted?
+      assert_equal "newuser@example.com", result.user.email
+      assert_equal "microsoft_graph", result.user.provider
+      assert_equal "ms-uid-456", result.user.uid
+      assert result.user.confirmed_at.present? # SSO users are pre-confirmed
     end
   end
 
@@ -69,7 +74,20 @@ class UserOmniauthTest < ActiveSupport::TestCase
       info: OmniAuth::AuthHash::InfoHash.new(email: "different@example.com")
     )
 
-    user = User.from_omniauth(auth)
-    assert_equal @luca.id, user.id
+    result = User.from_omniauth(auth)
+    assert_equal :found, result.status
+    assert_equal @luca.id, result.user.id
+  end
+
+  test "link_omniauth! links SSO identity to existing account" do
+    assert_nil @luca.provider
+    assert_nil @luca.uid
+
+    @luca.link_omniauth!(provider: "google_oauth2", uid: "linked-uid-789", avatar_url: "https://example.com/avatar.png")
+    @luca.reload
+
+    assert_equal "google_oauth2", @luca.provider
+    assert_equal "linked-uid-789", @luca.uid
+    assert_equal "https://example.com/avatar.png", @luca.avatar_url
   end
 end

@@ -24,4 +24,8 @@ devise_scope :user do
       get :token
       delete :token, action: :regen_token
     end
+
+  # SSO account linking — verify password before linking SSO to existing account
+  get "users/sso/link", to: "users/omniauth_callbacks#link_account", as: :sso_link
+  post "users/sso/link", to: "users/omniauth_callbacks#confirm_link"
 end

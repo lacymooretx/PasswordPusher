@@ -1,0 +1,22 @@
+<% title(_('Link SSO Account')) %>
+<h2 class='my-3'><%= _('Link Your %{provider} Account') % {provider: @sso_provider} %></h2>
+
+<div class="alert alert-info">
+  <i class="bi bi-info-circle"></i>
+  <%= _('An account with the email <strong>%{email}</strong> already exists. To link your %{provider} identity, please verify your password.') % {email: @sso_email, provider: @sso_provider} %>
+</div>
+
+<%= form_tag(sso_link_path, method: :post) do %>
+  <div class="form-floating mb-3">
+    <%= password_field_tag :password, nil, class: 'form-control', autocomplete: "current-password", placeholder: 'password', required: true, autofocus: true %>
+    <%= label_tag :password, _('Password') %>
+  </div>
+
+  <button class="w-100 btn btn-lg btn-primary mt-3" type="submit">
+    <i class="bi bi-link-45deg"></i> <%= _('Verify & Link Account') %>
+  </button>
+<% end %>
+
+<div class="text-center mt-3">
+  <%= link_to _('Cancel'), new_user_session_path, class: "btn btn-outline-secondary" %>
+</div>
