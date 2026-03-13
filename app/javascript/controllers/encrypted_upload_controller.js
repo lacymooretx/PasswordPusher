@@ -1,5 +1,6 @@
 import { DirectUpload } from "@rails/activestorage"
 import { Controller } from "@hotwired/stimulus"
+import SparkMD5 from "spark-md5"
 
 // Encrypted file format: [HEADER][CHUNK_0][CHUNK_1]...[CHUNK_N]
 // Header (29 bytes): [4: magic "PWPE"][1: version][4: chunk_size][8: original_size][12: base_iv]
@@ -9,6 +10,8 @@ const FORMAT_VERSION = 1
 const CHUNK_SIZE = 5 * 1024 * 1024 // 5 MB
 const HEADER_SIZE = 29
 const GCM_TAG_SIZE = 16
+const MULTIPART_THRESHOLD = 100 * 1024 * 1024 // 100 MB — use multipart above this
+const MULTIPART_PART_SIZE = 100 * 1024 * 1024 // 100 MB per part
 
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return "0 Bytes"
@@ -19,9 +22,15 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
 }
 
+function csrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]')
+  return meta ? meta.content : ""
+}
+
 export default class extends Controller {
   static values = {
     directUploadUrl: String,
+    multipartUrl: String,
     enabled: { type: Boolean, default: false }
   }
 
@@ -97,14 +106,22 @@ export default class extends Controller {
           this.updateProgress(progressItem, pct * 0.4, `Encrypting ${file.name}... ${Math.round(pct)}%`)
         })
 
-        // Phase 2: Upload via DirectUpload
+        // Phase 2: Upload
         this.updateProgress(progressItem, 40, `Uploading ${file.name}...`)
         const encryptedFile = new File([encryptedBlob], file.name, {
           type: "application/octet-stream"
         })
-        const signedId = await this.uploadFile(encryptedFile, (pct) => {
-          this.updateProgress(progressItem, 40 + pct * 0.6, `Uploading ${file.name}... ${Math.round(pct)}%`)
-        })
+
+        let signedId
+        if (encryptedFile.size > MULTIPART_THRESHOLD && this.hasMultipartUrlValue) {
+          signedId = await this.multipartUpload(encryptedFile, (pct) => {
+            this.updateProgress(progressItem, 40 + pct * 0.6, `Uploading ${file.name}... ${Math.round(pct)}%`)
+          })
+        } else {
+          signedId = await this.directUploadFile(encryptedFile, (pct) => {
+            this.updateProgress(progressItem, 40 + pct * 0.6, `Uploading ${file.name}... ${Math.round(pct)}%`)
+          })
+        }
 
         signedIds.push(signedId)
         this.updateProgress(progressItem, 100, `${file.name} (${formatBytes(file.size)}) ✓`)
@@ -187,21 +204,14 @@ export default class extends Controller {
     return new Blob(encryptedParts)
   }
 
-  uploadFile(file, onProgress) {
+  // Single-part upload via ActiveStorage DirectUpload (for files <= 100MB)
+  directUploadFile(file, onProgress) {
     return new Promise((resolve, reject) => {
       const upload = new DirectUpload(file, this.directUploadUrlValue, {
         directUploadWillStoreFileWithXHR: (request) => {
           request.upload.addEventListener("progress", (event) => {
             if (onProgress && event.total > 0) {
               onProgress((event.loaded / event.total) * 100)
-            }
-          })
-          request.addEventListener("error", () => {
-            console.error("DirectUpload XHR error:", request.status, request.statusText, request.responseText)
-          })
-          request.addEventListener("load", () => {
-            if (request.status >= 400) {
-              console.error("DirectUpload XHR failed:", request.status, request.statusText, request.responseText)
             }
           })
         }
@@ -214,6 +224,173 @@ export default class extends Controller {
           resolve(blob.signed_id)
         }
       })
+    })
+  }
+
+  // Multipart upload for large files (> 100MB)
+  async multipartUpload(file, onProgress) {
+    const checksum = await this.computeChecksum(file)
+    const baseUrl = this.multipartUrlValue
+
+    // Step 1: Initiate multipart upload
+    const initResponse = await fetch(baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken()
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        byte_size: file.size,
+        checksum: checksum,
+        content_type: file.type || "application/octet-stream"
+      })
+    })
+
+    if (!initResponse.ok) {
+      const text = await initResponse.text()
+      throw new Error(`Failed to initiate upload: ${initResponse.status} ${text}`)
+    }
+
+    const { upload_id, key, signed_id } = await initResponse.json()
+
+    try {
+      // Step 2: Upload parts
+      const totalParts = Math.ceil(file.size / MULTIPART_PART_SIZE)
+      const completedParts = []
+      let totalUploaded = 0
+
+      for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+        const start = (partNumber - 1) * MULTIPART_PART_SIZE
+        const end = Math.min(start + MULTIPART_PART_SIZE, file.size)
+        const partBlob = file.slice(start, end)
+
+        // Get presigned URL for this part
+        const partUrlResponse = await fetch(`${baseUrl}/part_url`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken()
+          },
+          body: JSON.stringify({
+            key: key,
+            upload_id: upload_id,
+            part_number: partNumber
+          })
+        })
+
+        if (!partUrlResponse.ok) {
+          throw new Error(`Failed to get part URL: ${partUrlResponse.status}`)
+        }
+
+        const { url } = await partUrlResponse.json()
+
+        // Upload the part directly to B2/S3
+        const etag = await this.uploadPart(url, partBlob, (partPct) => {
+          const partBytes = partPct / 100 * (end - start)
+          const totalPct = (totalUploaded + partBytes) / file.size * 100
+          if (onProgress) onProgress(totalPct)
+        })
+
+        completedParts.push({ etag: etag, part_number: partNumber })
+        totalUploaded += (end - start)
+        if (onProgress) onProgress(totalUploaded / file.size * 100)
+      }
+
+      // Step 3: Complete multipart upload
+      const completeResponse = await fetch(`${baseUrl}/complete`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken()
+        },
+        body: JSON.stringify({
+          key: key,
+          upload_id: upload_id,
+          parts: completedParts
+        })
+      })
+
+      if (!completeResponse.ok) {
+        const text = await completeResponse.text()
+        throw new Error(`Failed to complete upload: ${completeResponse.status} ${text}`)
+      }
+
+      return signed_id
+    } catch (error) {
+      // Abort the multipart upload on failure
+      try {
+        await fetch(`${baseUrl}/abort`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken()
+          },
+          body: JSON.stringify({ key: key, upload_id: upload_id })
+        })
+      } catch (abortError) {
+        console.error("Failed to abort multipart upload:", abortError)
+      }
+      throw error
+    }
+  }
+
+  // Upload a single part to the presigned URL, return the ETag
+  uploadPart(url, blob, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open("PUT", url)
+
+      xhr.upload.addEventListener("progress", (event) => {
+        if (onProgress && event.total > 0) {
+          onProgress((event.loaded / event.total) * 100)
+        }
+      })
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const etag = xhr.getResponseHeader("ETag")
+          resolve(etag)
+        } else {
+          reject(new Error(`Part upload failed: ${xhr.status} ${xhr.statusText}`))
+        }
+      }
+
+      xhr.onerror = () => {
+        reject(new Error("Part upload network error"))
+      }
+
+      xhr.send(blob)
+    })
+  }
+
+  // Compute MD5 checksum of a Blob using SparkMD5 (streaming)
+  computeChecksum(blob) {
+    return new Promise((resolve, reject) => {
+      const md5 = new SparkMD5.ArrayBuffer()
+      const reader = new FileReader()
+      const chunkSize = 2 * 1024 * 1024 // 2 MB read chunks
+      let offset = 0
+
+      reader.onload = (event) => {
+        md5.append(event.target.result)
+        offset += event.target.result.byteLength
+        if (offset < blob.size) {
+          readNextChunk()
+        } else {
+          const rawDigest = md5.end(true) // raw binary string
+          resolve(btoa(rawDigest))
+        }
+      }
+
+      reader.onerror = () => reject(new Error("Failed to compute file checksum"))
+
+      function readNextChunk() {
+        const slice = blob.slice(offset, offset + chunkSize)
+        reader.readAsArrayBuffer(slice)
+      }
+
+      readNextChunk()
     })
   }
 

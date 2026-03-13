@@ -38,6 +38,14 @@ Rails.application.routes.draw do
     root to: "pushes#new"
   end
 
+  # Multipart upload endpoints for large file uploads to S3-compatible storage
+  scope "/pfb" do
+    post "multipart_uploads", to: "active_storage/multipart_uploads#create"
+    post "multipart_uploads/part_url", to: "active_storage/multipart_uploads#part_url"
+    put "multipart_uploads/complete", to: "active_storage/multipart_uploads#complete"
+    delete "multipart_uploads/abort", to: "active_storage/multipart_uploads#abort_upload"
+  end
+
   # Health check endpoint that returns a simple 200 OK response
   get "/up" => proc { |env|
     [200, {"Content-Type" => "text/html"}, ["<html style='background:green;width:100%;height:100vh'></html>"]]

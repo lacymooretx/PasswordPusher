@@ -34,7 +34,7 @@
 | 28 | Footer Redesign | COMPLETE | 2026-02-25 | 2026-02-25 |
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE | 2026-02-26 | 2026-02-26 |
 | 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE | 2026-02-27 | 2026-02-27 |
-| 31 | Backblaze B2 Encrypted File Storage | PHASE COMPLETE | 2026-03-12 | |
+| 31 | Backblaze B2 Encrypted File Storage | COMPLETE | 2026-03-12 | 2026-03-12 |
 
 ---
 
@@ -49,7 +49,7 @@ Support large file uploads (1.57 GB+) with client-side AES-256-GCM encryption, s
 - [x] 31c: Client-side encryption (chunked AES-256-GCM upload)
 - [x] 31d: Client-side decryption (download flow)
 - [x] 31e: View updates (upload form, download page, encryption indicators)
-- [ ] 31f: Nginx + production deployment config
+- [x] 31f: Nginx + production deployment config (deployed 2026-03-12)
 - [x] 31g: Testing + verification (1124 tests, 4807 assertions, 0 failures)
 
 ### Implementation Details

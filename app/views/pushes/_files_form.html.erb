@@ -3,7 +3,7 @@
 <% encryption_enabled = Settings.files.enable_encryption %>
 <div class='container'
     data-controller="knobs form<%= ' encrypted-upload' if encryption_enabled %>"
-    <%= "data-encrypted-upload-enabled-value=true data-encrypted-upload-direct-upload-url-value=#{rails_direct_uploads_url}" if encryption_enabled %>
+    <%= "data-encrypted-upload-enabled-value=true data-encrypted-upload-direct-upload-url-value=#{rails_direct_uploads_url} data-encrypted-upload-multipart-url-value=#{"/pfb/multipart_uploads"}" if encryption_enabled %>
     data-knobs-tab-name-value="file"
     data-knobs-lang-day-value="<%= _('Day') %>"
     data-knobs-lang-days-value="<%= _('Days') %>"
