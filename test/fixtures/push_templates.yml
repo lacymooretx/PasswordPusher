@@ -1,0 +1,25 @@
+text_template:
+  user: one
+  name: "Quick Share"
+  kind: 0
+  expire_after_days: 3
+  expire_after_views: 5
+  retrieval_step: true
+  deletable_by_viewer: false
+
+team_template:
+  user: one
+  team: one_team
+  name: "Team Default"
+  kind: 0
+  expire_after_days: 7
+  expire_after_views: 10
+  retrieval_step: false
+  deletable_by_viewer: true
+
+url_template:
+  user: one
+  name: "URL Preset"
+  kind: 2
+  expire_after_days: 1
+  expire_after_views: 1

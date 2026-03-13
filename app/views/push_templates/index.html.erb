@@ -1,0 +1,75 @@
+<% title(_('Push Templates')) %>
+
+<main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><%= _('Push Templates') %></h2>
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <em class="bi bi-plus-circle"></em> <%= _('New Template') %>
+      </button>
+      <ul class="dropdown-menu">
+        <li><%= link_to _('Password / Text'), new_push_template_path(kind: 'text'), class: 'dropdown-item' %></li>
+        <% if Settings.enable_file_pushes %>
+          <li><%= link_to _('File'), new_push_template_path(kind: 'file'), class: 'dropdown-item' %></li>
+        <% end %>
+        <% if Settings.enable_url_pushes %>
+          <li><%= link_to _('URL'), new_push_template_path(kind: 'url'), class: 'dropdown-item' %></li>
+        <% end %>
+        <% if Settings.enable_qr_pushes %>
+          <li><%= link_to _('QR Code'), new_push_template_path(kind: 'qr'), class: 'dropdown-item' %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+
+  <% if @push_templates.any? %>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th><%= _('Name') %></th>
+            <th><%= _('Kind') %></th>
+            <th><%= _('Days') %></th>
+            <th><%= _('Views') %></th>
+            <th><%= _('Shared With') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @push_templates.each do |template| %>
+            <tr>
+              <td><%= link_to template.name, edit_push_template_path(template), class: "text-decoration-none" %></td>
+              <td>
+                <% kind_badges = { 'text' => 'bg-primary', 'file' => 'bg-info', 'url' => 'bg-warning text-dark', 'qr' => 'bg-success' } %>
+                <span class="badge <%= kind_badges[template.kind] || 'bg-secondary' %>"><%= template.kind.capitalize %></span>
+              </td>
+              <td><%= template.expire_after_days || '-' %></td>
+              <td><%= template.expire_after_views || '-' %></td>
+              <td>
+                <% if template.team.present? %>
+                  <span class="badge bg-secondary"><%= template.team.name %></span>
+                <% else %>
+                  <span class="text-muted"><%= _('Personal') %></span>
+                <% end %>
+              </td>
+              <td>
+                <%= link_to edit_push_template_path(template), class: "btn btn-sm btn-outline-secondary me-1" do %>
+                  <em class="bi bi-pencil"></em>
+                <% end %>
+                <%= button_to push_template_path(template), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_confirm: _("Are you sure you want to delete this template?") } do %>
+                  <em class="bi bi-trash"></em>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-5 text-muted">
+      <em class="bi bi-bookmark-star fs-1 d-block mb-3"></em>
+      <p><%= _('No push templates yet.') %></p>
+      <p><%= _('Templates let you save push settings as reusable presets.') %></p>
+    </div>
+  <% end %>
+</main>

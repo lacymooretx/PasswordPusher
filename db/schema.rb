@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_13_203812) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -53,6 +53,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
+  create_table "csp_tenants", force: :cascade do |t|
+    t.string "contact_email"
+    t.datetime "created_at", null: false
+    t.string "domain"
+    t.datetime "last_synced_at"
+    t.string "name"
+    t.datetime "onboarded_at"
+    t.boolean "sso_enabled", default: false, null: false
+    t.string "tenant_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_count"
+    t.index ["tenant_id"], name: "index_csp_tenants_on_tenant_id", unique: true
+  end
+
   create_table "data_migration_statuses", force: :cascade do |t|
     t.boolean "completed", default: false
     t.datetime "completed_at"
@@ -82,10 +96,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
     t.index ["user_id"], name: "index_otp_backup_codes_on_user_id"
   end
 
+  create_table "push_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "deletable_by_viewer"
+    t.integer "expire_after_days"
+    t.integer "expire_after_views"
+    t.integer "kind", null: false
+    t.string "name", null: false
+    t.string "passphrase"
+    t.boolean "retrieval_step"
+    t.integer "team_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["team_id"], name: "index_push_templates_on_team_id"
+    t.index ["user_id", "name"], name: "index_push_templates_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_push_templates_on_user_id"
+  end
+
   create_table "pushes", force: :cascade do |t|
     t.text "allowed_countries"
     t.text "allowed_ips"
     t.datetime "created_at", null: false
+    t.string "custom_url_token"
     t.boolean "deletable_by_viewer", default: true
     t.integer "expire_after_days"
     t.integer "expire_after_views"
@@ -104,6 +136,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
     t.datetime "updated_at", null: false
     t.string "url_token"
     t.integer "user_id"
+    t.index ["custom_url_token"], name: "index_pushes_on_custom_url_token", unique: true
     t.index ["request_id"], name: "index_pushes_on_request_id"
     t.index ["team_id"], name: "index_pushes_on_team_id"
     t.index ["url_token"], name: "index_pushes_on_url_token", unique: true
@@ -417,6 +450,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
     t.datetime "created_at", null: false
     t.string "event", null: false
     t.json "payload"
+    t.datetime "read_at"
     t.text "response_body"
     t.integer "response_code"
     t.boolean "success", default: false, null: false
@@ -447,6 +481,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_000001) do
   add_foreign_key "memberships", "teams", on_delete: :cascade
   add_foreign_key "memberships", "users", on_delete: :cascade
   add_foreign_key "otp_backup_codes", "users", on_delete: :cascade
+  add_foreign_key "push_templates", "teams", on_delete: :cascade
+  add_foreign_key "push_templates", "users", on_delete: :cascade
   add_foreign_key "pushes", "requests", on_delete: :nullify
   add_foreign_key "pushes", "teams", on_delete: :nullify
   add_foreign_key "pushes", "users"

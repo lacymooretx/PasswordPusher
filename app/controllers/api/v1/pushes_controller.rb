@@ -185,6 +185,49 @@ class Api::V1::PushesController < Api::BaseController
     end
   end
 
+  api :POST, "/p/bulk.json", "Create multiple pushes in a single request."
+  param :pushes, Array, desc: "Array of push objects (max 50).", required: true
+  formats ["JSON"]
+  description "Creates up to 50 pushes in a single API call. Each push object uses the same parameters as the single create endpoint. Returns an array of results."
+  error code: 401, desc: "Unauthorized."
+  error code: 422, desc: "Validation failed."
+  def bulk_create
+    authenticate_user!
+
+    items = params[:pushes]
+    unless items.is_a?(Array) && items.size.between?(1, 50)
+      render json: {error: "Must provide 1-50 pushes"}, status: :unprocessable_content
+      return
+    end
+
+    results = items.map do |push_data|
+      push = Push.new(push_data.permit(:kind, :name, :payload, :expire_after_days, :expire_after_views,
+        :retrieval_step, :deletable_by_viewer, :passphrase, :note, :custom_url_token))
+      push.kind ||= "text"
+      push.user = current_user
+
+      assign_deletable_by_viewer(push, push_data)
+      assign_retrieval_step(push, push_data)
+
+      if push.save
+        log_creation(push)
+        {
+          url_token: push.url_token,
+          custom_url_token: push.custom_url_token,
+          html_url: helpers.secret_url(push),
+          kind: push.kind,
+          expire_after_days: push.expire_after_days,
+          expire_after_views: push.expire_after_views,
+          created_at: push.created_at.iso8601
+        }
+      else
+        {error: push.errors.full_messages}
+      end
+    end
+
+    render json: {results: results}, status: :created
+  end
+
   api :GET, "/p/:url_token/preview.json", "Helper endpoint to retrieve the fully qualified secret URL of a push."
   param :url_token, String, desc: "Secret URL token of a previously created push.", required: true
   formats ["JSON"]
@@ -458,7 +501,7 @@ class Api::V1::PushesController < Api::BaseController
   end
 
   def set_push
-    @push = Push.includes(:audit_logs).find_by!(url_token: params[:id])
+    @push = Push.includes(:audit_logs).find_by_token!(params[:id])
   rescue ActiveRecord::RecordNotFound
     # Showing a 404 reveals that this Secret URL never existed
     # which is an information leak (not a secret anymore)

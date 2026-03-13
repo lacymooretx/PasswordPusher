@@ -14,6 +14,7 @@
     data-knobs-default-retrieval-step-value="<%= effective_default(@push.settings_for_kind, :retrieval_step_default, 'url') %>"
     data-knobs-ga-enabled-value="<%= ENV.key?('GA_ENABLE') %>">
 <%= render partial: "shared/topnav" %>
+<%= render partial: "push_templates/template_selector", locals: { kind: "url" } %>
 
 <%= form_for @push, data: { action: 'form#submit' } do |f| %>
     <%= render partial: "pushes/error", locals: {push: @push} %>

@@ -1,0 +1,67 @@
+<% title(@csp_tenant.name) %>
+
+<main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><%= @csp_tenant.name %></h2>
+    <div class="d-flex gap-2">
+      <%= link_to edit_csp_tenant_path(@csp_tenant), class: "btn btn-outline-secondary" do %>
+        <em class="bi bi-pencil"></em> <%= _('Edit') %>
+      <% end %>
+      <%= button_to csp_tenant_path(@csp_tenant), method: :delete, class: "btn btn-outline-danger", data: { turbo_confirm: _("Are you sure?") } do %>
+        <em class="bi bi-trash"></em> <%= _('Delete') %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-3"><%= _('Azure Tenant ID') %></dt>
+        <dd class="col-sm-9"><code><%= @csp_tenant.tenant_id %></code></dd>
+
+        <dt class="col-sm-3"><%= _('Domain') %></dt>
+        <dd class="col-sm-9"><code><%= @csp_tenant.domain %></code></dd>
+
+        <dt class="col-sm-3"><%= _('Contact Email') %></dt>
+        <dd class="col-sm-9"><%= @csp_tenant.contact_email || _('Not set') %></dd>
+
+        <dt class="col-sm-3"><%= _('SSO Access') %></dt>
+        <dd class="col-sm-9">
+          <% if @csp_tenant.sso_enabled? %>
+            <span class="badge bg-success"><%= _('Enabled') %></span>
+          <% else %>
+            <span class="badge bg-secondary"><%= _('Disabled') %></span>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-3"><%= _('Onboarded') %></dt>
+        <dd class="col-sm-9">
+          <% if @csp_tenant.onboarded? %>
+            <%= l(@csp_tenant.onboarded_at) %>
+          <% else %>
+            <span class="text-muted"><%= _('Not yet') %></span>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-3"><%= _('User Count') %></dt>
+        <dd class="col-sm-9"><%= @csp_tenant.user_count || _('Unknown') %></dd>
+
+        <dt class="col-sm-3"><%= _('Last Synced') %></dt>
+        <dd class="col-sm-9"><%= @csp_tenant.last_synced_at ? l(@csp_tenant.last_synced_at) : '-' %></dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <%= button_to toggle_sso_csp_tenant_path(@csp_tenant), method: :post, class: "btn btn-#{@csp_tenant.sso_enabled? ? 'outline-danger' : 'outline-success'}" do %>
+      <em class="bi bi-<%= @csp_tenant.sso_enabled? ? 'lock' : 'unlock' %>"></em>
+      <%= @csp_tenant.sso_enabled? ? _('Disable SSO') : _('Enable SSO') %>
+    <% end %>
+    <% if @csp_tenant.contact_email.present? %>
+      <%= button_to onboard_csp_tenant_path(@csp_tenant), method: :post, class: "btn btn-outline-primary", data: { turbo_confirm: _("Send onboarding email?") } do %>
+        <em class="bi bi-envelope"></em> <%= _('Send Onboarding Email') %>
+      <% end %>
+    <% end %>
+    <%= link_to _('Back'), csp_tenants_path, class: "btn btn-outline-secondary" %>
+  </div>
+</main>

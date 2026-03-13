@@ -31,6 +31,7 @@
     data-pwgen-passphrase-include-number-default-value="<%= Settings.gen.passphrase_include_number %>"
     data-knobs-ga-enabled-value="<%= ENV.key?('GA_ENABLE') %>">
 <%= render partial: "shared/topnav" %>
+<%= render partial: "push_templates/template_selector", locals: { kind: "text" } %>
 <%= form_for @push, html: { multipart: true }, data: { action: "form#submit#{' submit->encrypted-upload#handleSubmit' if encryption_enabled}" } do |f| %>
     <%= render partial: "pushes/error", locals: {push: @push} %>
 

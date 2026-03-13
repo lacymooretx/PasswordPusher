@@ -15,15 +15,29 @@ if defined? Rack::Attack
     # Use the memory store for faster tests
     if Rails.env.test?
       Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
-    elsif Rails.env.production?
-      # Use a separate file cache store for Rack::Attack with shorter expiration
-      Rack::Attack.cache.store = ActiveSupport::Cache::FileStore.new(
-        Rails.root.join("tmp", "rack_attack_cache"),
-        expires_in: 2.hours,           # Shorter expiration for rate limiting data
-        race_condition_ttl: 10.seconds,
-        compress: true,
-        compress_threshold: 1.kilobyte
-      )
+    else
+      redis_url = ENV["PWP__REDIS__URL"].presence ||
+        (Settings.respond_to?(:redis) && Settings.redis.respond_to?(:url) ? Settings.redis.url.presence : nil)
+
+      if redis_url
+        Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
+          url: redis_url,
+          expires_in: 2.hours,
+          race_condition_ttl: 10.seconds,
+          error_handler: ->(method:, returning:, exception:) {
+            Rails.logger.warn "Rack::Attack Redis error (#{method}): #{exception.class} - #{exception.message}"
+          }
+        )
+      elsif Rails.env.production?
+        # Fall back to file cache when Redis is not configured
+        Rack::Attack.cache.store = ActiveSupport::Cache::FileStore.new(
+          Rails.root.join("tmp", "rack_attack_cache"),
+          expires_in: 2.hours,
+          race_condition_ttl: 10.seconds,
+          compress: true,
+          compress_threshold: 1.kilobyte
+        )
+      end
     end
 
     # Return a Retry-After header for throttled requests

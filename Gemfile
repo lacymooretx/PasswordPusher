@@ -74,8 +74,8 @@ gem "terser", "~> 1.2"
 gem "bootstrap"
 gem "json", "~> 2.18" # Legacy carry-over
 
-# Use Redis adapter to run Action Cable in production
-# gem 'redis', '~> 4.0'
+# Use Redis for Action Cable, Rack::Attack cache, etc.
+gem "redis", "~> 5.0"
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 

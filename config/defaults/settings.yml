@@ -101,6 +101,12 @@ enable_audit_dashboard: false
 #
 enable_push_notifications: false
 
+### Push Notification Configuration
+#
+push_notifications:
+  # Number of days before expiration to send the "expiring soon" email
+  expiring_soon_days: 1
+
 ### Auto Dispatch
 #
 # When enabled, users can enter email addresses when creating a push to
@@ -142,6 +148,99 @@ webhooks:
   retry_attempts: 5
   # Number of days to retain webhook delivery records
   delivery_retention_days: 30
+
+### Push Templates
+#
+# When enabled, logged-in users can create named push templates with
+# preset settings (expiration, retrieval step, passphrase, etc.) that
+# can be quickly applied when creating new pushes.
+#
+# Environment variable override:
+# PWP__ENABLE_PUSH_TEMPLATES='false'
+#
+enable_push_templates: false
+
+### Push Template Configuration
+#
+push_templates:
+  # Maximum templates per user
+  max_per_user: 25
+
+### CSP Integration
+#
+# When enabled, administrators can discover and manage client tenants
+# from the CIPP (CyberDrain Improved Partner Portal) API. This also
+# enables multi-tenant SSO, allowing managed client users to sign in
+# with their own Microsoft Entra ID credentials.
+#
+# Environment variable override:
+# PWP__ENABLE_CSP_INTEGRATION='false'
+#
+enable_csp_integration: false
+
+### Usage & Compliance Reports
+#
+# When enabled, administrators can view usage dashboards with push
+# statistics, compliance metrics, trend charts, and top-user reports.
+#
+# Environment variable override:
+# PWP__ENABLE_REPORTS='false'
+#
+enable_reports: false
+
+### Microsoft Teams Notifications
+#
+# When enabled, push events (created, viewed, expired) are sent to a
+# Microsoft Teams channel via an Incoming Webhook connector.
+#
+# Environment variable overrides:
+# PWP__ENABLE_TEAMS_NOTIFICATIONS='false'
+# PWP__TEAMS__WEBHOOK_URL='https://outlook.office.com/webhook/...'
+#
+enable_teams_notifications: false
+
+### Custom Short URLs
+#
+# When enabled, logged-in users can set a custom vanity slug for their
+# pushes (e.g., /p/my-password instead of /p/abc123). The slug must be
+# unique, lowercase alphanumeric with hyphens, 3-50 characters.
+#
+# Environment variable override:
+# PWP__ENABLE_CUSTOM_URLS='false'
+#
+enable_custom_urls: false
+
+### ClamAV File Scanning
+#
+# When enabled, uploaded files are scanned for malware via ClamAV.
+# Requires a running clamd instance accessible at the configured host/port.
+# Infected pushes are automatically expired and quarantined.
+#
+# Environment variable overrides:
+# PWP__ENABLE_CLAMAV='false'
+# PWP__CLAMAV__HOST='localhost'
+# PWP__CLAMAV__PORT='3310'
+#
+enable_clamav: false
+
+clamav:
+  host: 'localhost'
+  port: 3310
+
+### Redis
+#
+# When configured, Redis is used as the cache store for Rack::Attack
+# rate limiting. This is recommended for multi-process or multi-server
+# deployments where the default file-based cache won't share state.
+#
+# Environment variable overrides:
+# PWP__REDIS__URL='redis://localhost:6379/1'
+#
+redis:
+  url: ''
+
+teams:
+  webhook_url: ''
 
 ### IP Allowlisting
 #

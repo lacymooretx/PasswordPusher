@@ -1,0 +1,17 @@
+<% if user_signed_in? && Settings.respond_to?(:enable_push_templates) && Settings.enable_push_templates %>
+  <% templates = PushTemplate.available_to(current_user).for_kind(kind).order(:name) %>
+  <% if templates.any? %>
+    <div class="mb-3" data-controller="template-select"
+         data-template-select-templates-value="<%= templates.map { |t| { id: t.id, expire_after_days: t.expire_after_days, expire_after_views: t.expire_after_views, retrieval_step: t.retrieval_step, deletable_by_viewer: t.deletable_by_viewer, passphrase: t.passphrase } }.to_json %>">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text"><em class="bi bi-bookmark-star"></em></span>
+        <select class="form-select form-select-sm" data-template-select-target="select" data-action="change->template-select#apply">
+          <option value=""><%= _('Apply a template...') %></option>
+          <% templates.each do |t| %>
+            <option value="<%= t.id %>"><%= t.name %></option>
+          <% end %>
+        </select>
+      </div>
+    </div>
+  <% end %>
+<% end %>

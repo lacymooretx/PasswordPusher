@@ -1,0 +1,51 @@
+<% title(_('Edit Tenant: %{name}') % { name: @csp_tenant.name }) %>
+
+<main>
+  <h2 class="mb-4"><%= _('Edit Tenant') %></h2>
+
+  <%= form_with(model: @csp_tenant, class: "needs-validation") do |f| %>
+    <% if @csp_tenant.errors.any? %>
+      <div class="alert alert-danger">
+        <h6><%= _('Please fix the following errors:') %></h6>
+        <ul class="mb-0">
+          <% @csp_tenant.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="row">
+      <div class="col-md-8">
+        <div class="mb-3">
+          <%= f.label :name, _('Tenant Name'), class: "form-label" %>
+          <%= f.text_field :name, class: "form-control", disabled: true %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :domain, _('Domain'), class: "form-label" %>
+          <%= f.text_field :domain, class: "form-control", disabled: true %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :contact_email, _('Contact Email'), class: "form-label" %>
+          <%= f.email_field :contact_email, class: "form-control", placeholder: "admin@#{@csp_tenant.domain}" %>
+          <div class="form-text"><%= _('Onboarding emails will be sent to this address.') %></div>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <%= f.check_box :sso_enabled, class: "form-check-input", role: "switch" %>
+            <%= f.label :sso_enabled, _('Enable SSO Login'), class: "form-check-label" %>
+          </div>
+          <div class="form-text"><%= _('Allow users from this tenant to sign in with Microsoft SSO.') %></div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <%= f.submit _('Update Tenant'), class: "btn btn-primary" %>
+          <%= link_to _('Cancel'), csp_tenants_path, class: "btn btn-outline-secondary" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</main>

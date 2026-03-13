@@ -66,6 +66,22 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   def handle_omniauth(provider_name)
     auth = request.env["omniauth.auth"]
+
+    # Multi-tenant SSO: validate the user's tenant against the allowlist
+    if ENV["PWP__SSO__MICROSOFT__MULTI_TENANT"] == "true" && provider_name == "Microsoft"
+      user_tenant_id = auth.extra&.raw_info&.tid
+      if user_tenant_id.present?
+        # Always allow the app owner's tenant (from SSO config or partner tenant)
+        owner_tenant = ENV["PWP__SSO__MICROSOFT__TENANT_ID"] || ENV["AZURE_PARTNER_TENANT_ID"]
+        unless user_tenant_id == owner_tenant ||
+               (defined?(CspTenant) && CspTenant.exists?(tenant_id: user_tenant_id, sso_enabled: true))
+          flash[:alert] = I18n._("Your organization is not authorized to sign in. Please contact your administrator.")
+          redirect_to new_user_session_path
+          return
+        end
+      end
+    end
+
     result = User.from_omniauth(auth)
 
     case result.status

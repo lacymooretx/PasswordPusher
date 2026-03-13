@@ -35,6 +35,16 @@
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE | 2026-02-26 | 2026-02-26 |
 | 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE | 2026-02-27 | 2026-02-27 |
 | 31 | Backblaze B2 Encrypted File Storage | COMPLETE | 2026-03-12 | 2026-03-12 |
+| -- | Security Audit (11 vulnerability fixes) | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 32 | Push Templates | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 33 | CSP Client Discovery + Multi-Tenant SSO + Onboarding | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 34 | Usage & Compliance Reporting Dashboard | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 35 | Scheduled Push Expiration Notifications | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 36 | Microsoft Teams Bot | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 37 | Custom Short URLs / Vanity Links | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 38 | Bulk Push API + Webhook Read Receipts | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 39 | ClamAV File Scanning | COMPLETE | 2026-03-13 | 2026-03-13 |
+| 40 | Redis for Rack::Attack | COMPLETE | 2026-03-13 | 2026-03-13 |
 
 ---
 
@@ -1111,3 +1121,192 @@ Three enhancements: (1) show SSO user avatars from Microsoft Entra ID, (2) add a
 - [x] All changes deployed to production (pwpush.aspendora.com)
 
 **PHASE 30 COMPLETE.**
+
+---
+
+## Phase 32: Push Templates
+
+### Goal
+Allow logged-in users to create named push setting presets (templates) with pre-configured expiration, retrieval step, passphrase, and sharing options. Templates can be shared with teams and applied when creating new pushes via a dropdown selector.
+
+### Feature Flag
+- `Settings.enable_push_templates` / `PWP__ENABLE_PUSH_TEMPLATES`
+- `Settings.push_templates.max_per_user` (default: 25)
+
+### Files Changed/Created
+
+#### Migration
+- [x] `db/migrate/20260313000002_create_push_templates.rb` — push_templates table with user_id, team_id, name, kind, expire_after_days, expire_after_views, retrieval_step, deletable_by_viewer, passphrase
+
+#### Model
+- [x] `app/models/push_template.rb` — enum kind, validations, `available_to` and `for_kind` scopes, `values_within_global_limits` validation
+- [x] `app/models/user.rb` — `has_many :push_templates, dependent: :destroy`
+
+#### Settings
+- [x] `config/settings.yml` + `config/defaults/settings.yml` — `enable_push_templates: false`, `push_templates.max_per_user: 25`
+
+#### Routes
+- [x] `config/routes/push_templates.rb` — `resources :push_templates`
+- [x] `config/routes.rb` — `draw :push_templates`
+- [x] `config/routes/pwp_api.rb` — API CRUD routes
+
+#### Controllers
+- [x] `app/controllers/push_templates_controller.rb` — Full HTML CRUD
+- [x] `app/controllers/api/v1/push_templates_controller.rb` — Full JSON API with Apipie annotations
+
+#### Views
+- [x] `app/views/push_templates/index.html.erb` — Template list with kind badges, team sharing info, edit/delete actions
+- [x] `app/views/push_templates/new.html.erb` — New template form wrapper
+- [x] `app/views/push_templates/edit.html.erb` — Edit template form wrapper
+- [x] `app/views/push_templates/show.html.erb` — Template detail view
+- [x] `app/views/push_templates/_form.html.erb` — Shared form with name, kind, expiration, retrieval step, deletable, passphrase, team sharing
+- [x] `app/views/push_templates/_template_selector.html.erb` — Dropdown selector for push forms
+
+#### Stimulus
+- [x] `app/javascript/controllers/template_select_controller.js` — Applies template values to push form knobs (days, views, retrieval step, deletable, passphrase)
+- [x] `app/javascript/controllers/index.js` — Registered template-select controller
+
+#### Push Form Integration
+- [x] `app/views/pushes/_form.html.erb` — Template selector for text pushes
+- [x] `app/views/pushes/_files_form.html.erb` — Template selector for file pushes
+- [x] `app/views/pushes/_url_form.html.erb` — Template selector for URL pushes
+- [x] `app/views/pushes/_qr_form.html.erb` — Template selector for QR pushes
+
+#### Navigation
+- [x] `app/views/shared/_header.html.erb` — "Push Templates" link in account dropdown (after API Tokens)
+
+#### Tests
+- [x] `test/fixtures/push_templates.yml` — 3 fixtures (text_template, team_template, url_template)
+- [x] `test/models/push_template_test.rb` — 13 tests (validation, scopes, limits)
+- [x] `test/controllers/push_templates_controller_test.rb` — 11 tests (CRUD, auth, feature flag)
+- [x] `test/controllers/api/v1/push_templates_controller_test.rb` — 11 tests (API CRUD, auth, token auth)
+
+### Verification
+- [x] **1164 runs, 4904 assertions, 0 failures, 0 errors**
+
+**PHASE 32 COMPLETE.**
+
+---
+
+## Phase 33: CSP Client Discovery + Multi-Tenant SSO + Onboarding Email
+
+### Goal
+Integrate CIPP API for discovering CSP client tenants, switch Microsoft SSO from single-tenant to multi-tenant (`common` endpoint) with CspTenant allowlist, and add an onboarding email with usage documentation for new clients.
+
+### Deliverables
+- [x] CspTenant model with tenant_id, name, domain, sso_enabled, onboarded_at, contact_email, user_count
+- [x] CippClient service with OAuth 2.0 client credentials + auto-refresh, sync_tenants!, list_tenants, list_users
+- [x] ClientMailer#onboarding_email with comprehensive HTML email (SSO login, push types, security features)
+- [x] CspTenants HTML controller (admin CRUD + sync, onboard, toggle_sso)
+- [x] CspTenants API controller with Apipie annotations
+- [x] OmniAuth multi-tenant: `common` endpoint when PWP__SSO__MICROSOFT__MULTI_TENANT=true
+- [x] Callback validation: checks user tenant_id against CspTenant allowlist
+- [x] Admin nav links for CSP Tenants and Reports
+- [x] Feature flag: `Settings.enable_csp_integration`
+
+### Tests
+- [x] 8 model tests, 9 HTML controller tests, 10 API controller tests
+
+---
+
+## Phase 34: Usage & Compliance Reporting Dashboard
+
+### Goal
+Admin reporting dashboard with KPIs, daily activity charts, push type breakdown, security events, top users, and 2FA adoption.
+
+### Deliverables
+- [x] DailyGroupable concern (SQLite/PostgreSQL compatible date grouping)
+- [x] Reports HTML controller with period filter (7d/30d/90d)
+- [x] Reports API controller (JSON stats)
+- [x] Dashboard view with Chart.js (line chart + doughnut), KPI cards, tables
+- [x] Feature flag: `Settings.enable_reports`
+
+### Tests
+- [x] 5 HTML controller tests, 4 API controller tests
+
+---
+
+## Phase 35: Scheduled Push Expiration Notifications
+
+### Goal
+Configurable threshold for push expiration warning notifications.
+
+### Deliverables
+- [x] `Settings.push_notifications.expiring_soon_days` setting (default 1)
+- [x] ExpiringPushesNotificationJob reads threshold from settings
+
+---
+
+## Phase 36: Microsoft Teams Bot
+
+### Goal
+Send push event notifications (created, viewed, expired, deleted) to Microsoft Teams channels via Incoming Webhook.
+
+### Deliverables
+- [x] TeamsNotifier service — builds MessageCard with color-coded events, facts, potentialAction
+- [x] TeamsNotificationJob — async delivery with retry
+- [x] WebhookDispatch concern dispatches to Teams when enabled
+- [x] Feature flag: `Settings.enable_teams_notifications`, `Settings.teams.webhook_url`
+
+### Tests
+- [x] 2 service tests, 2 job tests
+
+---
+
+## Phase 37: Custom Short URLs / Vanity Links
+
+### Goal
+Allow users to set custom URL tokens (vanity links) on pushes.
+
+### Deliverables
+- [x] Migration: `custom_url_token` column with unique index
+- [x] Push model: validation (3-50 chars, lowercase alphanumeric + hyphens), reserved tokens list
+- [x] `Push.find_by_token` / `find_by_token!` — checks custom_url_token first, then url_token
+- [x] `Push#to_param` uses custom_url_token when present
+- [x] Controllers updated to use find_by_token!, custom_url_token in permitted params
+- [x] Feature flag: `Settings.enable_custom_urls`
+
+---
+
+## Phase 38: Bulk Push API + Webhook Read Receipts
+
+### Goal
+Batch create up to 50 pushes per API call; track webhook delivery read status.
+
+### Deliverables
+- [x] `bulk_create` action in pushes API controller (max 50, per-push error reporting)
+- [x] Route: `POST /p/bulk.json`
+- [x] Migration: `read_at` datetime on webhook_deliveries
+- [x] WebhookDelivery: `scope :unread`, `read?`, `mark_read!`
+- [x] Webhooks API: `mark_delivery_read` action with nested route
+
+---
+
+## Phase 39: ClamAV File Scanning
+
+### Goal
+Scan uploaded files for malware using ClamAV daemon, quarantine infected pushes.
+
+### Deliverables
+- [x] ClamavScanner service — clamd TCP client, INSTREAM protocol, chunked transfer
+- [x] FileScanJob — scans files after upload, expires + logs quarantined pushes
+- [x] Push model: `after_commit :enqueue_file_scan` on create
+- [x] Feature flag: `Settings.enable_clamav`, `Settings.clamav.host/port`
+
+---
+
+## Phase 40: Redis for Rack::Attack
+
+### Goal
+Use Redis as Rack::Attack cache store for distributed rate limiting in multi-process/multi-server deployments.
+
+### Deliverables
+- [x] Added `redis` gem (~> 5.0) to Gemfile
+- [x] Settings: `Settings.redis.url` / `PWP__REDIS__URL`
+- [x] rack_attack.rb: Uses RedisCacheStore when Redis URL configured, falls back to FileStore
+- [x] Error handler logs Redis errors without crashing requests
+
+### Verification
+- [x] **1204 runs, 4998 assertions, 0 failures, 0 errors**
+
+**ALL PHASES 33-40 COMPLETE.**

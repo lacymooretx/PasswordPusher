@@ -379,7 +379,7 @@ class PushesController < BaseController
   end
 
   def set_push
-    @push = Push.includes(:audit_logs).find_by!(url_token: params[:id])
+    @push = Push.includes(:audit_logs).find_by_token!(params[:id])
   rescue ActiveRecord::RecordNotFound
     # Showing a 404 reveals that this Secret URL never existed
     # which is an information leak (not a secret anymore)
@@ -399,13 +399,13 @@ class PushesController < BaseController
     case params.dig(:push, :kind)
     when "url"
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries)
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :custom_url_token)
     when "file"
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, :custom_url_token, files: [])
     else
       params.require(:push).permit(:kind, :name, :expire_after_days, :expire_after_views, :deletable_by_viewer,
-        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, files: [])
+        :retrieval_step, :payload, :note, :passphrase, :allowed_ips, :allowed_countries, :file_encryption_key, :custom_url_token, files: [])
     end
   rescue => e
     Rails.logger.error("Error in push_params: #{e.message}")

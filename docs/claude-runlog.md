@@ -67,10 +67,37 @@ Fix 10 security vulnerabilities identified during code audit (all except #8 SSO 
 - `app/views/devise/registrations/token.html.erb`
 - `db/migrate/20260313000001_add_authentication_token_digest_to_users.rb`
 
-### Remaining
-- [ ] Commit
-- [ ] Deploy to production
-- [ ] Run migration on production
+### Status: DEPLOYED
+
+---
+
+## 2026-03-13: Security Fix #8 — SSO Account Linking Verification
+
+### Goal
+Require password verification before linking an SSO identity to an existing local account.
+
+### Problem
+`User.from_omniauth` auto-linked SSO to existing accounts by email match without verification,
+allowing account takeover if an attacker controlled an OAuth account claiming the victim's email.
+
+### Fix
+- `User.from_omniauth` now returns `OmniauthResult` struct with status `:found`, `:conflict`, or `:created`
+- On `:conflict`, controller stores auth data in session and redirects to `/users/sso/link`
+- User must enter their existing password to verify account ownership
+- Only after correct password is the SSO identity linked via `User#link_omniauth!`
+
+### Files Changed
+- `app/models/user.rb` — OmniauthResult struct, conflict detection, link_omniauth! method
+- `app/controllers/users/omniauth_callbacks_controller.rb` — link_account/confirm_link actions
+- `app/views/users/omniauth_callbacks/link_account.html.erb` — password verification form
+- `config/routes/users.rb` — GET/POST `/users/sso/link`
+- `test/models/user_omniauth_test.rb` — updated for OmniauthResult API
+- `test/controllers/omniauth_callbacks_controller_test.rb` — conflict/link tests
+
+### Test Results
+- 1129 runs, 4819 assertions, 0 failures (5 new tests added)
+
+### Status: DEPLOYED
 
 ---
 
@@ -160,3 +187,34 @@ Three enhancements: SSO avatars, manual dark mode toggle, dark mode branding log
 ### Steps
 1. **Migration** — `20260227000015_add_avatar_url_to_users.rb` adds `avatar_url` string column
 2. **User model** — `from_omniauth` now extracts `auth.info.image` and stores/updates `avatar_url`
+
+---
+
+## 2026-03-13: Phases 32-40 — Feature Batch Build
+
+### Goal
+Build 9 feature phases in one session: Push Templates, CSP Integration, Reporting, Expiration Notifications, Teams Bot, Custom URLs, Bulk API, ClamAV, Redis.
+
+### Steps
+1. **Phase 32: Push Templates** — PushTemplate model (enum kind, team scoping), HTML + API CRUD, template selector partial + Stimulus controller, 35 tests
+2. **Phase 33: CSP Client Discovery + Multi-Tenant SSO + Onboarding** — CspTenant model, CippClient OAuth service, ClientMailer onboarding email, OmniAuth multi-tenant common endpoint, callback tenant validation, admin CRUD + API, 27 tests
+3. **Phase 34: Usage & Compliance Reporting Dashboard** — DailyGroupable concern, Reports controller with Chart.js dashboard, API, 9 tests
+4. **Phase 35: Scheduled Push Expiration Notifications** — Added configurable `push_notifications.expiring_soon_days` setting
+5. **Phase 36: Microsoft Teams Bot** — TeamsNotifier service (MessageCard), TeamsNotificationJob, WebhookDispatch integration, 4 tests
+6. **Phase 37: Custom Short URLs** — custom_url_token column + migration, Push model validation + find_by_token, controller updates
+7. **Phase 38: Bulk Push API + Webhook Read Receipts** — bulk_create action (max 50), read_at migration, mark_delivery_read API
+8. **Phase 39: ClamAV File Scanning** — ClamavScanner service (clamd INSTREAM protocol), FileScanJob, after_commit hook
+9. **Phase 40: Redis for Rack::Attack** — redis gem, Settings.redis.url, RedisCacheStore with FileStore fallback
+
+### Bug Fixes
+- Teams test fixtures: Changed `pushes(:one)` to `pushes(:test_push)` (correct fixture name)
+- Added `assert_nothing_raised` to silence "missing assertions" warnings in job tests
+
+### Settings Added
+- `enable_push_templates`, `enable_csp_integration`, `enable_reports`, `enable_teams_notifications`, `enable_custom_urls`, `enable_clamav`
+- `push_templates.max_per_user`, `push_notifications.expiring_soon_days`, `teams.webhook_url`, `clamav.host/port`, `redis.url`
+
+### Verification
+- **1204 runs, 4998 assertions, 0 failures, 0 errors**
+- Settings files byte-identical (config/settings.yml == config/defaults/settings.yml)
+- All migrations applied

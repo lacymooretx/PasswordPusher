@@ -1,0 +1,236 @@
+<% title(_('Usage & Compliance Reports')) %>
+
+<main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><%= _('Usage & Compliance Reports') %></h2>
+    <div class="btn-group" role="group">
+      <% %w[7 30 90].each do |p| %>
+        <%= link_to "#{p}d", reports_path(period: p), class: "btn btn-sm btn-#{@period == p ? 'primary' : 'outline-primary'}" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# KPI Cards %>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center">
+        <div class="card-body py-3">
+          <div class="h3 mb-0 text-primary"><%= @total_users %></div>
+          <small class="text-muted"><%= _('Total Users') %></small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center">
+        <div class="card-body py-3">
+          <div class="h3 mb-0 text-success"><%= @total_pushes %></div>
+          <small class="text-muted"><%= _('Total Pushes') %></small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center">
+        <div class="card-body py-3">
+          <div class="h3 mb-0 text-info"><%= @active_pushes %></div>
+          <small class="text-muted"><%= _('Active Pushes') %></small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center">
+        <div class="card-body py-3">
+          <div class="h3 mb-0 text-warning"><%= @total_views %></div>
+          <small class="text-muted"><%= _('Total Views') %></small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Period Stats %>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="text-muted mb-1"><%= _('Pushes (last %{days} days)') % { days: @period } %></h6>
+          <div class="h4 mb-0"><%= @period_pushes %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="text-muted mb-1"><%= _('Views (last %{days} days)') % { days: @period } %></h6>
+          <div class="h4 mb-0"><%= @period_views %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="text-muted mb-1"><%= _('New Users (last %{days} days)') % { days: @period } %></h6>
+          <div class="h4 mb-0"><%= @period_users %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Charts Row %>
+  <div class="row g-3 mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header"><%= _('Push Activity') %></div>
+        <div class="card-body">
+          <canvas id="activityChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header"><%= _('Push Types') %></div>
+        <div class="card-body">
+          <canvas id="kindChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Compliance & Security %>
+  <div class="row g-3 mb-4">
+    <% if defined?(@two_fa_enabled) && @two_fa_total&.positive? %>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header"><%= _('2FA Adoption') %></div>
+          <div class="card-body text-center">
+            <% pct = (@two_fa_enabled.to_f / @two_fa_total * 100).round(1) %>
+            <div class="h2 mb-1 <%= pct >= 80 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-danger' %>"><%= pct %>%</div>
+            <small class="text-muted"><%= @two_fa_enabled %> / <%= @two_fa_total %> <%= _('users') %></small>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header"><%= _('Security Events') %></div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-8"><%= _('Expired Pushes') %></dt>
+            <dd class="col-4 text-end"><%= @expired_by_views %></dd>
+            <dt class="col-8"><%= _('Failed Passphrases') %></dt>
+            <dd class="col-4 text-end"><span class="<%= @failed_passphrases > 0 ? 'text-danger' : '' %>"><%= @failed_passphrases %></span></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <% if defined?(@csp_tenants_total) %>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header"><%= _('CSP Tenants') %></div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-8"><%= _('Total Tenants') %></dt>
+              <dd class="col-4 text-end"><%= @csp_tenants_total %></dd>
+              <dt class="col-8"><%= _('SSO Enabled') %></dt>
+              <dd class="col-4 text-end"><%= @csp_tenants_sso %></dd>
+              <dt class="col-8"><%= _('Onboarded') %></dt>
+              <dd class="col-4 text-end"><%= @csp_tenants_onboarded %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Top Users %>
+  <% if @top_users.any? %>
+    <div class="card mb-4">
+      <div class="card-header"><%= _('Top Users by Push Count (last %{days} days)') % { days: @period } %></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th class="ps-3">#</th>
+              <th><%= _('User') %></th>
+              <th class="text-end pe-3"><%= _('Pushes') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @top_users.each_with_index do |(email, count), i| %>
+              <tr>
+                <td class="ps-3"><%= i + 1 %></td>
+                <td><%= email %></td>
+                <td class="text-end pe-3"><strong><%= count %></strong></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Activity Chart (pushes + views by day)
+    const activityCtx = document.getElementById('activityChart');
+    if (activityCtx) {
+      const pushData = <%= raw @daily_pushes.map { |d, c| { x: d.to_s, y: c } }.to_json %>;
+      const viewData = <%= raw @daily_views.map { |d, c| { x: d.to_s, y: c } }.to_json %>;
+      new Chart(activityCtx, {
+        type: 'line',
+        data: {
+          datasets: [
+            {
+              label: '<%= _("Pushes Created") %>',
+              data: pushData,
+              borderColor: '#0d6efd',
+              backgroundColor: 'rgba(13,110,253,0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: '<%= _("Views") %>',
+              data: viewData,
+              borderColor: '#198754',
+              backgroundColor: 'rgba(25,135,84,0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { type: 'category' },
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          },
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // Push Types Doughnut
+    const kindCtx = document.getElementById('kindChart');
+    if (kindCtx) {
+      const kindData = <%= raw @pushes_by_kind.to_json %>;
+      const labels = Object.keys(kindData).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+      const values = Object.values(kindData);
+      new Chart(kindCtx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ['#0d6efd', '#0dcaf0', '#ffc107', '#198754']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+  });
+</script>

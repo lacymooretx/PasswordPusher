@@ -134,6 +134,12 @@ All feature controllers inherit from `BaseController`, which extends
 | `enable_ip_allowlisting` | `PWP__ENABLE_IP_ALLOWLISTING` | false | IP-based push access restriction |
 | `enable_geofencing` | `PWP__ENABLE_GEOFENCING` | false | Country-based push access restriction |
 | `enable_auto_dispatch` | `PWP__ENABLE_AUTO_DISPATCH` | false | Auto-email secret links to recipients on push creation |
+| `enable_push_templates` | `PWP__ENABLE_PUSH_TEMPLATES` | false | Reusable push setting presets |
+| `enable_csp_integration` | `PWP__ENABLE_CSP_INTEGRATION` | false | CIPP CSP tenant discovery + multi-tenant SSO |
+| `enable_reports` | `PWP__ENABLE_REPORTS` | false | Admin usage & compliance reporting dashboard |
+| `enable_teams_notifications` | `PWP__ENABLE_TEAMS_NOTIFICATIONS` | false | Microsoft Teams webhook notifications |
+| `enable_custom_urls` | `PWP__ENABLE_CUSTOM_URLS` | false | Custom vanity URL tokens on pushes |
+| `enable_clamav` | `PWP__ENABLE_CLAMAV` | false | ClamAV malware scanning for file uploads |
 
 ---
 
@@ -171,7 +177,17 @@ All feature controllers inherit from `BaseController`, which extends
 | 28 | Footer Redesign | COMPLETE |
 | 29 | New Push Page Redesign + Auto Dispatch | COMPLETE |
 | 30 | Entra ID Avatars, Dark Mode Toggle, Dark Mode Logos | COMPLETE |
+| 31 | Backblaze B2 Encrypted File Storage | COMPLETE |
+| 32 | Push Templates | COMPLETE |
+| 33 | CSP Client Discovery + Multi-Tenant SSO + Onboarding | COMPLETE |
+| 34 | Usage & Compliance Reporting Dashboard | COMPLETE |
+| 35 | Scheduled Push Expiration Notifications | COMPLETE |
+| 36 | Microsoft Teams Bot | COMPLETE |
+| 37 | Custom Short URLs / Vanity Links | COMPLETE |
+| 38 | Bulk Push API + Webhook Read Receipts | COMPLETE |
+| 39 | ClamAV File Scanning | COMPLETE |
+| 40 | Redis for Rack::Attack | COMPLETE |
 
-All features gated behind flags. 1124 tests, 4807 assertions, 0 failures.
+All features gated behind flags. 1204 tests, 4998 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.

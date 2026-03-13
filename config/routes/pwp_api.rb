@@ -19,7 +19,18 @@ constraints(format: :json) do
 
       resource :user_branding, only: [:show, :update]
       resources :requests, only: [:index, :show, :create, :update, :destroy]
-      resources :webhooks, only: [:index, :show, :create, :update, :destroy]
+      resources :webhooks, only: [:index, :show, :create, :update, :destroy] do
+        resources :deliveries, only: [], controller: "webhooks" do
+          post :read, on: :member, action: :mark_delivery_read
+        end
+      end
+      resources :push_templates, only: [:index, :show, :create, :update, :destroy]
+      resources :csp_tenants, only: [:index, :show, :update, :destroy] do
+        post :sync, on: :collection
+        post :onboard, on: :member
+        post :toggle_sso, on: :member
+      end
+      resources :reports, only: [:index]
       resources :audit_logs, only: [:index]
 
       # Admin settings API
@@ -51,6 +62,7 @@ constraints(format: :json) do
     get "audit", on: :member
     get "active", on: :collection
     get "expired", on: :collection
+    post "bulk", on: :collection, action: :bulk_create
   end
 
   resources :p, controller: "api/v1/pushes", as: :json_pushes, except: %i[new index edit update] do

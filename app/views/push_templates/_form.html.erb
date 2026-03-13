@@ -1,0 +1,91 @@
+<%= form_with(model: push_template, class: "needs-validation") do |f| %>
+  <% if push_template.errors.any? %>
+    <div class="alert alert-danger">
+      <h6><%= _('Please fix the following errors:') %></h6>
+      <ul class="mb-0">
+        <% push_template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="mb-3">
+        <%= f.label :name, _('Template Name'), class: "form-label" %>
+        <%= f.text_field :name, class: "form-control", placeholder: _("e.g., Quick Share, Client Delivery"), required: true %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :kind, _('Push Kind'), class: "form-label" %>
+        <% if push_template.new_record? %>
+          <%= f.select :kind, [
+            [_('Password / Text'), 'text'],
+            Settings.enable_file_pushes ? [_('File'), 'file'] : nil,
+            Settings.enable_url_pushes ? [_('URL'), 'url'] : nil,
+            Settings.enable_qr_pushes ? [_('QR Code'), 'qr'] : nil
+          ].compact, {}, class: "form-select" %>
+        <% else %>
+          <%= f.text_field :kind, class: "form-control", disabled: true, value: push_template.kind.capitalize %>
+          <%= f.hidden_field :kind %>
+        <% end %>
+      </div>
+
+      <hr class="my-4">
+      <h5 class="mb-3"><%= _('Push Defaults') %></h5>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <%= f.label :expire_after_days, _('Expire After Days'), class: "form-label" %>
+          <%= f.number_field :expire_after_days, class: "form-control", min: 1, placeholder: _("Leave blank for default") %>
+          <div class="form-text"><%= _('Number of days until the push expires.') %></div>
+        </div>
+        <div class="col-md-6">
+          <%= f.label :expire_after_views, _('Expire After Views'), class: "form-label" %>
+          <%= f.number_field :expire_after_views, class: "form-control", min: 1, placeholder: _("Leave blank for default") %>
+          <div class="form-text"><%= _('Number of views until the push expires.') %></div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <%= f.check_box :retrieval_step, class: "form-check-input", role: "switch" %>
+          <%= f.label :retrieval_step, _('Enable 1-click retrieval step'), class: "form-check-label" %>
+        </div>
+        <div class="form-text"><%= _('Require an extra click before showing the secret.') %></div>
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <%= f.check_box :deletable_by_viewer, class: "form-check-input", role: "switch" %>
+          <%= f.label :deletable_by_viewer, _('Allow viewer to delete'), class: "form-check-label" %>
+        </div>
+        <div class="form-text"><%= _('Allow anyone viewing the push to delete it early.') %></div>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :passphrase, _('Default Passphrase'), class: "form-label" %>
+        <%= f.text_field :passphrase, class: "form-control", placeholder: _("Optional passphrase") %>
+        <div class="form-text"><%= _('Pre-fill this passphrase when creating pushes with this template.') %></div>
+      </div>
+
+      <% if Settings.respond_to?(:enable_teams) && Settings.enable_teams %>
+        <hr class="my-4">
+        <h5 class="mb-3"><%= _('Sharing') %></h5>
+        <div class="mb-3">
+          <%= f.label :team_id, _('Share with Team'), class: "form-label" %>
+          <%= f.select :team_id, current_user.teams.map { |t| [t.name, t.id] },
+            { include_blank: _('Personal (not shared)') },
+            class: "form-select" %>
+          <div class="form-text"><%= _('Team members will be able to use this template.') %></div>
+        </div>
+      <% end %>
+
+      <div class="d-flex gap-2 mt-4">
+        <%= f.submit push_template.new_record? ? _('Create Template') : _('Update Template'), class: "btn btn-primary" %>
+        <%= link_to _('Cancel'), push_templates_path, class: "btn btn-outline-secondary" %>
+      </div>
+    </div>
+  </div>
+<% end %>

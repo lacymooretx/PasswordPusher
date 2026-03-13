@@ -1,0 +1,22 @@
+acme_tenant:
+  tenant_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  name: "Acme Corp"
+  domain: "acme.onmicrosoft.com"
+  sso_enabled: true
+  contact_email: "admin@acme.com"
+  user_count: 25
+  last_synced_at: 2026-03-13 00:00:00
+
+contoso_tenant:
+  tenant_id: "11111111-2222-3333-4444-555555555555"
+  name: "Contoso Ltd"
+  domain: "contoso.onmicrosoft.com"
+  sso_enabled: false
+  contact_email: "it@contoso.com"
+  user_count: 50
+
+disabled_tenant:
+  tenant_id: "99999999-8888-7777-6666-555555555555"
+  name: "Disabled Co"
+  domain: "disabled.onmicrosoft.com"
+  sso_enabled: false

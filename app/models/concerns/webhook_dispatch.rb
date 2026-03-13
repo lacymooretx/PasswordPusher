@@ -17,6 +17,11 @@ module WebhookDispatch
         payload = build_webhook_payload(event, push, extra)
         WebhookDeliveryJob.perform_later(webhook.id, event, payload)
       end
+
+      # Also dispatch to Teams if enabled
+      if Settings.respond_to?(:enable_teams_notifications) && Settings.enable_teams_notifications
+        TeamsNotificationJob.perform_later(push.id, event, extra)
+      end
     end
 
     private

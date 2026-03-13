@@ -1,0 +1,125 @@
+<div style="max-width: 650px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; line-height: 1.6;">
+  <%# Header %>
+  <div style="background-color: <%= @branding&.primary_color.presence || '#0d6efd' %>; padding: 25px 30px; border-radius: 8px 8px 0 0; text-align: center;">
+    <% if @branding&.logo&.attached? %>
+      <%= image_tag attachments["logo.png"].url, style: "max-height: 50px; max-width: 250px; margin-bottom: 8px;", alt: @brand_title %>
+      <br>
+    <% end %>
+    <h1 style="color: #fff; margin: 0; font-size: 22px;">Welcome to <%= @brand_title %></h1>
+    <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0; font-size: 14px;">Secure Secret Sharing for <%= @tenant.name %></p>
+  </div>
+
+  <div style="padding: 30px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="font-size: 16px; margin-top: 0;">
+      Hello,
+    </p>
+    <p>
+      Your organization (<strong><%= @tenant.name %></strong>) has been set up with <strong><%= @brand_title %></strong>,
+      a secure platform for sharing passwords, files, URLs, and other sensitive information through
+      self-expiring, encrypted links.
+    </p>
+
+    <%# Getting Started %>
+    <h2 style="color: #0d6efd; font-size: 18px; border-bottom: 2px solid #0d6efd; padding-bottom: 8px; margin-top: 30px;">Getting Started</h2>
+
+    <h3 style="font-size: 15px; margin-bottom: 5px;">1. Sign In</h3>
+    <p>
+      Go to <a href="<%= @app_url %>" style="color: #0d6efd; font-weight: 600;"><%= @app_url %></a> and click
+      <strong>"Sign in with Microsoft"</strong>. Use your regular work email and password &mdash; the same credentials
+      you use for Outlook, Teams, and other Microsoft 365 apps. No separate account or registration needed.
+    </p>
+
+    <h3 style="font-size: 15px; margin-bottom: 5px;">2. Create a Push</h3>
+    <p>After signing in, you'll see the main push creation page. Choose what you want to share:</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600; width: 140px;">Passwords &amp; Text</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Share passwords, API keys, license keys, or any sensitive text</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">Files</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Share documents, certificates, configuration files (end-to-end encrypted)</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">URLs</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Share links that auto-expire after a set time or number of views</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">QR Codes</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Generate scannable QR codes for WiFi passwords, URLs, or text</td>
+      </tr>
+    </table>
+
+    <h3 style="font-size: 15px; margin-bottom: 5px;">3. Set Expiration</h3>
+    <p>
+      Every push has two expiration controls &mdash; use the sliders to set:
+    </p>
+    <ul style="margin: 5px 0;">
+      <li><strong>Days</strong> &mdash; the link expires after this many days</li>
+      <li><strong>Views</strong> &mdash; the link expires after this many views</li>
+    </ul>
+    <p>Whichever limit is reached first will cause the push to be permanently deleted.</p>
+
+    <h3 style="font-size: 15px; margin-bottom: 5px;">4. Share the Link</h3>
+    <p>
+      After creating a push, you'll get a unique secret link. Copy it and send it to your recipient
+      via email, Teams, or any messaging tool. You can also use <strong>Auto Dispatch</strong> to
+      have the link emailed directly to recipients.
+    </p>
+
+    <%# Security Features %>
+    <h2 style="color: #0d6efd; font-size: 18px; border-bottom: 2px solid #0d6efd; padding-bottom: 8px; margin-top: 30px;">Security Features</h2>
+    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600; width: 160px;">Encryption</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">All data is encrypted at rest. File uploads use client-side AES-256-GCM encryption.</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">Auto-Expiration</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Links automatically expire and data is permanently deleted &mdash; no secrets linger in inboxes.</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">Passphrase Protection</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Optionally add a passphrase that the recipient must enter before viewing.</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">1-Click Retrieval Step</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Prevents link previews from consuming views &mdash; recipient must click to reveal.</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">Audit Trail</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Track when and from where your pushes were viewed in the Pushes dashboard.</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: 600;">Two-Factor Auth</td>
+        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">Your Microsoft SSO includes your organization's MFA policies for extra security.</td>
+      </tr>
+    </table>
+
+    <%# Tips %>
+    <h2 style="color: #0d6efd; font-size: 18px; border-bottom: 2px solid #0d6efd; padding-bottom: 8px; margin-top: 30px;">Best Practices</h2>
+    <ul>
+      <li><strong>Never email passwords directly</strong> &mdash; create a push and share the link instead.</li>
+      <li><strong>Use 1-view expiration</strong> for highly sensitive items &mdash; the link burns after one view.</li>
+      <li><strong>Add a passphrase</strong> and share it through a different channel than the link.</li>
+      <li><strong>Send usernames and passwords separately</strong> for maximum security.</li>
+      <li><strong>Enable the retrieval step</strong> to prevent chat/email link previews from consuming your view count.</li>
+      <li><strong>Check your Pushes dashboard</strong> to see if a recipient has viewed your push.</li>
+    </ul>
+
+    <%# Need Help %>
+    <h2 style="color: #0d6efd; font-size: 18px; border-bottom: 2px solid #0d6efd; padding-bottom: 8px; margin-top: 30px;">Need Help?</h2>
+    <p>
+      If you have questions or run into any issues, contact your IT administrator or
+      reach out to <a href="mailto:support@aspendora.com" style="color: #0d6efd;">support@aspendora.com</a>.
+    </p>
+
+    <div style="margin-top: 30px; padding: 15px; background: #f0f7ff; border-radius: 6px; text-align: center;">
+      <a href="<%= @app_url %>" style="display: inline-block; background-color: #0d6efd; color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-size: 16px; font-weight: 600;">Get Started at <%= @app_url %></a>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 15px; font-size: 12px; color: #aaa;">
+    Sent by <a href="<%= @app_url %>" style="color: #aaa;"><%= @brand_title %></a> &mdash; Managed by Aspendora Technologies
+  </div>
+</div>

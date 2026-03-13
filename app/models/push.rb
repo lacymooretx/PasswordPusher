@@ -8,12 +8,17 @@ require "ipaddr"
 # at rest via Lockbox. Settings are resolved through a priority chain:
 # Team Forced > Team Default > User Policy > Global Settings.
 class Push < ApplicationRecord
+  include DailyGroupable
   include WebhookDispatch
 
   enum :kind, [:text, :file, :url, :qr], validate: true
 
   validate :check_enabled_push_kinds, on: :create
   validates :url_token, presence: true, uniqueness: true
+  validates :custom_url_token, uniqueness: true, allow_blank: true,
+    length: {minimum: 3, maximum: 50},
+    format: {with: /\A[a-z0-9]([a-z0-9\-]*[a-z0-9])?\z/, message: "must be lowercase alphanumeric (hyphens allowed)"}
+  validate :custom_url_token_not_reserved, if: -> { custom_url_token.present? }
 
   validate :check_payload_for_text, if: :text?
   validate :check_optional_files_for_text, if: :text?
@@ -27,6 +32,8 @@ class Push < ApplicationRecord
     create.before_validation :set_default_attributes
   end
 
+  after_commit :enqueue_file_scan, on: :create
+
   belongs_to :user, optional: true
   belongs_to :request, optional: true
   belongs_to :team, optional: true
@@ -37,7 +44,16 @@ class Push < ApplicationRecord
   has_many_attached :files, dependent: :destroy
 
   def to_param
-    url_token.to_s
+    custom_url_token.presence || url_token.to_s
+  end
+
+  # Find a push by either custom_url_token or url_token
+  def self.find_by_token(token)
+    find_by(custom_url_token: token) || find_by(url_token: token)
+  end
+
+  def self.find_by_token!(token)
+    find_by_token(token) || raise(ActiveRecord::RecordNotFound, "Push not found")
   end
 
   def files_encrypted?
@@ -226,6 +242,21 @@ class Push < ApplicationRecord
 
   def check_limits
     expire if !expired? && (!days_remaining.positive? || !views_remaining.positive?)
+  end
+
+  RESERVED_TOKENS = %w[admin api p f r new edit active expired preview audit pushes login signup].freeze
+
+  def custom_url_token_not_reserved
+    if RESERVED_TOKENS.include?(custom_url_token)
+      errors.add(:custom_url_token, "is reserved")
+    end
+  end
+
+  def enqueue_file_scan
+    return unless Settings.respond_to?(:enable_clamav) && Settings.enable_clamav
+    return unless file? && files.attached?
+
+    FileScanJob.perform_later(id)
   end
 
   def set_url_token

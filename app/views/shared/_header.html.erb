@@ -131,7 +131,7 @@
                     <% end %>
                   </li>
                 <% end %>
-                <% if current_user.admin? %>
+                <% if current_user.admin? && respond_to?(:admin_root_path) %>
                   <li>
                     <%= link_to admin_root_path, class: "dropdown-item" do %>
                       <%= _('Admin Center') %>
@@ -148,7 +148,7 @@
                 <% end %>
                 <li><hr class="dropdown-divider"></li>
               <% else %>
-                <% if current_user.admin? %>
+                <% if current_user.admin? && respond_to?(:admin_root_path) %>
                   <li>
                     <%= link_to admin_root_path, class: "dropdown-item" do %>
                       <%= _('Admin Center') %>
@@ -188,6 +188,13 @@
                   <%= _('API Tokens') %>
                 <% end %>
               </li>
+              <% if Settings.respond_to?(:enable_push_templates) && Settings.enable_push_templates %>
+                <li>
+                  <%= link_to push_templates_path, class: "dropdown-item" do %>
+                    <%= _('Push Templates') %>
+                  <% end %>
+                </li>
+              <% end %>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <%= button_to destroy_user_session_path, method: :delete, class: "dropdown-item w-100", form_class: "d-inline w-100" do %>

@@ -17,6 +17,7 @@
     data-knobs-default-deletable-by-viewer-value="<%= effective_default(@push.settings_for_kind, :deletable_pushes_default, 'file') %>"
     data-knobs-ga-enabled-value="<%= ENV.key?('GA_ENABLE') %>">
 <%= render partial: "shared/topnav" %>
+<%= render partial: "push_templates/template_selector", locals: { kind: "file" } %>
 
 <%= form_for @push, data: { action: "form#submit#{' submit->encrypted-upload#handleSubmit' if encryption_enabled}" } do |f| %>
     <%= render partial: "pushes/error", locals: {push: @push} %>

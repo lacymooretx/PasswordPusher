@@ -110,6 +110,21 @@ class Api::V1::WebhooksController < Api::BaseController
     head :no_content
   end
 
+  api :POST, "/api/v1/webhooks/:id/deliveries/:delivery_id/read.json", "Mark a webhook delivery as read."
+  param :id, :number, desc: "Webhook ID.", required: true
+  param :delivery_id, :number, desc: "Delivery ID.", required: true
+  formats ["JSON"]
+  error code: 401, desc: "Unauthorized."
+  error code: 404, desc: "Not found."
+  def mark_delivery_read
+    webhook = current_user.webhooks.find(params[:id])
+    delivery = webhook.deliveries.find(params[:delivery_id])
+    delivery.mark_read!
+    render json: {id: delivery.id, read_at: delivery.read_at.iso8601}
+  rescue ActiveRecord::RecordNotFound
+    render json: {error: "Not found"}, status: :not_found
+  end
+
   private
 
   def check_feature_enabled

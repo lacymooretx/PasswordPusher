@@ -9,6 +9,7 @@ import KnobsController from "./knobs_controller"
 import MultiUploadController from "./multi_upload_controller"
 import PWGenController from "./pwgen_controller"
 import PasswordsController from "./passwords_controller"
+import TemplateSelectController from "./template_select_controller"
 import ThemeController from "./theme_controller"
 import { application } from "./application"
 
@@ -23,4 +24,5 @@ application.register("form", FormController)
 application.register("knobs", KnobsController)
 application.register("passwords", PasswordsController)
 application.register("multi-upload", MultiUploadController)
+application.register("template-select", TemplateSelectController)
 application.register("theme", ThemeController)

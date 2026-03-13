@@ -19,6 +19,9 @@ Rails.application.routes.draw do
     draw :teams
     draw :audit_dashboard
     draw :webhooks
+    draw :push_templates
+    draw :csp_tenants
+    draw :reports
     draw :pwp_api
 
     apipie
