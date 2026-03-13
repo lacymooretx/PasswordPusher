@@ -77,8 +77,10 @@ module ActiveStorage
 
     private
 
+    # ActiveStorage S3Service stores an Aws::S3::Resource as :client
+    # We need the underlying Aws::S3::Client for multipart operations
     def s3_client
-      ActiveStorage::Blob.service.send(:client)
+      ActiveStorage::Blob.service.send(:client).client
     end
 
     def bucket_name
@@ -86,7 +88,7 @@ module ActiveStorage
     end
 
     def s3_client_for(blob)
-      blob.service.send(:client)
+      blob.service.send(:client).client
     end
 
     def bucket_name_for(blob)
