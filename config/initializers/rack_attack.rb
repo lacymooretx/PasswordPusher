@@ -84,5 +84,23 @@ if defined? Rack::Attack
         req.params["email"].to_s.downcase.gsub(/\s+/, "").presence
       end
     end
+
+    ### Prevent Brute-Force Passphrase Attacks
+    #
+    # Throttle POST requests to push passphrase access endpoints by IP.
+    # This prevents attackers from brute-forcing push passphrases.
+    #
+    throttle("passphrase/ip", limit: 5, period: 30.seconds) do |req|
+      if req.path.match?(%r{/p/.+/access}) && req.post?
+        req.ip
+      end
+    end
+
+    # Also throttle by the specific push URL token to prevent distributed attacks
+    throttle("passphrase/push", limit: 10, period: 1.minute) do |req|
+      if req.path.match?(%r{/p/([^/]+)/access}) && req.post?
+        req.path.match(%r{/p/([^/]+)/access})[1]
+      end
+    end
   end
 end

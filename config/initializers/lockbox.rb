@@ -23,7 +23,22 @@
 #
 # or go to https://pwpush.com/pages/generate_key
 #
-Lockbox.master_key = ENV.fetch("PWPUSH_MASTER_KEY", "749b1022e1cb83fb04f3022eacaf3bfef60c6d47f83e6fb41f534a05fc69929f")
+if ENV.key?("PWPUSH_MASTER_KEY")
+  Lockbox.master_key = ENV.fetch("PWPUSH_MASTER_KEY")
+elsif Rails.env.production?
+  raise <<~MSG
+    PWPUSH_MASTER_KEY is not set!
+
+    A unique encryption key is REQUIRED in production. Using the default key
+    means anyone who reads the source code can decrypt your data.
+
+    Generate one with:  ruby -e "require 'securerandom'; puts SecureRandom.hex(32)"
+    Then set:           export PWPUSH_MASTER_KEY=<your key>
+  MSG
+else
+  # Development/test fallback — safe because no real data at risk
+  Lockbox.master_key = "749b1022e1cb83fb04f3022eacaf3bfef60c6d47f83e6fb41f534a05fc69929f"
+end
 
 if ENV.key?("PWPUSH_MASTER_KEY_PREVIOUS")
   Lockbox.default_options[:previous_versions] = ENV.fetch("PWPUSH_MASTER_KEY_PREVIOUS").split(",").map do |previous_key|

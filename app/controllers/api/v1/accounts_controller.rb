@@ -41,7 +41,8 @@ class Api::V1::AccountsController < Api::BaseController
     )
 
     if user.save
-      render json: account_json(user), status: :created
+      user.regenerate_authentication_token!
+      render json: account_json(user.reload), status: :created
     else
       render json: {errors: user.errors.full_messages}, status: :unprocessable_content
     end
@@ -125,8 +126,8 @@ class Api::V1::AccountsController < Api::BaseController
   EOS
   error code: 401, desc: "Unauthorized - invalid or missing API token."
   def regenerate_token
-    current_user.regenerate_authentication_token!
-    render json: {token: current_user.authentication_token}
+    plaintext_token = current_user.regenerate_authentication_token!
+    render json: {token: plaintext_token}
   end
 
   private
@@ -136,13 +137,16 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def account_json(user)
-    {
+    json = {
       email: user.email,
       admin: user.admin?,
       otp_enabled: user.otp_enabled?,
       preferred_language: user.preferred_language,
       created_at: user.created_at.iso8601,
-      token: user.authentication_token
+      has_token: user.authentication_token_digest.present?
     }
+    # Include plaintext token only if it's still available (backward compat)
+    json[:token] = user.authentication_token if user.authentication_token.present?
+    json
   end
 end

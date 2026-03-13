@@ -107,7 +107,6 @@ class Push < ApplicationRecord
       end
       attr_hash["files"] = file_list.to_json
       attr_hash["files_encrypted"] = files_encrypted?
-      attr_hash["file_encryption_key"] = file_encryption_key if files_encrypted? && payload
     end
 
     # Remove unnecessary fields
@@ -230,7 +229,7 @@ class Push < ApplicationRecord
   end
 
   def set_url_token
-    self.url_token = SecureRandom.urlsafe_base64(rand(8..14)).downcase
+    self.url_token = SecureRandom.urlsafe_base64(16).downcase
   end
 
   def expire!

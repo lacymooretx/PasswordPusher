@@ -64,8 +64,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def token
     if current_user.nil?
       redirect_to user_session_path
-    elsif current_user&.authentication_token.blank?
-      current_user.regenerate_authentication_token!
+    elsif current_user.authentication_token_digest.blank? && current_user.authentication_token.blank?
+      @display_token = current_user.regenerate_authentication_token!
+    else
+      @display_token = flash[:new_token] || current_user.authentication_token
     end
   end
 
@@ -74,7 +76,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if current_user.nil?
       redirect_to user_session_path
     else
-      current_user.regenerate_authentication_token!
+      plaintext = current_user.regenerate_authentication_token!
+      flash[:new_token] = plaintext
       redirect_to token_user_registration_path
     end
   end

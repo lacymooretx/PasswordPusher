@@ -6,6 +6,7 @@ module ActiveStorage
   class MultipartUploadsController < ApplicationController
     before_action :authenticate_user!, if: -> { Settings.enable_logins }
     before_action :ensure_s3_service
+    before_action :verify_blob_ownership, only: %i[part_url complete abort_upload]
 
     def create
       blob = ActiveStorage::Blob.create_before_direct_upload!(
@@ -22,6 +23,12 @@ module ActiveStorage
         content_type: blob.content_type
       )
 
+      # Track blob ownership in session so only the creator can operate on it
+      session[:owned_blob_keys] ||= []
+      session[:owned_blob_keys] << blob.key
+      # Keep session from growing unbounded — retain last 20 keys
+      session[:owned_blob_keys] = session[:owned_blob_keys].last(20)
+
       render json: {
         upload_id: response.upload_id,
         key: blob.key,
@@ -30,13 +37,11 @@ module ActiveStorage
     end
 
     def part_url
-      blob = ActiveStorage::Blob.find_by!(key: params[:key])
-
-      presigner = Aws::S3::Presigner.new(client: s3_client_for(blob))
+      presigner = Aws::S3::Presigner.new(client: s3_client_for(@blob))
       url = presigner.presigned_url(
         :upload_part,
-        bucket: bucket_name_for(blob),
-        key: blob.key,
+        bucket: bucket_name_for(@blob),
+        key: @blob.key,
         upload_id: params[:upload_id],
         part_number: params[:part_number].to_i,
         expires_in: 3600
@@ -46,11 +51,9 @@ module ActiveStorage
     end
 
     def complete
-      blob = ActiveStorage::Blob.find_by!(key: params[:key])
-
-      s3_client_for(blob).complete_multipart_upload(
-        bucket: bucket_name_for(blob),
-        key: blob.key,
+      s3_client_for(@blob).complete_multipart_upload(
+        bucket: bucket_name_for(@blob),
+        key: @blob.key,
         upload_id: params[:upload_id],
         multipart_upload: {
           parts: params[:parts].map { |p|
@@ -59,23 +62,33 @@ module ActiveStorage
         }
       )
 
-      render json: {signed_id: blob.signed_id}
+      # Remove from owned keys now that upload is complete
+      session[:owned_blob_keys]&.delete(@blob.key)
+
+      render json: {signed_id: @blob.signed_id}
     end
 
     def abort_upload
-      blob = ActiveStorage::Blob.find_by!(key: params[:key])
-
-      s3_client_for(blob).abort_multipart_upload(
-        bucket: bucket_name_for(blob),
-        key: blob.key,
+      s3_client_for(@blob).abort_multipart_upload(
+        bucket: bucket_name_for(@blob),
+        key: @blob.key,
         upload_id: params[:upload_id]
       )
 
-      blob.purge
+      session[:owned_blob_keys]&.delete(@blob.key)
+      @blob.purge
       head :ok
     end
 
     private
+
+    def verify_blob_ownership
+      @blob = ActiveStorage::Blob.find_by!(key: params[:key])
+      owned_keys = session[:owned_blob_keys] || []
+      unless owned_keys.include?(@blob.key)
+        head :forbidden
+      end
+    end
 
     # ActiveStorage S3Service stores an Aws::S3::Resource as :client
     # We need the underlying Aws::S3::Client for multipart operations

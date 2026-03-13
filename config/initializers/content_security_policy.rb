@@ -8,17 +8,17 @@
 
 Rails.application.configure do
   config.content_security_policy do |policy|
-    policy.default_src :self, :https, :http, :ws, :wss
-    policy.font_src :self, :https, :http, :data
-    policy.img_src :self, :https, :http, :data, :blob
-    policy.media_src :self, :https, :http, :data, :blob
+    policy.default_src :self, :https, :wss
+    policy.font_src :self, :https, :data
+    policy.img_src :self, :https, :data, :blob
+    policy.media_src :self, :https, :data, :blob
     policy.object_src :none
-    policy.script_src :self, :https, :http
-    policy.style_src :self, :https, :http, :unsafe_inline
+    policy.script_src :self, :https
+    policy.style_src :self, :https, :unsafe_inline
     policy.style_src_attr :unsafe_inline
-    policy.connect_src :self, :https, :http, :ws, :wss
+    policy.connect_src :self, :https, :wss
     policy.report_uri "/csp-violation-report"
-    policy.script_src_elem :self, :https, :http
+    policy.script_src_elem :self, :https
   end
 end
 

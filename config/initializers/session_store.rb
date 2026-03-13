@@ -2,7 +2,7 @@
 
 # Be sure to restart your server when you modify this file.
 
-if Settings.secure_cookies
+if Settings.secure_cookies || Rails.env.production?
   PasswordPusher::Application.config.session_store :cookie_store,
     key: "_PasswordPusher_session",
     secure: true,                    # Only send the cookie over HTTPS
