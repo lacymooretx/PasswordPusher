@@ -113,6 +113,13 @@ export default class extends Controller {
         })
 
         let signedId
+        console.log("Upload decision:", {
+          fileSize: encryptedFile.size,
+          threshold: MULTIPART_THRESHOLD,
+          hasMultipartUrl: this.hasMultipartUrlValue,
+          multipartUrl: this.multipartUrlValue,
+          useMultipart: encryptedFile.size > MULTIPART_THRESHOLD && this.hasMultipartUrlValue
+        })
         if (encryptedFile.size > MULTIPART_THRESHOLD && this.hasMultipartUrlValue) {
           signedId = await this.multipartUpload(encryptedFile, (pct) => {
             this.updateProgress(progressItem, 40 + pct * 0.6, `Uploading ${file.name}... ${Math.round(pct)}%`)
