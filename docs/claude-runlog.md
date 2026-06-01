@@ -218,3 +218,25 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 - **1204 runs, 4998 assertions, 0 failures, 0 errors**
 - Settings files byte-identical (config/settings.yml == config/defaults/settings.yml)
 - All migrations applied
+
+---
+
+## 2026-06-01 — Fix: Microsoft SSO login loops back to "not logged in"
+
+**Goal:** Diagnose why a Windows client could reach pwpush.aspendora.com (DNS/ping fine) but Microsoft SSO login kept bouncing back to a logged-out state.
+
+**Diagnosis:** Root cause is the session cookie `same_site: :strict` in `config/initializers/session_store.rb` (active in production). With `SameSite=Strict`, the browser will not attach the `_PasswordPusher_session` cookie on cross-site top-level navigations — i.e. the redirect chain returning from `login.microsoftonline.com` and the subsequent redirect to the dashboard. The OAuth callback signs the user in and sets the cookie, but the very next (cross-site) request omits it, so the app sees no session → login page → loop. Password logins (fully same-site) are unaffected, which is why it looked SSO/machine-specific. Not a networking/DNS issue.
+
+**What I did:** Changed the production session cookie from `same_site: :strict` to `same_site: :lax`. Lax still sends the cookie on top-level GET navigations (OAuth redirects) while retaining CSRF protection against cross-site POST/subresource requests.
+
+**Files changed:** `config/initializers/session_store.rb`
+
+**Commands run:** `ssh` to prod (port 22 timed out / filtered from current network — could not pull live logs or deploy remotely).
+
+**Result:** Code fix committed locally on `master`. Requires deploy (rebuild) to take effect — initializer change needs app restart.
+
+**Next required steps:**
+1. Push to `origin/master`.
+2. On server: `cd /opt/docker/pwpush && git pull && docker build -f containers/docker/Dockerfile -t pwpush:latest . && cd /opt/docker && docker compose up -d pwpush`
+3. Re-test Microsoft SSO from the Windows client.
+4. Sanity check: confirm normal password login still works (should be unaffected).

@@ -7,7 +7,10 @@ if Settings.secure_cookies || Rails.env.production?
     key: "_PasswordPusher_session",
     secure: true,                    # Only send the cookie over HTTPS
     httponly: true,                  # Prevent JavaScript access to the cookie
-    same_site: :strict               # Restrict the cookie to same-site requests
+    same_site: :lax                  # Lax (not Strict) so the session cookie is sent on
+                                     # top-level OAuth/SSO redirect navigations back from
+                                     # the identity provider (Microsoft/Google). Strict drops
+                                     # the cookie on cross-site redirects, breaking SSO login.
 else
   PasswordPusher::Application.config.session_store :cookie_store, key: "_PasswordPusher_session"
 end
