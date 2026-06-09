@@ -22,6 +22,8 @@
 
 Use the [hosted service](https://pwpush.com) or run your own instance with Docker in minutes.
 
+> **This fork — Self-Hosted Enhanced Edition.** This repository extends upstream Password Pusher with a large set of self-hosted "Pro"-style features: user accounts with SSO and 2FA, teams and multi-tenancy, an admin panel, a full JSON API with Swagger docs, client-side encrypted large-file storage, webhooks and Microsoft Teams integration, IP/geo access controls, usage & compliance reporting, and more. Every addition is behind a feature flag and **off by default** — enable only what you need. See **[Enhanced Edition features](#enhanced-edition-features)** below.
+
 ---
 
 ## Why Password Pusher?
@@ -91,6 +93,8 @@ Use the [hosted service](https://pwpush.com) or run your own instance with Docke
 ### Self-Hosted Password Pusher Pro (beta)
 
 Self-hosted **Pro** (with licensing) is in late beta. Pro features not yet in OSS will be available for self-hosted deployments.
+
+> **This fork** independently implements many Pro-style capabilities as self-hostable, feature-flagged additions — see [Enhanced Edition features](#enhanced-edition-features).
 
 ---
 
@@ -176,6 +180,96 @@ Thanks also to [Translation.io](https://translation.io) for managing translation
 - [JarvisAndPi](http://www.reddit.com/user/JarvisAndPi) — Favicon design
 
 More: [Contributors](https://github.com/pglombardo/PasswordPusher/graphs/contributors)
+
+---
+
+## Enhanced Edition features
+
+Everything below is **additional** to upstream Password Pusher and ships in this repository. Each capability is gated behind a `Settings.enable_*` flag (env var `PWP__ENABLE_*`) and is **disabled by default** — turn on only what you need. Most account-based features require `enable_logins`.
+
+### 👤 Accounts, identity & access
+
+- **User accounts & logins** — full registration, sessions, and password reset (Devise 5).
+- **Two-factor authentication** — TOTP 2FA with QR enrollment and recoverable backup codes.
+- **Single sign-on** — Google and Microsoft / **Entra ID** OAuth2, including Entra profile avatars.
+- **Personal user policies** — per-user default expiration, view limits, and toggles for each push kind.
+- **Per-user branding & white-label** — custom logo, colors, and site name applied to delivery pages.
+
+### 👥 Teams & multi-tenancy
+
+- **Teams** — group users, shared visibility, member roles, and email invitations.
+- **Team policies** — *forced* or *default* push settings that flow down to members (Team Forced → Team Default → User Policy → Global).
+- **Team 2FA enforcement** — require two-factor for all members, with compliance view and reminders.
+- **Organization Settings Hub** — single place to manage org-wide policy, branding, and members.
+- **CSP multi-tenant integration** — CIPP-driven client/tenant discovery, multi-tenant SSO, and tenant onboarding for MSP deployments.
+
+### 🔐 Push creation & content
+
+- **Encrypted large-file storage** — client-side **AES-256-GCM** chunked encryption (Web Crypto) with files stored in **Backblaze B2** via Active Storage; supports 1.5 GB+ uploads. Keys are Lockbox-encrypted per push.
+- **ClamAV scanning** — optional malware scanning of uploaded files before delivery.
+- **Push templates** — save and reuse common push setting presets.
+- **Custom / vanity URLs** — human-friendly short tokens on push links.
+- **Auto-dispatch** — optionally email the secret link straight to recipients on creation.
+- **Passphrase & password generator** — built-in strong-secret generator (random and passphrase modes).
+
+### 🛡️ Access controls & hardening
+
+- **IP allowlisting** — restrict who can view a push by source IP / CIDR.
+- **Geofencing** — country-based access restrictions on pushes.
+- **Content Security Policy** — strict CSP headers across the app.
+- **Redis-backed rate limiting** — `Rack::Attack` throttling with a Redis store for production.
+- **Audit dashboard** — centralized, filterable audit log of push activity across the instance.
+
+### 🔔 Notifications & integrations
+
+- **Email push notifications** — alerts on push views and other events.
+- **Webhooks** — outbound HTTP POST on push events, including read receipts.
+- **Microsoft Teams** — channel webhook notifications plus an interactive **Teams bot**.
+- **Scheduled expiration notifications** — proactive reminders before pushes expire.
+
+### 🛠️ Admin, API & tooling
+
+- **Admin settings panel** — manage instance configuration from a tabbed admin UI, with DB-backed runtime overrides of `settings.yml`.
+- **Usage & compliance reporting** — admin dashboard with period-based usage and compliance metrics.
+- **Full JSON API** — 18 controllers / 65+ endpoints covering pushes (incl. **bulk create**), teams & members, invitations, webhooks, requests, audit logs, policies, branding, account & 2FA, notifications, admin settings, templates, CSP tenants, and reports.
+- **Interactive API docs** — Apipie annotations at `/api` and **Swagger UI** at `/api-docs`.
+- **CLI tool** — scriptable command-line client in `tools/cli/`.
+
+### 🎨 UI refresh
+
+Redesigned header & account dropdown, pushes dashboard, new-push page, branding tabs, team overview, and footer — plus a **dark-mode toggle** with dark-mode logo variants.
+
+### Feature flags
+
+All of the above are controlled by `enable_*` settings. Set them in `config/settings.yml` or via `PWP__ENABLE_*` environment variables:
+
+| Feature | Flag / env var |
+|---------|----------------|
+| User accounts | `enable_logins` / `PWP__ENABLE_LOGINS` |
+| Personal user policies | `enable_user_policies` |
+| Two-factor auth | `enable_two_factor` |
+| Google SSO | `sso.google.enabled` |
+| Microsoft / Entra SSO | `sso.microsoft.enabled` |
+| Per-user branding | `enable_user_branding` |
+| Request / intake forms | `enable_requests` |
+| Teams | `enable_teams` |
+| File pushes | `enable_file_pushes` |
+| URL pushes | `enable_url_pushes` |
+| QR pushes | `enable_qr_pushes` |
+| Audit dashboard | `enable_audit_dashboard` |
+| Email notifications | `enable_push_notifications` |
+| Webhooks | `enable_webhooks` |
+| IP allowlisting | `enable_ip_allowlisting` |
+| Geofencing | `enable_geofencing` |
+| Auto-dispatch | `enable_auto_dispatch` |
+| Push templates | `enable_push_templates` |
+| CSP / multi-tenant integration | `enable_csp_integration` |
+| Usage & compliance reports | `enable_reports` |
+| Microsoft Teams notifications | `enable_teams_notifications` |
+| Custom / vanity URLs | `enable_custom_urls` |
+| ClamAV file scanning | `enable_clamav` |
+
+See [`CLAUDE.md`](CLAUDE.md) for the full flag reference and architecture notes, and [`docs/app-build-progress.md`](docs/app-build-progress.md) for the phased build history.
 
 ---
 

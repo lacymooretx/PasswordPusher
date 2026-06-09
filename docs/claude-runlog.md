@@ -240,3 +240,5 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 2. On server: `cd /opt/docker/pwpush && git pull && docker build -f containers/docker/Dockerfile -t pwpush:latest . && cd /opt/docker && docker compose up -d pwpush`
 3. Re-test Microsoft SSO from the Windows client.
 4. Sanity check: confirm normal password login still works (should be unaffected).
+
+**DEPLOYED (2026-06-01):** Discovered prod actually runs on Vultr/Proxmox VM 301 `docker-apps` (reach via Tailscale `ssh docker-apps`), behind NPM, deploy dir `/opt/services/pwpush` (image-only, no source on box). Live logs confirmed the failure: `omniauth (microsoft_graph) csrf_detected`. Deployed the `:lax` fix as a derived image layer (rollback tag `pwpush:pre-samesite-fix`). Verified live: `config.session_options` → `same_site: :lax`, container healthy. Still TODO: push commit c8b71d58 to origin/master.
