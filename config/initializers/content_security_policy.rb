@@ -13,6 +13,9 @@ Rails.application.configure do
     policy.img_src :self, :https, :data, :blob
     policy.media_src :self, :https, :data, :blob
     policy.object_src :none
+    # Restrict <base> href to same-origin to prevent base-tag injection
+    # from rewriting relative URLs (e.g. script/asset hijacking). See GH #4382.
+    policy.base_uri :self
     policy.script_src :self, :https
     policy.style_src :self, :https, :unsafe_inline
     policy.style_src_attr :unsafe_inline

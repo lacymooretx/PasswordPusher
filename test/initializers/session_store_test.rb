@@ -28,7 +28,9 @@ class SessionStoreTest < ActiveSupport::TestCase
     # Assert that secure options are set correctly
     assert_equal true, session_options[:secure]
     assert_equal true, session_options[:httponly]
-    assert_equal :strict, session_options[:same_site]
+    # SameSite=Lax (not Strict) so the session cookie survives the OAuth/SSO
+    # redirect back from the IdP. Strict breaks the Microsoft/Google login loop.
+    assert_equal :lax, session_options[:same_site]
     assert_equal "_PasswordPusher_session", session_options[:key]
   end
 

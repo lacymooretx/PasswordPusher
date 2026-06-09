@@ -149,13 +149,17 @@ class Api::V1::PushesController < Api::BaseController
       }
   EOS
   def create
-    # Require authentication if allow_anonymous is false
-    # See config/settings.yml
-    authenticate_user! if Settings.enable_logins && !Settings.allow_anonymous
+    permitted_params = push_params
 
-    @push = Push.new(push_params)
+    # Require authentication when anonymous creation is disabled, or when
+    # creating a file push / uploading attachments. This prevents
+    # unauthenticated file storage abuse even when anonymous text pushes
+    # are allowed (allow_anonymous: true). See GH #4381.
+    authenticate_user! if requires_authentication_for_create?(permitted_params)
 
-    if !push_params[:kind].present?
+    @push = Push.new(permitted_params)
+
+    if !permitted_params[:kind].present?
       # These are used to determine the default kind based on the request path
       # for old push records. Their paths are generated based on their kind.
       # And, QR code pushes are created by using `/p/` path.
@@ -164,7 +168,7 @@ class Api::V1::PushesController < Api::BaseController
         "file"
       elsif request.path.include?("/r.json")
         "url"
-      elsif request.path.include?("/p.json") && push_params.key?(:files)
+      elsif request.path.include?("/p.json") && permitted_params.key?(:files)
         "file"
       else
         "text"
@@ -173,8 +177,8 @@ class Api::V1::PushesController < Api::BaseController
 
     @push.user = current_user if user_signed_in?
 
-    assign_deletable_by_viewer(@push, push_params)
-    assign_retrieval_step(@push, push_params)
+    assign_deletable_by_viewer(@push, permitted_params)
+    assign_retrieval_step(@push, permitted_params)
 
     if @push.save
       log_creation(@push)
@@ -469,6 +473,27 @@ class Api::V1::PushesController < Api::BaseController
   end
 
   private
+
+  # requires_authentication_for_create?
+  #
+  # Determines whether a push creation request must be authenticated.
+  # Authentication is required when:
+  #   - anonymous creation is disabled (allow_anonymous: false), or
+  #   - the request creates a file push / uploads attachments (the /f
+  #     endpoint, /p.json with a files key, or an explicit file kind).
+  # File pushes are always gated so that enabling anonymous text pushes
+  # does not also open unauthenticated file storage uploads. See GH #4381.
+  #
+  # @return [Boolean] true if authenticate_user! should be enforced
+  def requires_authentication_for_create?(permitted_params)
+    # No authentication system is available when logins are disabled.
+    return false unless Settings.enable_logins
+    return true unless Settings.allow_anonymous
+    return true if request.path.start_with?("/f")
+
+    (request.path.include?("/p.json") && permitted_params.key?(:files)) ||
+      permitted_params[:kind] == "file"
+  end
 
   # validate_page_parameter
   #

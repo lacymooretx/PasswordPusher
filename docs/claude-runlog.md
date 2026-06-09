@@ -242,3 +242,22 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 4. Sanity check: confirm normal password login still works (should be unaffected).
 
 **DEPLOYED (2026-06-01):** Discovered prod actually runs on Vultr/Proxmox VM 301 `docker-apps` (reach via Tailscale `ssh docker-apps`), behind NPM, deploy dir `/opt/services/pwpush` (image-only, no source on box). Live logs confirmed the failure: `omniauth (microsoft_graph) csrf_detected`. Deployed the `:lax` fix as a derived image layer (rollback tag `pwpush:pre-samesite-fix`). Verified live: `config.session_options` → `same_site: :lax`, container healthy. Still TODO: push commit c8b71d58 to origin/master.
+
+---
+
+## 2026-06-09 — Upstream security backport (3 fixes)
+
+**Goal:** Audit upstream PasswordPusher (we forked at `e26cdc6c`, 2026-02-23; upstream now v2.7.2) for security changes we lack and backport the relevant ones. Upstream is 348 commits ahead (243 dep bumps, 9 i18n, ~96 real). Focused on security.
+
+**Findings & actions:**
+1. **GH #4381 — file-upload auth enforcement (High):** Our v1 API `create` only authenticated when `!allow_anonymous`. The base controller's `require_api_authentication` already gates `/f.json` and `/r.json` create, but **not `/p.json` create** — so an anonymous client could create a *file* push via `/p.json` with a `files` key (or `kind=file`) and upload attachments without auth. Backported upstream's `requires_authentication_for_create?` helper (adapted: no APIv2 in our fork; kept `enable_logins` guard so no-login deployments don't call `authenticate_user!`). File: `app/controllers/api/v1/pushes_controller.rb`. New test: `test/integration/file_push/file_push_api_auth_test.rb` (4 tests, 13 assertions).
+2. **GH #4289 — trusted proxies (Med-High):** Prod/dev `trusted_proxies` were missing `172.16/12` (**Docker bridge** — our prod runs in Docker behind NPM), `127.0.0.0/8`, `169.254/16`, `100.64/10`. This affects accuracy of our IP-allowlist + geofence features. Expanded both `config/environments/production.rb` and `development.rb` to the full RFC 1918 / loopback / link-local / RFC 6598 set.
+3. **GH #4382 — CSP `base_uri :self` (Med):** Added `policy.base_uri :self` to `config/initializers/content_security_policy.rb` (blocks `<base>` tag injection). Skipped `strict_dynamic` — needs separate JS-loading testing.
+
+**Not backported (already covered / N/A):** upstream's own 2FA + `require_mfa` (we built our own 2FA + team 2FA enforcement); Custom-CSS HTML escaping (we don't have in-app Custom CSS); compose-only-443 (prod fronts with NPM).
+
+**Also fixed:** stale `session_store_test.rb` assertion (`:strict` → `:lax`) left over from the SSO SameSite fix (commit c8b71d58) — it had been failing since that change.
+
+**Verification:** Full suite green — **1208 runs, 5010 assertions, 0 failures, 0 errors**. (Ruby 4.0.1 via chruby.)
+
+**Next:** commit + push to origin/master (carries c8b71d58 too).
