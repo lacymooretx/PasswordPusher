@@ -261,3 +261,15 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 **Verification:** Full suite green — **1208 runs, 5010 assertions, 0 failures, 0 errors**. (Ruby 4.0.1 via chruby.)
 
 **Next:** commit + push to origin/master (carries c8b71d58 too).
+
+---
+
+## 2026-06-09 — Phase 41: Upstream UX backports (cont. from security backport)
+
+**Goal:** Backport non-security "may need" upstream features. User approved all; chose to **skip importmap migration** (#4285, keep esbuild) and **defer Ruby 4.0.3/Puma 8** (#4403, bundle-update blocked).
+
+**Done (4 features):** dark error pages (8d3773ba), auto re-blur 20s (#4383), Show/Hide Additional Options collapse across 4 forms (#4348), copyable share message on preview (#4474). New files: `app/helpers/share_message_helper.rb`, `app/views/shared/_additional_options.html.erb`, `app/views/shared/_share_message.html.erb`, `test/helpers/share_message_helper_test.rb`. Added `reveal_additional_options` system-test helper; patched 5 system tests (push_cookies, file_push_cookies, url_cookies, push_creation_workflows, file_push_editing) to expand the collapse.
+
+**Verification:** full unit/integration **1211 runs, 0 failures** (7 errors = pre-existing admin route-reload order pollution; admin test passes 7/7 alone). System tests green in isolation. All residual failures proven pre-existing via `git stash` baseline run.
+
+**Next:** Phase 42 (user-timezone #4274 — needs local_time gem) and Phase 43 (APIv2 #4371). Awaiting checkpoint per CLAUDE.md §11.

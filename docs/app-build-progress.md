@@ -1310,3 +1310,22 @@ Use Redis as Rack::Attack cache store for distributed rate limiting in multi-pro
 - [x] **1204 runs, 4998 assertions, 0 failures, 0 errors**
 
 **ALL PHASES 33-40 COMPLETE.**
+
+---
+
+## Phase 41: Upstream UX Backports (2026-06-09)
+
+Backport of self-contained upstream UX features onto our esbuild/redesigned base. Decision: **skip** upstream's importmap migration (we keep esbuild + custom B2-encryption JS) and **defer** Ruby 4.0.3/Puma 8 (blocked by apipie PR #964 bundle lock).
+
+### Delivered
+- [x] **Dark-mode error pages** (upstream 8d3773ba) — ported all 5 static pages (404, 406, 422, 500, maintenance) with dark-mode + i18n + branding. Self-contained inline CSS/JS, no asset-pipeline dependency.
+- [x] **Auto re-blur after 20s** (#4383) — revealed payloads automatically re-blur 20s after reveal. `spoiler_alert.js` timer + `PushesHelper#push_payload_auto_reblur_seconds` + `data-spoiler-auto-reblur-seconds` on payload divs (show.html.erb, _show_payload.html.erb).
+- [x] **Show / Hide Additional Options** (#4348) — new reusable `shared/_additional_options.html.erb` collapsible partial. Wrapped the advanced cluster (retrieval-step, deletable, passphrase — and Auto Dispatch on the text form) under one toggle across all 4 forms (_form, _url_form, _files_form, _qr_form). Added `reveal_additional_options` system-test helper; updated 5 system tests to expand the collapse before interacting.
+- [x] **Copyable share message on preview** (#4474) — new `ShareMessageHelper#push_share_message_text` (plain-text link + expiration + passphrase notes, locale-aware via our `enabled_language_codes`), `shared/_share_message.html.erb` partial added to the preview page, and `copy_controller.js` refactored with an `icon` target + robust feedback timer. New `test/helpers/share_message_helper_test.rb` (3 tests).
+
+### Verification
+- Unit/integration: new share-message helper test green (3 tests). Full suite: **1211 runs, 5013 assertions, 0 failures** (7 errors are a PRE-EXISTING order-dependent admin route-reload pollution — admin settings test passes 7/7 in isolation).
+- System tests: the 5 forms-touching files green in isolation after the collapse fix (push_cookies, url_cookies, file_push_editing, push_creation_workflows all 0 failures; file_push_cookies has 1 PRE-EXISTING container exact-match failure unrelated to this work — confirmed identical on baseline via stash).
+- **Pre-existing failures (NOT from this phase, confirmed via `git stash` baseline run):** (1) `file_push_cookies` / `push_cookies` assert `data-controller='knobs form'` exact-match which breaks when encryption adds `encrypted-upload`; (2) `push_viewing_workflows` + `passphrase_protection` expect old preliminary-page text "Click Here to Proceed" (our redesign uses "View Secret"). Worth a separate cleanup.
+
+**PHASE 41 COMPLETE.**

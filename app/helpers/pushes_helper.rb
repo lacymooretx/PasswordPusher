@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 module PushesHelper
+  include ShareMessageHelper
+
+  # Seconds after a payload is revealed before it is automatically re-blurred,
+  # to reduce lingering secret exposure in open tabs. See GH #4383.
+  PUSH_PAYLOAD_AUTO_REBLUR_SECONDS = 20
+
+  def push_payload_auto_reblur_seconds
+    PUSH_PAYLOAD_AUTO_REBLUR_SECONDS
+  end
+
   def filesize(size)
     units = %w[B KiB MiB GiB TiB Pib EiB ZiB]
 

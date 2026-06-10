@@ -18,6 +18,7 @@ class PushCookiesTest < ApplicationSystemTestCase
 
   test "password form has correct stimulus targets and values" do
     visit new_push_path(tab: "text")
+    reveal_additional_options
 
     # Check that the cookie save link exists
     assert_selector "#cookie-save a"
@@ -41,6 +42,7 @@ class PushCookiesTest < ApplicationSystemTestCase
 
   test "saving settings persists when revisiting password page" do
     visit new_push_path(tab: "text")
+    reveal_additional_options
 
     # Get the default values for comparison
     default_days = evaluate_script("document.querySelector('#push_expire_after_days').value")
@@ -82,6 +84,7 @@ class PushCookiesTest < ApplicationSystemTestCase
     # Navigate away and then revisit the page
     visit root_path
     visit new_push_path(tab: "text")
+    reveal_additional_options
 
     # Verify the saved values are restored
     assert_equal custom_days, evaluate_script("document.querySelector('#push_expire_after_days').value")

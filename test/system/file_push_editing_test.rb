@@ -126,6 +126,7 @@ class FilePushEditingTest < ApplicationSystemTestCase
     )
 
     visit edit_push_path(push)
+    reveal_additional_options
 
     # Wait for checkboxes to be rendered and loaded
     assert_selector "#push_retrieval_step"
@@ -153,6 +154,7 @@ class FilePushEditingTest < ApplicationSystemTestCase
     )
 
     visit edit_push_path(push)
+    reveal_additional_options
 
     # Wait for checkboxes to be rendered and loaded
     assert_selector "#push_retrieval_step"

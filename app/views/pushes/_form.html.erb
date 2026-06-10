@@ -145,72 +145,55 @@
                 </div>
             </div>
 
-            <div class='row mb-3'>
-                <div class='col'>
-                    <div class="list-group mx-0">
-                        <% if @push.settings_for_kind.enable_retrieval_step %>
-                            <label class="list-group-item d-flex gap-2">
-                            <%= check_box_tag "push[retrieval_step]", '1', @push.persisted? ? @push.retrieval_step : effective_default(@push.settings_for_kind, :retrieval_step_default, 'text'), checkbox_options_for_push(@push, "retrievalStep", effective_default(@push.settings_for_kind, :retrieval_step_default, 'text')) %>
-                            <span>
-                                <%= _('Use a 1-click retrieval step') %>
-                                <small class="d-block text-muted"><%= _('Helps to avoid chat systems and URL scanners from eating up views.') %></small>
-                            </span>
-                            </label>
-                        <% end %>
-                        <% if @push.settings_for_kind.enable_deletable_pushes %>
-                            <label class="list-group-item d-flex gap-2">
-                            <%= check_box_tag "push[deletable_by_viewer]", '1', @push.persisted? ? @push.deletable_by_viewer : effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text'), checkbox_options_for_push(@push, "deletableByViewer", effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text')) %>
-                            <span>
-                                <%= _('Allow immediate deletion') %>
-                                <small class="d-block text-muted"><%= _('Allow users to delete this push once retrieved.') %></small>
-                            </span>
-                            </label>
-                        <% end %>
-                    </div>
+            <%= render 'shared/additional_options' do %>
+                <div class="list-group mx-0 mb-3">
+                    <% if @push.settings_for_kind.enable_retrieval_step %>
+                        <label class="list-group-item d-flex gap-2">
+                        <%= check_box_tag "push[retrieval_step]", '1', @push.persisted? ? @push.retrieval_step : effective_default(@push.settings_for_kind, :retrieval_step_default, 'text'), checkbox_options_for_push(@push, "retrievalStep", effective_default(@push.settings_for_kind, :retrieval_step_default, 'text')) %>
+                        <span>
+                            <%= _('Use a 1-click retrieval step') %>
+                            <small class="d-block text-muted"><%= _('Helps to avoid chat systems and URL scanners from eating up views.') %></small>
+                        </span>
+                        </label>
+                    <% end %>
+                    <% if @push.settings_for_kind.enable_deletable_pushes %>
+                        <label class="list-group-item d-flex gap-2">
+                        <%= check_box_tag "push[deletable_by_viewer]", '1', @push.persisted? ? @push.deletable_by_viewer : effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text'), checkbox_options_for_push(@push, "deletableByViewer", effective_default(@push.settings_for_kind, :deletable_pushes_default, 'text')) %>
+                        <span>
+                            <%= _('Allow immediate deletion') %>
+                            <small class="d-block text-muted"><%= _('Allow users to delete this push once retrieved.') %></small>
+                        </span>
+                        </label>
+                    <% end %>
                 </div>
-            </div>
-            <div class='row mb-3'>
-                <div class='col'>
-                    <fieldset class="border rounded p-3">
-                        <legend class="float-none w-auto px-2 fs-6 mb-0">
-                            <em class="bi bi-lock"></em> <%= _('Passphrase Lockdown') %>
-                        </legend>
-                        <%= f.text_field(:passphrase, { class: "form-control",
-                                                        autocomplete: "off",
-                                                        placeholder: _('Optional: Require recipients to enter a passphrase to view this push') }) %>
-                    </fieldset>
-                </div>
-            </div>
 
-            <% if Settings.enable_auto_dispatch && user_signed_in? && action_name != 'edit' %>
-                <div class='row mb-3'>
-                    <div class='col'>
-                        <hr>
-                        <p class="d-inline-flex gap-1 mb-2">
-                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#additionalOptions" aria-expanded="false" aria-controls="additionalOptions">
-                                <em class="bi bi-gear"></em> <%= _('Additional Options') %> &mdash; <%= _('Show / Hide') %>
-                            </button>
-                        </p>
-                        <div class="collapse" id="additionalOptions">
-                            <div class="card">
-                                <div class="card-header">
-                                    <em class="bi bi-send"></em> <%= _('Auto Dispatch: Send This Secret Link To...') %>
-                                </div>
-                                <div class="card-body">
-                                    <p class="text-muted small mb-2">
-                                        <%= _('Enter email addresses separated by commas. The secret link will be emailed to each recipient after the push is created.') %>
-                                    </p>
-                                    <%= text_field_tag 'dispatch_emails', nil, class: "form-control",
-                                        placeholder: _('e.g. alice@example.com, bob@example.com'),
-                                        autocomplete: "off" %>
-                                    <div class="form-text">
-                                        <%= _('Maximum %{count} recipients.') % { count: Settings.auto_dispatch.max_recipients } %>
-                                    </div>
-                                </div>
+                <fieldset class="border rounded p-3 mb-3">
+                    <legend class="float-none w-auto px-2 fs-6 mb-0">
+                        <em class="bi bi-lock"></em> <%= _('Passphrase Lockdown') %>
+                    </legend>
+                    <%= f.text_field(:passphrase, { class: "form-control",
+                                                    autocomplete: "off",
+                                                    placeholder: _('Optional: Require recipients to enter a passphrase to view this push') }) %>
+                </fieldset>
+
+                <% if Settings.enable_auto_dispatch && user_signed_in? && action_name != 'edit' %>
+                    <div class="card">
+                        <div class="card-header">
+                            <em class="bi bi-send"></em> <%= _('Auto Dispatch: Send This Secret Link To...') %>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-2">
+                                <%= _('Enter email addresses separated by commas. The secret link will be emailed to each recipient after the push is created.') %>
+                            </p>
+                            <%= text_field_tag 'dispatch_emails', nil, class: "form-control",
+                                placeholder: _('e.g. alice@example.com, bob@example.com'),
+                                autocomplete: "off" %>
+                            <div class="form-text">
+                                <%= _('Maximum %{count} recipients.') % { count: Settings.auto_dispatch.max_recipients } %>
                             </div>
                         </div>
                     </div>
-                </div>
+                <% end %>
             <% end %>
 
             <% unless action_name == 'edit' %>

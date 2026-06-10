@@ -33,4 +33,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   teardown do
     # Any teardown needed for all system tests
   end
+
+  # Expands the collapsible "Additional Options" section on push forms so its
+  # controls (retrieval step, deletable-by-viewer, passphrase) become visible
+  # and interactable. No-op if already expanded. See GH #4348.
+  def reveal_additional_options
+    return if has_css?("#additionalOptionsCollapse.show", wait: 0)
+    find("button[data-bs-target='#additionalOptionsCollapse']").click
+    assert_selector "#additionalOptionsCollapse.show"
+  end
 end

@@ -62,6 +62,7 @@ class PushCreationWorkflowsTest < ApplicationSystemTestCase
     visit new_push_path(tab: "text")
 
     fill_in "push_payload", with: "TestPassword"
+    reveal_additional_options
     check "push_retrieval_step"
 
     click_button "Push It!"
@@ -74,6 +75,7 @@ class PushCreationWorkflowsTest < ApplicationSystemTestCase
     visit new_push_path(tab: "text")
 
     fill_in "push_payload", with: "TestPassword"
+    reveal_additional_options
     fill_in "push_passphrase", with: "mypassphrase"
 
     click_button "Push It!"

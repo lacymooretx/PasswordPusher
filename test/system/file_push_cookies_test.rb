@@ -19,6 +19,7 @@ class FilePushCookiesTest < ApplicationSystemTestCase
   test "file push form has correct stimulus targets and values" do
     visit new_push_path(tab: "files")
     assert_selector "h5", text: "Add Files..."
+    reveal_additional_options
 
     # Check that the cookie save link exists
     assert_selector "#cookie-save a"
@@ -42,6 +43,7 @@ class FilePushCookiesTest < ApplicationSystemTestCase
 
   test "saving settings persists when revisiting file push page" do
     visit new_push_path(tab: "files")
+    reveal_additional_options
 
     # Get the default values for comparison
     default_days = evaluate_script("document.querySelector('#push_expire_after_days').value")
@@ -83,6 +85,7 @@ class FilePushCookiesTest < ApplicationSystemTestCase
     # Navigate away and then revisit the page
     visit root_path
     visit new_push_path(tab: "files")
+    reveal_additional_options
 
     # Verify the saved values are restored
     assert_equal custom_days, evaluate_script("document.querySelector('#push_expire_after_days').value")
