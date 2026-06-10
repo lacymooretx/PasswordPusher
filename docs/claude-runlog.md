@@ -317,3 +317,18 @@ Deployed HEAD 5c129af6 (security backport + Phases 41-43 + test fixes) to pwpush
 **Verification:** container Up healthy on 5aa0897bd191; clean Puma boot (x86_64, production); /up=200; **/api/v2/version → api_version "2.0" (new endpoint live)**; /api/v1/version still 1.5; public https://pwpush.aspendora.com = 200; public /api/v2/version = 2.0 through NPM. local_time gem confirmed bundled (app boots with new lockfile + renders local_time view helpers).
 
 **Rollback if needed:** `ssh docker-apps 'cd /opt/services/pwpush && docker tag pwpush:pre-backports-20260609 pwpush:latest && docker compose up -d pwpush'`.
+
+---
+
+## 2026-06-10 — Deploy: audit-log single client IP + Cloudflare proxy trust
+
+Deployed HEAD c4435f6e. Cause: audit log showed two IPs (real visitor + Cloudflare edge) because it stored the raw X-Forwarded-For; same gap meant request.remote_ip (IP allowlisting/geofencing) resolved to Cloudflare's IP.
+
+Changes: log_events.rb → request.remote_ip; cloudflare_proxy initializer → static fallback list; enabled PWP__CLOUDFLARE_PROXY='true' in server compose (backed up first). Native server build → image 55ccff46f12b. Rollback tag pwpush:pre-cloudflare-ip (= 5aa0897bd191).
+
+Verified in prod via real RemoteIp middleware logic with the exact observed chains:
+- 76.247.107.61, 172.70.44.188 → 76.247.107.61
+- 75.148.185.62, 162.159.104.7 → 75.148.185.62
+22 Cloudflare IPAddr ranges loaded into trusted_proxies (live fetch succeeded). Container healthy, /up=200, public site 200.
+
+Rollback: `ssh docker-apps 'cd /opt/services/pwpush && docker tag pwpush:pre-cloudflare-ip pwpush:latest && git -C . checkout docker-compose.yml 2>/dev/null; docker compose up -d pwpush'` (also restore compose .bak if needed).
