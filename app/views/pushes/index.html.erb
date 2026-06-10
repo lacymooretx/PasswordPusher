@@ -49,7 +49,7 @@
               <%= _('Text') %>
             <% end %>
           </td>
-          <td><%= I18n.l push.created_at.in_time_zone(Settings.timezone), format: :long %></td>
+          <td><%= local_time(push.created_at, :long) %></td>
           <td>
             <% if push.note.blank? %>
               <span class="badge rounded-pill bg-light text-dark"><%= _('None') %></span>

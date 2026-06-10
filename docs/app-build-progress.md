@@ -1329,3 +1329,22 @@ Backport of self-contained upstream UX features onto our esbuild/redesigned base
 - **Pre-existing failures (NOT from this phase, confirmed via `git stash` baseline run):** (1) `file_push_cookies` / `push_cookies` assert `data-controller='knobs form'` exact-match which breaks when encryption adds `encrypted-upload`; (2) `push_viewing_workflows` + `passphrase_protection` expect old preliminary-page text "Click Here to Proceed" (our redesign uses "View Secret"). Worth a separate cleanup.
 
 **PHASE 41 COMPLETE.**
+
+---
+
+## Phase 42: User-Timezone Display (#4274) (2026-06-09)
+
+Render dates/times in the viewer's browser timezone instead of the server's `Settings.timezone`.
+
+### Delivered
+- [x] Added `local_time` gem (3.0.3) — single-gem `bundle install`, no apipie lock conflict.
+- [x] Ported upstream `app/javascript/local_time_locales.js` (420 lines, all app locales) and wired `application.js` (`setLocalTimeLocaleFromDocument()` + `LocalTime.start/run` on turbo:load/morph). The `local-time` npm package was already imported.
+- [x] Converted all 16 server-side date renderings from `I18n.l(...in_time_zone(Settings.timezone))` / `strftime` to `local_time` / `local_date` helpers:
+  - `pushes/index.html.erb`, `pushes/audit.html.erb`, `teams/show.html.erb` (×2), `admin/users/index.html.erb` (×4)
+  - 8 `audit_logs/_log_*.html.erb` partials — wrapped each interpolation in `(...).html_safe` with `h(audit_log.subject_name)` for XSS safety (matches upstream), since `local_time` emits a `<time>` tag.
+
+### Verification
+- Full suite: **1211 runs, 0 failures**. (8 errors = the known pre-existing order-pollution: 7 admin route + 1 webhook cleanup; both pass in isolation — see cleanup task.) Crucially **no date-format assertion broke**, confirming the conversions render correctly through the view tests.
+- esbuild bundle builds clean with the new `local_time_locales` import.
+
+**PHASE 42 COMPLETE.**

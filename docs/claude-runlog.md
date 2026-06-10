@@ -273,3 +273,9 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 **Verification:** full unit/integration **1211 runs, 0 failures** (7 errors = pre-existing admin route-reload order pollution; admin test passes 7/7 alone). System tests green in isolation. All residual failures proven pre-existing via `git stash` baseline run.
 
 **Next:** Phase 42 (user-timezone #4274 — needs local_time gem) and Phase 43 (APIv2 #4371). Awaiting checkpoint per CLAUDE.md §11.
+
+---
+
+## 2026-06-09 — Phase 42: User-timezone display (#4274)
+
+Added `local_time` gem (3.0.3, clean single-gem bundle install). Ported `local_time_locales.js` + `application.js` hooks (local-time npm was already imported). Converted all 16 date renderings to `local_time`/`local_date` (pushes index/audit, teams ×2, admin users ×4, 8 audit_log partials with `.html_safe` + `h()` XSS guard). Full suite 1211 runs, 0 failures (8 errors = pre-existing pollution, pass in isolation). Next: Phase 43 APIv2.

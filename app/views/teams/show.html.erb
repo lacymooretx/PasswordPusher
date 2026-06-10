@@ -83,7 +83,7 @@
                 <% end %>
               </td>
             <% end %>
-            <td><%= I18n.l membership.created_at.in_time_zone(Settings.timezone), format: :short %></td>
+            <td><%= local_time(membership.created_at, :short) %></td>
             <td class="text-end">
               <% current_membership = @team.membership_for(current_user) %>
               <% if membership.user == current_user && !membership.owner? %>
@@ -178,7 +178,7 @@
             <tr>
               <td><%= push.name.present? ? push.name : push.url_token %></td>
               <td><%= push.kind.humanize %></td>
-              <td><%= I18n.l push.created_at.in_time_zone(Settings.timezone), format: :short %></td>
+              <td><%= local_time(push.created_at, :short) %></td>
               <td><%= push.user&.email || _('Anonymous') %></td>
               <td>
                 <% if push.expired? %>
