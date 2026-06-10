@@ -11,7 +11,10 @@ class Api::V1::WebhooksControllerTest < ActionDispatch::IntegrationTest
 
   teardown do
     Settings.enable_webhooks = false
-    Settings.webhooks = nil
+    # Restore the full webhooks settings from YAML rather than nilling them,
+    # which would leave Settings.webhooks = nil for later tests (e.g. the
+    # webhook delivery cleanup job test reads Settings.webhooks.*).
+    Settings.reload!
   end
 
   # --- index ---

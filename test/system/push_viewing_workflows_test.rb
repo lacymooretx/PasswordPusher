@@ -50,10 +50,10 @@ class PushViewingWorkflowsTest < ApplicationSystemTestCase
 
     # Should be on preliminary page
     assert_current_path preliminary_push_path(@push), wait: 5
-    assert_text "Click Here to Proceed", wait: 5
+    assert_text "View Secret", wait: 5
 
     # Click the link to proceed
-    click_link "Click Here to Proceed"
+    click_link "View Secret"
 
     # Should now be on the actual push page
     assert_current_path push_path(@push), wait: 5

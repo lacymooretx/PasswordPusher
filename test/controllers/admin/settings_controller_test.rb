@@ -5,6 +5,10 @@ require "test_helper"
 class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
   setup do
     Settings.enable_logins = true
+    # Admin routes (config/routes/admin.rb) are only drawn when enable_logins
+    # is true, so redraw them here — a prior test may have reloaded routes
+    # with logins disabled, dropping admin_settings_path.
+    Rails.application.reload_routes!
     @admin = users(:mr_admin)
     sign_in @admin
   end

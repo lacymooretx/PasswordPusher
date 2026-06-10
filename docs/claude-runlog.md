@@ -285,3 +285,16 @@ Added `local_time` gem (3.0.3, clean single-gem bundle install). Ported `local_t
 ## 2026-06-09 — Phase 43: APIv2 (#4371)
 
 Added `/api/v2` surface: `Api::V2::PushesController < Api::V1::PushesController` (overrides push_params to use the `push` namespace; inherits all v1 extensions + the #4381 security fix), `Api::V2::VersionController` (api_version "2.0"), v2 routes (version + pushes except new/index/edit/update + preview/audit/active/expired), and base_controller v2 auth gating. Tests: api_v2_version_test (2) + api_v2_pushes_test (19), adapted (dropped /help/api page; enable_logins in setup). Skipped the upstream static help page + footer link (we have /api + /api-docs; footer is redesigned). Full suite: **1232 runs, 0 failures, 0 errors** (clean). Phases 41-43 complete.
+
+---
+
+## 2026-06-09 — Fix pre-existing test pollution + brittle system tests
+
+Root-caused and fixed the long-standing intermittent (seed-dependent) failures:
+
+1. **Admin route pollution (7 errors):** `config/routes/admin.rb` draws the admin block (incl. `admin_settings_path`) only `if Settings.enable_logins`. `Admin::SettingsControllerTest` set `enable_logins = true` but never reloaded routes, so it inherited route state from a prior test that reloaded with logins off. Fix: `Rails.application.reload_routes!` in its setup. (Confirmed mechanism via rails runner.)
+2. **Webhook Settings pollution (1 error):** `webhooks_controller_test.rb` teardown did `Settings.webhooks = nil`, leaving it nil for later tests (`webhook_delivery_cleanup_job_test` reads `Settings.webhooks.*`). Fix: teardown now `Settings.reload!` (restores full webhooks from YAML).
+3. **Brittle data-controller assertions:** `push_cookies`/`file_push_cookies`/`url_cookies` asserted exact `data-controller='knobs form'`, which breaks when `encrypted-upload` is appended (encryption enabled). Fix: loosen to `[data-controller~='knobs'][data-controller~='form']` word-contains selectors (assert_selector + querySelector).
+4. **Stale preliminary-page text:** `push_viewing_workflows` + `passphrase_protection` expected "Click Here to Proceed"; our redesigned preliminary page says "View Secret". Updated assertions/click_link.
+
+**Verification:** combined system tests 43 runs 0 failures (was 3F+1E). Full unit/integration suite run twice (seeds 12345, 99999): **1232 runs, 5059 assertions, 0 failures, 0 errors** both times. Pollution no longer seed-dependent.

@@ -135,7 +135,7 @@ class PassphraseProtectionTest < ApplicationSystemTestCase
 
     # Should be on preliminary page
     assert_current_path preliminary_push_path(@push), wait: 5
-    click_link "Click Here to Proceed"
+    click_link "View Secret"
 
     # Then should go to passphrase page (not directly to push)
     assert_current_path passphrase_push_path(@push), wait: 5

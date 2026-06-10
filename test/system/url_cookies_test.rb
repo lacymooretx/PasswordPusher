@@ -26,10 +26,11 @@ class UrlCookiesTest < ApplicationSystemTestCase
     assert_text "Save the above settings as the page default."
 
     # Verify the container has the correct data attributes
-    assert_selector "div.container[data-controller='knobs form']"
+    assert_selector "div.container[data-controller~='knobs'][data-controller~='form']"
 
-    # Check knobs attributes using JavaScript
-    container_data = evaluate_script("document.querySelector('div.container[data-controller=\"knobs form\"]').dataset")
+    # Check knobs attributes using JavaScript (tolerate extra controllers like
+    # encrypted-upload that are appended when file encryption is enabled)
+    container_data = evaluate_script("document.querySelector('div.container[data-controller~=\"knobs\"][data-controller~=\"form\"]').dataset")
 
     # Check tab name and language values
     assert_equal "url", container_data["knobsTabNameValue"]
