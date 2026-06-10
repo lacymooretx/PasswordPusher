@@ -11,13 +11,21 @@ class Api::BaseController < ApplicationController
     if (user = user_from_token)
       sign_in user, store: false
 
-    elsif params["controller"] == "api/v1/version"
-      # Version endpoint is public
+    elsif %w[api/v1/version api/v2/version].include?(params["controller"])
+      # Version endpoints are public
       nil
 
     elsif request.headers.key?("Authorization") || request.headers.key?("X-User-Token")
       # The user is trying to authenticate with a bad token
       head :unauthorized
+
+    elsif params["controller"] == "api/v2/pushes"
+      # APIv2 pushes mirror v1 semantics: show/create/preview/destroy are
+      # publicly reachable (create-auth is enforced in the controller via
+      # requires_authentication_for_create?); only these require a token.
+      if %w[audit active expired].include?(params["action"])
+        head :unauthorized
+      end
 
     elsif request.path.start_with?("/p")
       if %w[audit active expired].include?(params["action"])

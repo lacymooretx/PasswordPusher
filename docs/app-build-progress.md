@@ -1348,3 +1348,26 @@ Render dates/times in the viewer's browser timezone instead of the server's `Set
 - esbuild bundle builds clean with the new `local_time_locales` import.
 
 **PHASE 42 COMPLETE.**
+
+---
+
+## Phase 43: APIv2 Namespace (#4371) (2026-06-09)
+
+Add a clean, versioned `/api/v2` surface alongside the existing v1 API.
+
+### Delivered
+- [x] `Api::V2::PushesController < Api::V1::PushesController` — inherits ALL our v1 extensions and security gating (incl. the #4381 file-auth fix). Overrides only `push_params` to accept a single consistent `push` namespace (vs v1's `password`/`file_push`/`url`), with file-kind inference and parity for our extended attrs (allowed_ips, allowed_countries, file_encryption_key, custom_url_token).
+- [x] `Api::V2::VersionController` — returns `{application_version, api_version: "2.0", edition}`.
+- [x] Routes (`config/routes/pwp_api.rb`): `namespace :api { namespace :v2 { get :version; resources :pushes except new/index/edit/update + preview/audit/active/expired } }`. Unconditional (not behind feature flags), so robust to route reloads.
+- [x] `Api::BaseController#require_api_authentication`: v2 version is public; v2 pushes show/create/preview/destroy are publicly reachable (create-auth enforced in controller); audit/active/expired require a token.
+- [x] Tests: `test/integration/api/api_v2_version_test.rb` (2) + `api_v2_pushes_test.rb` (19) — adapted from upstream (dropped the /help/api page test; set enable_logins in setup so allow_anonymous semantics align with our security-fix helper).
+
+### Notes / deviations from upstream
+- Skipped upstream's static `/help/api` docs page + footer link — our footer is redesigned (Phase 28) and we already ship Apipie at `/api` and Swagger at `/api-docs`.
+- v2 keeps upstream's focused surface (no bulk endpoint) even though the inherited controller has `bulk_create`; v1 remains the home for our extended endpoints.
+
+### Verification
+- v2 tests: 21 runs, 0 failures. All API tests (v1+v2+auth): 226 runs, 0 failures.
+- **Full suite: 1232 runs, 5059 assertions, 0 failures, 0 errors.** (Clean run — the pre-existing order-pollution is seed-dependent and did not surface.)
+
+**PHASE 43 COMPLETE. Phases 41-43 (all "may need" upstream backports) done.**

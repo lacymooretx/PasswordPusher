@@ -57,6 +57,21 @@ constraints(format: :json) do
     end
   end
 
+  # APIv2 — clean, versioned surface. Pushes inherit all v1 behaviour and
+  # security gating; only the request shape changes (single `push` namespace).
+  namespace :api do
+    namespace :v2 do
+      get :version, to: "version#show"
+
+      resources :pushes, except: %i[new index edit update] do
+        get "preview", on: :member
+        get "audit", on: :member
+        get "active", on: :collection
+        get "expired", on: :collection
+      end
+    end
+  end
+
   resources :p, controller: "api/v1/pushes", as: :passwords, except: %i[new index edit update] do
     get "preview", on: :member
     get "audit", on: :member

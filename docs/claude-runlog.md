@@ -279,3 +279,9 @@ Build 9 feature phases in one session: Push Templates, CSP Integration, Reportin
 ## 2026-06-09 — Phase 42: User-timezone display (#4274)
 
 Added `local_time` gem (3.0.3, clean single-gem bundle install). Ported `local_time_locales.js` + `application.js` hooks (local-time npm was already imported). Converted all 16 date renderings to `local_time`/`local_date` (pushes index/audit, teams ×2, admin users ×4, 8 audit_log partials with `.html_safe` + `h()` XSS guard). Full suite 1211 runs, 0 failures (8 errors = pre-existing pollution, pass in isolation). Next: Phase 43 APIv2.
+
+---
+
+## 2026-06-09 — Phase 43: APIv2 (#4371)
+
+Added `/api/v2` surface: `Api::V2::PushesController < Api::V1::PushesController` (overrides push_params to use the `push` namespace; inherits all v1 extensions + the #4381 security fix), `Api::V2::VersionController` (api_version "2.0"), v2 routes (version + pushes except new/index/edit/update + preview/audit/active/expired), and base_controller v2 auth gating. Tests: api_v2_version_test (2) + api_v2_pushes_test (19), adapted (dropped /help/api page; enable_logins in setup). Skipped the upstream static help page + footer link (we have /api + /api-docs; footer is redesigned). Full suite: **1232 runs, 0 failures, 0 errors** (clean). Phases 41-43 complete.
