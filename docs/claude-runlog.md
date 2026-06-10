@@ -298,3 +298,22 @@ Root-caused and fixed the long-standing intermittent (seed-dependent) failures:
 4. **Stale preliminary-page text:** `push_viewing_workflows` + `passphrase_protection` expected "Click Here to Proceed"; our redesigned preliminary page says "View Secret". Updated assertions/click_link.
 
 **Verification:** combined system tests 43 runs 0 failures (was 3F+1E). Full unit/integration suite run twice (seeds 12345, 99999): **1232 runs, 5059 assertions, 0 failures, 0 errors** both times. Pollution no longer seed-dependent.
+
+---
+
+## 2026-06-10 — Production deploy of upstream backports batch
+
+Deployed HEAD 5c129af6 (security backport + Phases 41-43 + test fixes) to pwpush.aspendora.com (docker-apps VM).
+
+**Method (native build on server — faster than cross-arch + no image transfer):**
+1. Tagged current running image for rollback: `pwpush:pre-backports-20260609` (= 4fcd5326c1f5).
+2. Shipped source via `git archive HEAD | ssh docker-apps tar -x -C /opt/pwpush-build` (tracked files only, no node_modules/.git).
+3. Native amd64 build on server: `docker build -f containers/docker/Dockerfile -t pwpush:latest .` → new image 5aa0897bd191 (680MB).
+4. `cd /opt/services/pwpush && docker compose up -d pwpush` (recreated only pwpush; redis/clamav untouched; no volume changes).
+5. Removed /opt/pwpush-build.
+
+**No new DB migrations in this batch** — pure code + assets.
+
+**Verification:** container Up healthy on 5aa0897bd191; clean Puma boot (x86_64, production); /up=200; **/api/v2/version → api_version "2.0" (new endpoint live)**; /api/v1/version still 1.5; public https://pwpush.aspendora.com = 200; public /api/v2/version = 2.0 through NPM. local_time gem confirmed bundled (app boots with new lockfile + renders local_time view helpers).
+
+**Rollback if needed:** `ssh docker-apps 'cd /opt/services/pwpush && docker tag pwpush:pre-backports-20260609 pwpush:latest && docker compose up -d pwpush'`.
