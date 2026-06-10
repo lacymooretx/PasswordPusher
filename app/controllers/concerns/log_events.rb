@@ -46,7 +46,11 @@ module LogEvents
   end
 
   def log_event(push, kind)
-    ip = request.env["HTTP_X_FORWARDED_FOR"].blank? ? request.env["REMOTE_ADDR"] : request.env["HTTP_X_FORWARDED_FOR"]
+    # Record the resolved client IP. request.remote_ip walks the
+    # X-Forwarded-For chain using config.action_dispatch.trusted_proxies, so
+    # with cloudflare_proxy enabled this yields the real visitor IP rather than
+    # the full proxy chain (e.g. "<client>, <cloudflare-edge>").
+    ip = request.remote_ip
 
     # Limit retrieved values to 256 characters
     user_agent = request.env["HTTP_USER_AGENT"].to_s[0, 255]

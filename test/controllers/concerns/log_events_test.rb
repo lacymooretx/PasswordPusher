@@ -197,14 +197,16 @@ class LogEventsTest < ActionController::TestCase
   end
 
   # Test log_event method - IP address handling
-  test "log_event uses HTTP_X_FORWARDED_FOR when present" do
+  test "log_event records the resolved client IP from X-Forwarded-For" do
     @request.env["HTTP_X_FORWARDED_FOR"] = "203.0.113.50, 192.168.1.1"
     @request.env["REMOTE_ADDR"] = "10.0.0.1"
 
     @controller.log_view(@push)
 
     log = AuditLog.last
-    assert_equal "203.0.113.50, 192.168.1.1", log.ip
+    # request.remote_ip strips trusted (private) proxies from the forwarded
+    # chain, leaving the real client rather than the full "client, proxy" list.
+    assert_equal "203.0.113.50", log.ip
   end
 
   test "log_event uses REMOTE_ADDR when HTTP_X_FORWARDED_FOR is nil" do
