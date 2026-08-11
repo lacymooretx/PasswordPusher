@@ -131,6 +131,33 @@ class Sms::ClerkChatTest < ActiveSupport::TestCase
     assert_match(/sender number is not configured/, error.message)
   end
 
+  # Regression: the Config gem YAML-parses env vars, so
+  # PWP__CLERK_CHAT__SENDER='+12819414028' reaches us as the Integer
+  # 12819414028. Sending that as a number made Clerk Chat answer 422.
+  test "normalizes an integer sender back into an E.164 string" do
+    client = Sms::ClerkChat.new(api_key: "ck-test", sender: 12819414028)
+
+    http = FakeHttp.new(created_response)
+    Net::HTTP.stub :new, http do
+      client.deliver(to: "+17138750817", body: "hi")
+    end
+
+    payload = JSON.parse(http.last_request.body)
+    assert_equal "+12819414028", payload["sender"]
+    assert_kind_of String, payload["sender"]
+  end
+
+  test "normalizes a loosely formatted sender" do
+    client = Sms::ClerkChat.new(api_key: "ck-test", sender: "(281) 941-4028")
+
+    http = FakeHttp.new(created_response)
+    Net::HTTP.stub :new, http do
+      client.deliver(to: "+17138750817", body: "hi")
+    end
+
+    assert_equal "+12819414028", JSON.parse(http.last_request.body)["sender"]
+  end
+
   test "configured? reflects key and sender presence" do
     assert Sms::ClerkChat.new(api_key: "k", sender: "+1555").configured?
     assert_not Sms::ClerkChat.new(api_key: "k").configured?

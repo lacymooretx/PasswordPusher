@@ -69,8 +69,19 @@ module Sms
       settings[:api_key].presence || setting(:api_key)
     end
 
+    # Always an E.164 *string*.
+    #
+    # The Config gem YAML-parses environment variables, so
+    # PWP__CLERK_CHAT__SENDER='+12819414028' arrives as the Integer
+    # 12819414028 (YAML reads a leading "+" as an explicit-sign integer).
+    # Serialising that into the request body sends a number where Clerk Chat
+    # requires a string, and it answers 422 with no detail. Normalising
+    # whatever we are handed fixes it regardless of how the value was supplied.
     def sender
-      settings[:sender].presence || setting(:sender)
+      raw = settings[:sender].presence || setting(:sender)
+      return nil if raw.blank?
+
+      Sms::PhoneNumber.normalize(raw.to_s) || raw.to_s
     end
 
     def sent_by_name
