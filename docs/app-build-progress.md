@@ -1395,12 +1395,12 @@ API docs in `~/code/apis/pwpush-api/`.
 ### Phase plan
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 44 | SMTP2GO API mail delivery method | PENDING |
-| 45 | Supervisor email + SMS dispatch (Clerk Chat) — model, jobs, UI, API | PENDING |
-| 46 | Mobile-friendly UI/UX pass (dispatch-first) | PENDING |
-| 47 | API surface completion + Apipie + `~/code/apis/pwpush-api` docs | PENDING |
-| 48 | `pwpush-mcp` server (bearer + Entra OAuth, Docker) | PENDING |
-| 49 | Production deployment | PENDING (operator approval) |
+| 44 | SMTP2GO API mail delivery method | COMPLETE |
+| 45 | Supervisor email + SMS dispatch (Clerk Chat) — model, jobs, UI, API | COMPLETE |
+| 46 | Mobile-friendly UI/UX pass (dispatch-first) | COMPLETE |
+| 47 | API surface completion + Apipie + `~/code/apis/pwpush-api` docs | COMPLETE |
+| 48 | `pwpush-mcp` server (bearer + Entra OAuth, Docker) | COMPLETE |
+| 49 | Production deployment | COMPLETE |
 
 ---
 
@@ -1581,8 +1581,40 @@ New repo: `~/code/pwpush-mcp/` (git initialised, first commit `9860fe7`).
 
 ---
 
-## Phase 49: Production Deployment — NOT STARTED
+## Phase 49: Production Deployment (2026-08-11)
 
-Awaiting operator approval. Requires: pwpush image rebuild + env additions, a new Entra app
-registration and DNS/NPM entry for `mcp-pwpush.aspendora.com`, and a first Clerk Chat SMS send
-(the only piece not yet verified against a live provider).
+Deployed and verified end to end. Full step-by-step in `docs/claude-runlog.md`.
+
+### Delivered
+- [x] pwpush rebuilt natively on docker-apps and deployed; `CreatePushDispatches` migrated on
+      boot. Rollback tags `pwpush:pre-dispatch-20260811` and `pwpush:pre-sender-fix-20260811`.
+- [x] Env: SMTP2GO API delivery + Clerk Chat enabled. `.env` and compose backed up first.
+- [x] **Live verification**: recipient and supervisor emails `sent` with SMTP2GO ids; recipient and
+      supervisor SMS `sent` with Clerk ids 80002238 / 80002239. Test pushes expired afterwards.
+- [x] pwpush-mcp deployed on 8311 behind `mcp-pwpush.aspendora.com` (Cloudflare A record, NPM
+      proxy host 75, Let's Encrypt). Bearer minted and registered in `~/.claude.json`.
+- [x] Entra app `pwpush-mcp` (appId `5aad31ad-ef92-4162-b856-fe84295dfc5c`) created via Graph —
+      single-tenant, `access` scope, **no Graph API permissions** (authorization-server facade
+      only), secret expires 2028-08-11. `OAUTH_ENABLED=true`; DCR discovery live and bearer auth
+      confirmed unaffected.
+
+### Bugs found by testing against the real providers
+Neither was reachable from a stub, which is the argument for doing the live pass:
+
+1. **Clerk Chat wraps a 201 in a `data` envelope** (our API doc claimed a flat body), so
+   `provider_message_id` would always have been nil, and a `status: failed` inside a 201 would
+   have looked like success. Fixed both; corrected the API doc.
+2. **The Config gem YAML-parses env vars**, turning `PWP__CLERK_CHAT__SENDER='+12819414028'` into
+   the Integer `12819414028`. We sent a number where Clerk requires a string → 422 with no detail.
+   Fixed by normalising the sender through `Sms::PhoneNumber` rather than relying on deployment
+   quoting.
+
+Plus two MCP fixes: `whoami` reported a null caller under OAuth, and tokens were still tagged
+`itg:` from the port out of itglue-mcp.
+
+### Known issue (provider-side)
+After ~5 link-bearing texts to one number within minutes, Clerk Chat returns
+`HTTP 400: Fraud detected`. Earlier sends in the same run succeeded. Recorded on the dispatch row
+as `failed`. Check the number's 10DLC campaign registration if it appears in normal use.
+
+**PHASE 49 COMPLETE.**

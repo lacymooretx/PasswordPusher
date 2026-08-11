@@ -405,3 +405,66 @@ provenance; `~/code/pwpush-mcp/docs/secrets-required.md` does the same for the M
 4. **First live Clerk Chat send is still unverified** — SMS costs money and reaches a real
    handset, so it was left for the operator to trigger.
 5. Document the runbook in IT Glue.
+
+### Phase 49: Production deployment (2026-08-11, ~08:45–09:05 CDT)
+
+Operator approved deploying and authorised a test SMS to 713-875-0817.
+
+**pwpush app**
+1. Tagged `pwpush:pre-dispatch-20260811` (= 55ccff46f12b) for rollback; backed up `.env` and
+   `docker-compose.yml` as `*.bak-pre-dispatch-20260811`.
+2. Appended `PWPUSH_SMTP2GO_API_KEY`, `PWPUSH_CLERKCHAT_API_KEY`, `PWPUSH_CLERKCHAT_SENDER` to
+   `/opt/services/pwpush/.env`; added `PWP__MAIL__DELIVERY_METHOD=smtp2go_api`,
+   `PWP__MAIL__SMTP2GO_API_KEY`, `PWP__ENABLE_SMS_DISPATCH=true`, `PWP__CLERK_CHAT__API_KEY`,
+   `PWP__CLERK_CHAT__SENDER` to the compose file. Verified with `docker compose config`.
+3. Native build on docker-apps from `git archive HEAD` (no cross-arch QEMU), `compose up -d`.
+   Entrypoint auto-ran `CreatePushDispatches`. `/up` 200, public site 200, container healthy.
+
+**Two bugs found by testing against the real providers — neither was reachable from a stub:**
+
+1. **Clerk Chat 201 wraps the message in a `data` envelope**, not the flat body our API doc
+   described. `provider_message_id` would always have been nil. Fixed to read `data.id`, to also
+   accept the flat shape, and to treat `data.status: failed` / a non-null `data.error` on a 201 as
+   a failure. Corrected `~/code/apis/clerk-chat-api/send-message.md`.
+2. **The Config gem YAML-parses env vars**, so `PWP__CLERK_CHAT__SENDER='+12819414028'` arrived as
+   the *Integer* 12819414028 (YAML reads a leading `+` as an explicit-sign integer). We sent a
+   number where Clerk requires a string → `HTTP 422 Unprocessable Entity` with no detail, while
+   the identical request by hand succeeded. Fixed by normalising the sender through
+   `Sms::PhoneNumber` so it works however the value is supplied. Deployed via the surgical
+   single-file path (`FROM pwpush:latest` + COPY), rollback tag `pwpush:pre-sender-fix-20260811`.
+
+**End-to-end verification in production**
+- Email: recipient + supervisor both `sent` with real SMTP2GO message ids.
+- SMS: recipient + supervisor both `sent` with Clerk message ids 80002238 / 80002239.
+- Test pushes expired afterwards.
+
+**pwpush-mcp**
+1. Cloudflare A record `mcp-pwpush.aspendora.com` → 155.138.223.68 (unproxied, matching the other
+   MCP hosts).
+2. Deployed to `/opt/services/pwpush-mcp` on port 8311; minted bearer `lacy-laptop`.
+3. NPM proxy host id 75 → 10.10.30.101:8311, websockets on, Let's Encrypt cert 95.
+4. Entra app registration `pwpush-mcp` created via Graph using `AZURE_ASPENDORA_*`
+   (Application.ReadWrite.All): appId `5aad31ad-ef92-4162-b856-fe84295dfc5c`, single-tenant,
+   redirect `https://mcp-pwpush.aspendora.com/auth/callback`, exposed scope `access`,
+   identifierUri `api://<appId>`, service principal created, secret expires 2028-08-11.
+   **No Graph API permissions** — the app is only an authorization-server facade.
+5. `OAUTH_ENABLED=true`; OAuth discovery + DCR live, bearer auth confirmed still working.
+6. Registered in `~/.claude.json` as `pwpush` (backup: `~/.claude.json.bak-pre-pwpush-mcp-20260811`).
+
+Two further MCP fixes: `whoami` reported a null caller under OAuth (the bearer middleware is
+deliberately out of the chain there) — now falls back to FastMCP's access token and reports which
+path authenticated; and the token `client_id` was still tagged `itg:` from the port.
+
+**Known issue (provider-side, not a defect):** after ~5 link-bearing texts to the same number in a
+few minutes, Clerk Chat returned `HTTP 400: Fraud detected`. Earlier sends in the same run
+succeeded with real message ids. Recorded on the dispatch row as `failed`. If it shows up in
+normal use, check the number's 10DLC campaign registration before touching code.
+
+**Rollback**
+- App: `docker tag pwpush:pre-dispatch-20260811 pwpush:latest && docker compose up -d pwpush`
+  (the migration is additive — `push_dispatches` can stay).
+- Env/compose: restore `*.bak-pre-dispatch-20260811`.
+- MCP: `docker compose down` in `/opt/services/pwpush-mcp`; delete NPM host 75, the DNS record and
+  the Entra app if abandoning entirely.
+
+**PHASE 49 COMPLETE.**
