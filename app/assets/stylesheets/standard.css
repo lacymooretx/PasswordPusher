@@ -24,6 +24,36 @@ input[type='file'] {
 .next { margin: 6px; }
 .last { margin: 6px; }
 
+/* Responsive width utility.
+   Bootstrap's w-* utilities are not breakpoint-aware, so a fixed w-75 leaves
+   content in a cramped column on a phone. w-md-75 is full width below the md
+   breakpoint and 75% above it. */
+.w-md-75 {
+    width: 100% !important;
+}
+
+@media (min-width: 768px) {
+    .w-md-75 {
+        width: 75% !important;
+    }
+}
+
+/* Mobile touch targets: iOS zooms the viewport when a focused input renders
+   below 16px, which throws the user out of the layout mid-form. Pin form
+   controls to 16px on small screens. */
+@media (max-width: 575.98px) {
+    .form-control,
+    .form-control-lg,
+    .form-select {
+        font-size: 1rem;
+    }
+
+    /* Keep the secret-URL bar readable instead of overflowing its container. */
+    .text-break-all {
+        word-break: break-all;
+    }
+}
+
 /* Payload reveal zone (edit form): make blurred textarea obviously clickable */
 .payload-reveal-zone .spoiler {
   cursor: pointer;

@@ -1,0 +1,48 @@
+<%# Delivery log for a push's secret link: who it was emailed/texted to and
+    whether each send actually landed.
+
+    Uses a stacked list rather than a table so it stays readable on a phone --
+    a 6-column table would either overflow or shrink to unreadable text. %>
+<% dispatches = push.push_dispatches %>
+<% if dispatches.any? %>
+  <div class='row w-100 mt-3'>
+    <div class='col'>
+      <div class="list-group w-100">
+        <div class="list-group-item list-group-item-secondary d-flex align-items-center gap-2">
+          <em class="bi bi-send" aria-hidden="true"></em>
+          <span><%= _('Secret Link Delivery') %></span>
+        </div>
+
+        <% dispatches.each do |dispatch| %>
+          <div class="list-group-item">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <em class="bi <%= dispatch.email? ? 'bi-envelope' : 'bi-chat-dots' %> flex-shrink-0" aria-hidden="true"></em>
+
+              <span class="font-monospace text-break"><%= dispatch.masked_destination %></span>
+
+              <% if dispatch.supervisor? %>
+                <span class="badge text-bg-info"><%= _('Supervisor') %></span>
+              <% end %>
+
+              <span class="badge <%= {"pending" => "text-bg-secondary", "sent" => "text-bg-success", "failed" => "text-bg-danger"}[dispatch.status] %>">
+                <%= dispatch.status.humanize %>
+              </span>
+
+              <span class="ms-auto text-muted small text-nowrap">
+                <% if dispatch.sent_at %>
+                  <%= local_time(dispatch.sent_at, format: :short) %>
+                <% else %>
+                  <%= local_time(dispatch.created_at, format: :short) %>
+                <% end %>
+              </span>
+            </div>
+
+            <% if dispatch.failed? && dispatch.error.present? %>
+              <div class="small text-danger mt-1 text-break"><%= dispatch.error %></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

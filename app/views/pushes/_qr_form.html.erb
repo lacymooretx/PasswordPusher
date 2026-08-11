@@ -130,6 +130,8 @@
                                                     placeholder: _('Optional: Require recipients to enter a passphrase to view this push') }) %>
                 </div>
             <% end %>
+
+            <%= render 'shared/dispatch_fields' %>
             <% unless action_name == 'edit' %>
                 <div class='row'>
                     <div class='col'>

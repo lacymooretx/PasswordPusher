@@ -66,6 +66,8 @@ constraints(format: :json) do
       resources :pushes, except: %i[new index edit update] do
         get "preview", on: :member
         get "audit", on: :member
+        post "dispatch", on: :member, action: :dispatch_push
+        get "dispatches", on: :member
         get "active", on: :collection
         get "expired", on: :collection
       end
@@ -75,6 +77,8 @@ constraints(format: :json) do
   resources :p, controller: "api/v1/pushes", as: :passwords, except: %i[new index edit update] do
     get "preview", on: :member
     get "audit", on: :member
+    post "dispatch", on: :member, action: :dispatch_push
+    get "dispatches", on: :member
     get "active", on: :collection
     get "expired", on: :collection
     post "bulk", on: :collection, action: :bulk_create
@@ -83,6 +87,8 @@ constraints(format: :json) do
   resources :p, controller: "api/v1/pushes", as: :json_pushes, except: %i[new index edit update] do
     get "preview", on: :member
     get "audit", on: :member
+    post "dispatch", on: :member, action: :dispatch_push
+    get "dispatches", on: :member
     get "active", on: :collection
     get "expired", on: :collection
   end
@@ -92,6 +98,8 @@ constraints(format: :json) do
     resources :f, controller: "api/v1/pushes", as: :file_pushes, except: %i[new index edit update] do
       get "preview", on: :member
       get "audit", on: :member
+      post "dispatch", on: :member, action: :dispatch_push
+      get "dispatches", on: :member
       get "active", on: :collection
       get "expired", on: :collection
     end
@@ -102,6 +110,8 @@ constraints(format: :json) do
     resources :r, controller: "api/v1/pushes", as: :urls, except: %i[new index edit update] do
       get "preview", on: :member
       get "audit", on: :member
+      post "dispatch", on: :member, action: :dispatch_push
+      get "dispatches", on: :member
       get "active", on: :collection
       get "expired", on: :collection
     end

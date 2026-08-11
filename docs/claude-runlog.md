@@ -332,3 +332,76 @@ Verified in prod via real RemoteIp middleware logic with the exact observed chai
 22 Cloudflare IPAddr ranges loaded into trusted_proxies (live fetch succeeded). Container healthy, /up=200, public site 200.
 
 Rollback: `ssh docker-apps 'cd /opt/services/pwpush && docker tag pwpush:pre-cloudflare-ip pwpush:latest && git -C . checkout docker-compose.yml 2>/dev/null; docker compose up -d pwpush'` (also restore compose .bak if needed).
+
+---
+
+## 2026-08-11 (CDT) — Multi-channel secret link dispatch + pwpush-mcp
+
+**Goal:** email dispatch via the SMTP2GO API; optional supervisor/manager address; SMS delivery
+to recipient and supervisor via Clerk Chat; API parity; mobile-friendly UI; an MCP server
+reachable from Claude Code and claude.ai web; updated API docs.
+
+### Discovery
+- Read `~/code/apis/smtp2go-api/` and `~/code/apis/clerk-chat-api/` (both already documented).
+  Creds present in `~/.secrets/.env` as `SMTP2GO_API_KEY` and `CLERKCHAT_API_KEY`.
+- Confirmed prod pwpush runs on docker-apps VM 301, `/opt/services/pwpush`, behind NPM.
+  Outbound SMTP to `mail.smtp2go.com:2525` from the container is reachable, so the move to the
+  HTTP API is a reliability/observability choice, not a workaround for a blocked port.
+- MCP ports on docker-apps: 8301–8310 in use → pwpush-mcp takes **8311**.
+- Baseline test suite green before any change: 1232 runs, 5059 assertions, 0 failures.
+
+### Operator decisions (asked up front, since each changes the design)
+1. Supervisor receives the **same secret link** (not a link-free notification).
+2. SMTP2GO API replaces SMTP for **all** application email; SMTP stays as a config fallback.
+3. Clerk Chat sender: **+12819414028**, overridable via `PWP__CLERK_CHAT__SENDER`.
+
+### Work (phases 44–48 — see docs/app-build-progress.md for detail)
+| Phase | Result |
+|-------|--------|
+| 44 | SMTP2GO API ActionMailer delivery method + settings + 14 tests. **Live-verified**: real send accepted, `succeeded: 1`. |
+| 45 | `push_dispatches` table/model, `Sms::ClerkChat`, `Sms::PhoneNumber`, `PushDispatcher`, `PushDispatchJob` (replaces `AutoDispatchJob`), supervisor-aware mailer. 43 tests. |
+| 46 | Dispatch fields on all 4 creation forms, dispatch panel on the preview page, delivery log on the audit page, `w-md-75` utility, 16px inputs, responsive dashboard table. 11 tests. |
+| 47 | Dispatch endpoints on v1 + v2, inline dispatch on create, Apipie annotations, docs in `~/code/apis/pwpush-api/` (+ dispatch.md, mcp.md) and repo `docs/`. 17 tests. |
+| 48 | New repo `~/code/pwpush-mcp/` — 29-tool dual-auth FastMCP server on port 8311. 16 pytest tests. **Live-verified** against prod: tools/list + whoami. |
+
+### Files changed (pwpush repo)
+- Added: `lib/mail_delivery/smtp2go_api.rb`, `lib/sms/clerk_chat.rb`, `lib/sms/phone_number.rb`,
+  `config/initializers/smtp2go_api.rb`, `app/models/push_dispatch.rb`,
+  `app/services/push_dispatcher.rb`, `app/jobs/push_dispatch_job.rb`,
+  `db/migrate/20260811120000_create_push_dispatches.rb`,
+  `app/views/shared/_dispatch_fields.html.erb`, `app/views/pushes/_dispatch_now.html.erb`,
+  `app/views/pushes/_dispatch_log.html.erb`, `docs/secret-link-dispatch.md`,
+  `docs/secrets-required.md`, and 6 test files.
+- Modified: `config/settings.yml` (+ `config/defaults/settings.yml`, kept byte-identical),
+  `config/environments/production.rb`, `config/routes/pushes.rb`, `config/routes/pwp_api.rb`,
+  `app/controllers/pushes_controller.rb`, `app/controllers/api/base_controller.rb`,
+  `app/controllers/api/v1/pushes_controller.rb`, `app/mailers/push_mailer.rb`, both
+  `push_dispatched` mailer views, `app/views/pushes/_form|_url_form|_files_form|_qr_form`,
+  `preview.html.erb`, `audit.html.erb`, `index.html.erb`,
+  `app/views/application/_secret_url_bar.html.erb`, `app/views/pushes/_push.json.jbuilder`,
+  `app/assets/stylesheets/standard.css`, `CLAUDE.md`.
+- Removed: `app/jobs/auto_dispatch_job.rb`, `test/jobs/auto_dispatch_job_test.rb`.
+
+### Verification
+- Full suite: **1313 runs, 5353 assertions, 0 failures, 0 errors** (baseline was 1232/0).
+- RuboCop: no offenses in any new/changed file (15 repo-wide offenses are pre-existing, in files
+  not touched here). ErbLint: the 4 errors are pre-existing (`admin/settings`, `api_docs`).
+- pwpush-mcp: 16 pytest passing, ruff clean.
+
+### Secrets
+No values committed. `docs/secrets-required.md` (new) lists every required variable and its
+provenance; `~/code/pwpush-mcp/docs/secrets-required.md` does the same for the MCP. The MCP's
+`tokens.json` is gitignored and confirmed untracked.
+
+### Next required steps (Phase 49 — needs operator approval)
+1. Add to `/opt/services/pwpush/.env` + compose: `PWP__MAIL__DELIVERY_METHOD=smtp2go_api`,
+   `PWP__MAIL__SMTP2GO_API_KEY`, `PWP__ENABLE_SMS_DISPATCH=true`, `PWP__CLERK_CHAT__API_KEY`,
+   `PWP__CLERK_CHAT__SENDER=+12819414028`.
+2. Rebuild the pwpush image natively on docker-apps (migration adds `push_dispatches`; tag the
+   current image for rollback first), `docker compose up -d pwpush`, run `db:migrate`.
+3. Deploy pwpush-mcp to `/opt/services/pwpush-mcp` on port 8311; NPM host
+   `mcp-pwpush.aspendora.com`; new Entra app registration for the OAuth front door; mint a
+   bearer and add to `~/.claude.json`.
+4. **First live Clerk Chat send is still unverified** — SMS costs money and reaches a real
+   handset, so it was left for the operator to trigger.
+5. Document the runbook in IT Glue.

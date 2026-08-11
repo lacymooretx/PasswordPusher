@@ -136,17 +136,7 @@ class PushesController < BaseController
     if @push.save
       log_creation(@push)
 
-      # Auto Dispatch: email the secret link to specified recipients
-      if Settings.enable_auto_dispatch && user_signed_in? && params[:dispatch_emails].present?
-        emails = params[:dispatch_emails].split(/[,;\s]+/).map(&:strip).reject(&:blank?)
-        valid_emails = emails.select { |e| e.match?(URI::MailTo::EMAIL_REGEXP) }
-
-        if valid_emails.any?
-          secret_url = helpers.secret_url(@push)
-          AutoDispatchJob.perform_later(@push.id, secret_url, valid_emails)
-          flash[:notice] = I18n._("Secret link will be emailed to %{count} recipient(s).") % {count: valid_emails.size}
-        end
-      end
+      dispatch_secret_link(@push)
 
       redirect_to preview_push_path(@push)
     else
@@ -163,6 +153,26 @@ class PushesController < BaseController
       end
       render action: "new", status: :unprocessable_content
     end
+  end
+
+  # POST /p/:url_token/dispatch
+  #
+  # Send the secret link after the fact, from the preview page. The dispatch
+  # fields on the creation form cover the common case; this covers "I created
+  # the push, now text it to them" -- which is the normal flow on a phone.
+  def dispatch_link
+    unless Settings.enable_auto_dispatch && user_signed_in? && @push.user_id == current_user.id
+      redirect_to preview_push_path(@push), alert: I18n._("That push doesn't belong to you.")
+      return
+    end
+
+    if @push.expired
+      redirect_to preview_push_path(@push), alert: I18n._("That push has already expired.")
+      return
+    end
+
+    dispatch_secret_link(@push)
+    redirect_to preview_push_path(@push)
   end
 
   # PATCH/PUT /p/:url_token
@@ -394,6 +404,38 @@ class PushesController < BaseController
     respond_to do |format|
       format.html { render template: "pushes/show_expired", layout: "naked" }
     end
+  end
+
+  # Auto Dispatch: send the secret link to the recipients (and optional
+  # supervisor) named on the form, over email and/or SMS.
+  #
+  # Kept out of #create so the same PushDispatcher entry point is used here, in
+  # the API and in the MCP server. Anonymous users cannot dispatch -- an
+  # unauthenticated visitor should not be able to make the server email or text
+  # arbitrary addresses.
+  def dispatch_secret_link(push)
+    return unless Settings.enable_auto_dispatch && user_signed_in?
+
+    spec = {
+      emails: params[:dispatch_emails],
+      phones: params[:dispatch_phones],
+      supervisor_email: params[:supervisor_email],
+      supervisor_phone: params[:supervisor_phone]
+    }
+    return if spec.values.all?(&:blank?)
+
+    result = PushDispatcher.call(push: push, secret_url: helpers.secret_url(push), spec: spec)
+
+    notices = []
+    if result.email_count.positive?
+      notices << I18n._("Secret link will be emailed to %{count} recipient(s).") % {count: result.email_count}
+    end
+    if result.sms_count.positive?
+      notices << I18n._("Secret link will be texted to %{count} number(s).") % {count: result.sms_count}
+    end
+
+    flash[:notice] = notices.join(" ") if notices.any?
+    flash[:alert] = result.errors.join(" ") if result.errors.any?
   end
 
   def push_params

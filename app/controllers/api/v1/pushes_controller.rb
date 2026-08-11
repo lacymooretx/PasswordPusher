@@ -5,7 +5,7 @@ class Api::V1::PushesController < Api::BaseController
   include LogEvents
   include AccessRestriction
 
-  before_action :set_push, only: %i[show preview audit destroy]
+  before_action :set_push, only: %i[show preview audit destroy dispatch_push dispatches]
   before_action :check_access_restrictions, only: %i[show]
 
   resource_description do
@@ -182,6 +182,10 @@ class Api::V1::PushesController < Api::BaseController
 
     if @push.save
       log_creation(@push)
+
+      # Optional inline dispatch: email/SMS the secret link on creation so a
+      # caller does not have to follow up with a second request.
+      @dispatch_result = dispatch_from_params(@push)
 
       render template: "pushes/show", status: :created
     else
@@ -360,6 +364,131 @@ class Api::V1::PushesController < Api::BaseController
     end
   end
 
+  api :POST, "/p/:url_token/dispatch.json", "Send a push's secret link by email and/or SMS."
+  param :url_token, String, desc: "Secret URL token of a previously created push.", required: true
+  param :dispatch, Hash, desc: "Delivery targets.", required: true do
+    param :emails, Array, desc: "Recipient email address(es). Also accepts a comma-separated string."
+    param :phones, Array, desc: "Recipient mobile number(s) for SMS. E.164 preferred; US numbers may omit the country code."
+    param :supervisor_email, String, desc: "Optional supervisor / manager email address."
+    param :supervisor_phone, String, desc: "Optional supervisor / manager mobile number for SMS."
+  end
+  formats ["JSON"]
+  description <<-EOS
+    == Dispatching a Secret Link
+
+    Queues delivery of this push's secret URL to one or more recipients over
+    email (SMTP2GO) and/or SMS (Clerk Chat).
+
+    Requires authentication, and the push must belong to the authenticated user.
+
+    === Supervisor
+
+    +supervisor_email+ / +supervisor_phone+ receive the *same* secret link as the
+    primary recipient, flagged in the message as a supervisor copy. Every person
+    who opens the link consumes one view, so set +expire_after_views+ high enough
+    to cover everybody you dispatch to.
+
+    === Feature flags
+
+    * +enable_auto_dispatch+ must be on for any dispatch.
+    * +enable_sms_dispatch+ must also be on for +phones+ / +supervisor_phone+.
+
+    Requests naming a disabled channel still succeed for the enabled channels;
+    the refused ones are listed in +errors+.
+
+    === Limits
+
+    Capped by +auto_dispatch.max_recipients+ (email) and
+    +auto_dispatch.max_sms_recipients+ (SMS). Addresses beyond the cap, and any
+    that fail validation, are reported in +errors+ rather than silently dropped.
+
+    == Example Request
+
+      curl -X POST \\
+        -H "X-User-Email: user@example.com" \\
+        -H "X-User-Token: MyAPIToken" \\
+        -H "Content-Type: application/json" \\
+        -d '{"dispatch": {"emails": ["alice@example.com"], "phones": ["713-875-0817"], "supervisor_email": "boss@example.com"}}' \\
+        https://pwpush.com/p/fkwjfvhall92/dispatch.json
+
+    == Example Response
+
+      {
+        "url_token": "fkwjfvhall92",
+        "queued": 3,
+        "errors": [],
+        "dispatches": [
+          {"id": 1, "channel": "email", "role": "recipient",  "destination": "al***@example.com", "status": "pending"},
+          {"id": 2, "channel": "sms",   "role": "recipient",  "destination": "********0817",      "status": "pending"},
+          {"id": 3, "channel": "email", "role": "supervisor", "destination": "bo**@example.com",  "status": "pending"}
+        ]
+      }
+  EOS
+  error code: 401, desc: "Unauthorized."
+  error code: 403, desc: "The push does not belong to the authenticated user."
+  error code: 422, desc: "Nothing could be dispatched."
+  def dispatch_push
+    return unless authorize_push_owner!
+
+    if @push.expired?
+      render json: {error: I18n._("That push has already expired.")}, status: :unprocessable_content
+      return
+    end
+
+    result = PushDispatcher.call(
+      push: @push,
+      secret_url: helpers.secret_url(@push),
+      spec: dispatch_spec_params
+    )
+
+    status = result.any? ? :created : :unprocessable_content
+    render json: dispatch_payload(result), status: status
+  end
+
+  api :GET, "/p/:url_token/dispatches.json", "List the delivery log for a push's secret link."
+  param :url_token, String, desc: "Secret URL token of a previously created push.", required: true
+  formats ["JSON"]
+  description <<-EOS
+    == Dispatch Delivery Log
+
+    Returns every email/SMS delivery of this push's secret link, with the status
+    of each: +pending+, +sent+ or +failed+.
+
+    Destinations are masked (+al***@example.com+, +********0817+) -- the full
+    address is encrypted at rest and is never returned by the API.
+
+    Authentication is required and the push must belong to the authenticated user.
+
+    == Example Response
+
+      {
+        "url_token": "fkwjfvhall92",
+        "dispatches": [
+          {
+            "id": 1,
+            "channel": "email",
+            "role": "recipient",
+            "destination": "al***@example.com",
+            "status": "sent",
+            "sent_at": "2026-08-11T18:04:11Z",
+            "provider_message_id": "<abc@pwpush>",
+            "error": null,
+            "created_at": "2026-08-11T18:04:09Z"
+          }
+        ]
+      }
+  EOS
+  error code: 401, desc: "Unauthorized."
+  error code: 403, desc: "The push does not belong to the authenticated user."
+  def dispatches
+    return unless authorize_push_owner!
+
+    render json: {
+      url_token: @push.url_token,
+      dispatches: @push.push_dispatches.map { |d| serialize_dispatch(d) }
+    }, status: :ok
+  end
+
   api :GET, "/p/active.json", "Retrieve your active pushes."
   formats ["JSON"]
   description <<-EOS
@@ -523,6 +652,76 @@ class Api::V1::PushesController < Api::BaseController
 
     check_ip_restriction(@push)
     check_geo_restriction(@push)
+  end
+
+  # -- dispatch helpers ----------------------------------------------------
+
+  # Only the push owner may make the server send its secret link somewhere.
+  # Renders the error response and returns false when the check fails.
+  def authorize_push_owner!
+    if !user_signed_in?
+      head :unauthorized
+      return false
+    end
+
+    if @push.user_id != current_user.id
+      render json: {error: I18n._("That push doesn't belong to you.")}, status: :forbidden
+      return false
+    end
+
+    true
+  end
+
+  # Accepts the `dispatch` object on create and on the dispatch endpoint.
+  # Arrays and comma-separated strings are both valid for emails/phones.
+  def dispatch_spec_params
+    raw = params[:dispatch]
+    return {} if raw.blank?
+
+    permitted = raw.permit(:supervisor_email, :supervisor_phone, :emails, :phones,
+      emails: [], phones: [])
+
+    {
+      emails: permitted[:emails],
+      phones: permitted[:phones],
+      supervisor_email: permitted[:supervisor_email],
+      supervisor_phone: permitted[:supervisor_phone]
+    }
+  end
+
+  # Inline dispatch during #create. Silently a no-op for anonymous callers:
+  # an unauthenticated request must not be able to make the server email or
+  # text arbitrary addresses.
+  def dispatch_from_params(push)
+    return nil if params[:dispatch].blank?
+    return nil unless user_signed_in?
+
+    PushDispatcher.call(push: push, secret_url: helpers.secret_url(push), spec: dispatch_spec_params)
+  end
+
+  def dispatch_payload(result)
+    {
+      url_token: @push.url_token,
+      queued: result.dispatches.size,
+      errors: result.errors,
+      dispatches: result.dispatches.map { |d| serialize_dispatch(d) }
+    }
+  end
+
+  # Destinations are masked: the full address is recipient PII, encrypted at
+  # rest, and the caller already knows what they asked us to send to.
+  def serialize_dispatch(dispatch)
+    {
+      id: dispatch.id,
+      channel: dispatch.channel,
+      role: dispatch.role,
+      destination: dispatch.masked_destination,
+      status: dispatch.status,
+      sent_at: dispatch.sent_at&.iso8601,
+      provider_message_id: dispatch.provider_message_id,
+      error: dispatch.error,
+      created_at: dispatch.created_at.iso8601
+    }
   end
 
   def set_push

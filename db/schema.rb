@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_13_203812) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_11_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -94,6 +94,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_203812) do
     t.boolean "used", default: false, null: false
     t.integer "user_id", null: false
     t.index ["user_id"], name: "index_otp_backup_codes_on_user_id"
+  end
+
+  create_table "push_dispatches", force: :cascade do |t|
+    t.integer "channel", null: false
+    t.datetime "created_at", null: false
+    t.text "destination_ciphertext"
+    t.text "error"
+    t.string "provider_message_id"
+    t.integer "push_id", null: false
+    t.integer "role", default: 0, null: false
+    t.datetime "sent_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["channel", "role"], name: "index_push_dispatches_on_channel_and_role"
+    t.index ["push_id"], name: "index_push_dispatches_on_push_id"
+    t.index ["status"], name: "index_push_dispatches_on_status"
   end
 
   create_table "push_templates", force: :cascade do |t|

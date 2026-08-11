@@ -145,6 +145,13 @@ Rails.application.configure do
       protocol: Settings.host_protocol
     }
 
+    # Transport selection. :smtp2go_api posts to the SMTP2GO HTTP API and needs
+    # no SMTP settings at all; the smtp_settings below stay populated so a
+    # fallback to :smtp is a single env var away.
+    if Settings.mail.respond_to?(:delivery_method) && Settings.mail.delivery_method.present?
+      config.action_mailer.delivery_method = Settings.mail.delivery_method.to_sym
+    end
+
     config.action_mailer.smtp_settings = {
       address: Settings.mail.smtp_address,
       port: Settings.mail.smtp_port

@@ -1,4 +1,10 @@
+<% if @supervisor %>
+<%= @sender_name %> shared a secret via <%= @brand_title %> and copied you as the supervisor.
+
+Note: opening this link counts as one of the views below, the same as it does for the primary recipient.
+<% else %>
 <%= @sender_name %> has shared a secret with you via <%= @brand_title %>.
+<% end %>
 <% if @push.name.present? %>
 Label: <%= @push.name %>
 <% end %>

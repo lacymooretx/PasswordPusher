@@ -176,25 +176,9 @@
                                                     placeholder: _('Optional: Require recipients to enter a passphrase to view this push') }) %>
                 </fieldset>
 
-                <% if Settings.enable_auto_dispatch && user_signed_in? && action_name != 'edit' %>
-                    <div class="card">
-                        <div class="card-header">
-                            <em class="bi bi-send"></em> <%= _('Auto Dispatch: Send This Secret Link To...') %>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted small mb-2">
-                                <%= _('Enter email addresses separated by commas. The secret link will be emailed to each recipient after the push is created.') %>
-                            </p>
-                            <%= text_field_tag 'dispatch_emails', nil, class: "form-control",
-                                placeholder: _('e.g. alice@example.com, bob@example.com'),
-                                autocomplete: "off" %>
-                            <div class="form-text">
-                                <%= _('Maximum %{count} recipients.') % { count: Settings.auto_dispatch.max_recipients } %>
-                            </div>
-                        </div>
-                    </div>
-                <% end %>
             <% end %>
+
+            <%= render 'shared/dispatch_fields' %>
 
             <% unless action_name == 'edit' %>
                 <div class='row'>

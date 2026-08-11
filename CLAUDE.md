@@ -140,6 +140,8 @@ All feature controllers inherit from `BaseController`, which extends
 | `enable_teams_notifications` | `PWP__ENABLE_TEAMS_NOTIFICATIONS` | false | Microsoft Teams webhook notifications |
 | `enable_custom_urls` | `PWP__ENABLE_CUSTOM_URLS` | false | Custom vanity URL tokens on pushes |
 | `enable_clamav` | `PWP__ENABLE_CLAMAV` | false | ClamAV malware scanning for file uploads |
+| `enable_sms_dispatch` | `PWP__ENABLE_SMS_DISPATCH` | false | Text secret links to recipients via Clerk Chat |
+| `auto_dispatch.enable_supervisor` | `PWP__AUTO_DISPATCH__ENABLE_SUPERVISOR` | true | Optional supervisor/manager copy on a dispatch |
 
 ---
 
@@ -187,7 +189,20 @@ All feature controllers inherit from `BaseController`, which extends
 | 38 | Bulk Push API + Webhook Read Receipts | COMPLETE |
 | 39 | ClamAV File Scanning | COMPLETE |
 | 40 | Redis for Rack::Attack | COMPLETE |
+| 41-43 | Upstream UX backports, user timezone, APIv2 namespace | COMPLETE |
+| 44 | SMTP2GO API mail delivery | COMPLETE |
+| 45 | Supervisor email + SMS dispatch (Clerk Chat) | COMPLETE |
+| 46 | Mobile-friendly dispatch UX | COMPLETE |
+| 47 | Dispatch API + docs | COMPLETE |
+| 48 | pwpush-mcp server (`~/code/pwpush-mcp/`) | COMPLETE |
 
-All features gated behind flags. 1204 tests, 4998 assertions, 0 failures.
+All features gated behind flags. 1313 tests, 5353 assertions, 0 failures.
 CLI tool: 13 additional tests in `tools/cli/`.
 Full details in `docs/app-build-progress.md`.
+
+## Secret Link Dispatch
+
+Sending a push's secret link to a person (email via SMTP2GO's HTTP API, SMS via Clerk Chat,
+with an optional supervisor copy) runs through one entry point, `PushDispatcher`, shared by
+the web forms, the JSON API and the MCP server. Delivery outcomes are recorded per send on
+`push_dispatches`. See **`docs/secret-link-dispatch.md`** before touching any of it.

@@ -20,6 +20,24 @@ if %w[create active expired].include?(controller.action_name)
   json.name push.name
 end
 
+# Inline dispatch summary: only present when the create request carried a
+# `dispatch` object, so existing clients see an unchanged response shape.
+if controller.action_name == "create" && (result = controller.instance_variable_get(:@dispatch_result))
+  json.dispatch do
+    json.queued result.dispatches.size
+    json.errors result.errors
+    json.dispatches result.dispatches.map { |d|
+      {
+        id: d.id,
+        channel: d.channel,
+        role: d.role,
+        destination: d.masked_destination,
+        status: d.status
+      }
+    }
+  end
+end
+
 if controller.action_name == "show"
   json.payload push.payload
 

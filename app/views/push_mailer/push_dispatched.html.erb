@@ -7,7 +7,14 @@
     <h1 style="color: #fff; margin: 0; font-size: 20px;"><%= @brand_title %></h1>
   </div>
   <div style="padding: 30px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
-    <p style="font-size: 16px; margin-top: 0;"><strong><%= @sender_name %></strong> has shared a secret with you.</p>
+    <% if @supervisor %>
+      <p style="font-size: 16px; margin-top: 0;"><strong><%= @sender_name %></strong> shared a secret and copied you as the supervisor.</p>
+      <p style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 14px; font-size: 13px; color: #664d03; margin: 0 0 20px;">
+        Opening this link counts as one of the views below, the same as it does for the primary recipient.
+      </p>
+    <% else %>
+      <p style="font-size: 16px; margin-top: 0;"><strong><%= @sender_name %></strong> has shared a secret with you.</p>
+    <% end %>
     <% if @push.name.present? %>
       <p style="color: #555;"><strong>Label:</strong> <%= @push.name %></p>
     <% end %>

@@ -9,9 +9,12 @@
       <%= render partial: 'application/secret_url_bar' %>
       <%= @qr_code %>
 
-      <div class="w-75 mt-4">
+      <%# w-100 below md so the block does not sit in a narrow column on a phone. %>
+      <div class="w-100 w-md-75 mt-4">
         <%= render partial: 'shared/share_message', locals: { share_message: @share_message } %>
       </div>
+
+      <%= render partial: 'pushes/dispatch_now', locals: { push: @push } %>
 
       <p class="d-inline-flex gap-1 mt-5 mb-2">
         <button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">

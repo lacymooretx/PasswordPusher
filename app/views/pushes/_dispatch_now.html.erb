@@ -1,0 +1,102 @@
+<%# Post-creation dispatch from the preview page.
+
+    On a phone, the natural flow is "create the push, then text it to them" --
+    that is the whole point of the SMS channel, so this panel is expanded by
+    default and sized for thumbs (form-control-lg, full-width submit below md). %>
+<% if Settings.enable_auto_dispatch && user_signed_in? && push.user_id == current_user.id && !push.expired %>
+  <% sms_enabled = Settings.respond_to?(:enable_sms_dispatch) && Settings.enable_sms_dispatch %>
+  <% supervisor_enabled = !Settings.auto_dispatch.respond_to?(:enable_supervisor) || Settings.auto_dispatch.enable_supervisor %>
+
+  <div class="w-100 w-md-75 mt-4">
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2">
+        <em class="bi bi-send" aria-hidden="true"></em>
+        <span><%= sms_enabled ? _('Email or Text This Link') : _('Email This Link') %></span>
+      </div>
+      <div class="card-body">
+        <%= form_tag(dispatch_push_path(push), method: :post) do %>
+          <div class="row g-3">
+            <div class="<%= sms_enabled ? 'col-12 col-md-6' : 'col-12' %>">
+              <label for="preview_dispatch_emails" class="form-label fw-semibold">
+                <em class="bi bi-envelope me-1" aria-hidden="true"></em><%= _('Email') %>
+              </label>
+              <%= text_field_tag 'dispatch_emails', nil,
+                    type: "email",
+                    multiple: true,
+                    id: "preview_dispatch_emails",
+                    class: "form-control form-control-lg",
+                    placeholder: _('alice@example.com'),
+                    autocomplete: "off",
+                    autocapitalize: "off",
+                    autocorrect: "off",
+                    spellcheck: "false" %>
+            </div>
+
+            <% if sms_enabled %>
+              <div class="col-12 col-md-6">
+                <label for="preview_dispatch_phones" class="form-label fw-semibold">
+                  <em class="bi bi-chat-dots me-1" aria-hidden="true"></em><%= _('Mobile (SMS)') %>
+                </label>
+                <%= text_field_tag 'dispatch_phones', nil,
+                      type: "tel",
+                      id: "preview_dispatch_phones",
+                      class: "form-control form-control-lg",
+                      inputmode: "tel",
+                      placeholder: _('(555) 123-4567'),
+                      autocomplete: "off" %>
+              </div>
+            <% end %>
+          </div>
+
+          <% if supervisor_enabled %>
+            <button type="button"
+                    class="btn btn-link btn-sm px-0 mt-3 text-decoration-none"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#previewSupervisorCollapse"
+                    aria-expanded="false"
+                    aria-controls="previewSupervisorCollapse">
+              <em class="bi bi-person-plus me-1" aria-hidden="true"></em><%= _('Also send to a supervisor / manager') %>
+            </button>
+
+            <div class="collapse" id="previewSupervisorCollapse">
+              <div class="row g-3 mt-0">
+                <div class="<%= sms_enabled ? 'col-12 col-md-6' : 'col-12' %>">
+                  <label for="preview_supervisor_email" class="form-label fw-semibold"><%= _('Supervisor email') %></label>
+                  <%= text_field_tag 'supervisor_email', nil,
+                        type: "email",
+                        id: "preview_supervisor_email",
+                        class: "form-control form-control-lg",
+                        placeholder: _('manager@example.com'),
+                        autocomplete: "off",
+                        autocapitalize: "off",
+                        autocorrect: "off",
+                        spellcheck: "false" %>
+                </div>
+                <% if sms_enabled %>
+                  <div class="col-12 col-md-6">
+                    <label for="preview_supervisor_phone" class="form-label fw-semibold"><%= _('Supervisor mobile (SMS)') %></label>
+                    <%= text_field_tag 'supervisor_phone', nil,
+                          type: "tel",
+                          id: "preview_supervisor_phone",
+                          class: "form-control form-control-lg",
+                          inputmode: "tel",
+                          placeholder: _('(555) 987-6543'),
+                          autocomplete: "off" %>
+                  </div>
+                <% end %>
+              </div>
+              <div class="alert alert-warning d-flex gap-2 mt-3 mb-0 py-2 px-3 small">
+                <em class="bi bi-exclamation-triangle flex-shrink-0 mt-1" aria-hidden="true"></em>
+                <span><%= _('The supervisor receives the same secret link. Each person who opens it uses one view — %{count} view(s) remain.') % { count: push.views_remaining } %></span>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="d-grid d-md-flex justify-content-md-end mt-3">
+            <%= submit_tag _('Send'), class: 'btn btn-primary btn-lg', data: { 'disable-with': _('Sending...') } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

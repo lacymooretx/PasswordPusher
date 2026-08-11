@@ -1371,3 +1371,218 @@ Add a clean, versioned `/api/v2` surface alongside the existing v1 API.
 - **Full suite: 1232 runs, 5059 assertions, 0 failures, 0 errors.** (Clean run — the pre-existing order-pollution is seed-dependent and did not surface.)
 
 **PHASE 43 COMPLETE. Phases 41-43 (all "may need" upstream backports) done.**
+
+---
+
+## Phases 44-49: Multi-Channel Dispatch (Email API + SMS) + MCP (2026-08-11)
+
+User brief: get email dispatch working through the **SMTP2GO API**; add an optional
+**supervisor/manager email**; add the ability to send the secret link **via SMS** to
+both the recipient and the supervisor (**Clerk Chat**); make it all **API-capable**;
+make the UI **mobile-friendly**; build a **pwpush MCP server** reachable from Claude
+Code *and* claude.ai web (same dual-auth pattern as controlr/itglue); update the
+API docs in `~/code/apis/pwpush-api/`.
+
+### Decisions (confirmed with operator 2026-08-11)
+1. **Supervisor receives the same secret link** as the primary recipient (email and/or
+   SMS). Consequence: view limits must account for 2+ viewers — the dispatch UI warns
+   when `expire_after_views` is lower than the recipient count.
+2. **SMTP2GO API replaces SMTP for ALL application email** via a registered ActionMailer
+   delivery method. SMTP remains available as a fallback by config.
+3. **Clerk Chat sender defaults to +12819414028** (Aspendora business line), overridable
+   via `PWP__CLERK_CHAT__SENDER`.
+
+### Phase plan
+| Phase | Scope | Status |
+|-------|-------|--------|
+| 44 | SMTP2GO API mail delivery method | PENDING |
+| 45 | Supervisor email + SMS dispatch (Clerk Chat) — model, jobs, UI, API | PENDING |
+| 46 | Mobile-friendly UI/UX pass (dispatch-first) | PENDING |
+| 47 | API surface completion + Apipie + `~/code/apis/pwpush-api` docs | PENDING |
+| 48 | `pwpush-mcp` server (bearer + Entra OAuth, Docker) | PENDING |
+| 49 | Production deployment | PENDING (operator approval) |
+
+---
+
+## Phase 44: SMTP2GO API Mail Delivery (2026-08-11)
+
+Route all application email through the SMTP2GO HTTP API instead of SMTP.
+
+### Delivered
+- [x] `lib/mail_delivery/smtp2go_api.rb` — ActionMailer delivery method posting to
+      `POST https://api.smtp2go.com/v3/email/send`. Decomposes a `Mail::Message` into the
+      SMTP2GO payload: formatted sender/to/cc/bcc (display names preserved), html/text bodies
+      from multipart, base64 `attachments` and `inlines` (inline parts keep their `cid`, which
+      is what makes the branded logo render), and `custom_headers` for everything SMTP2GO does
+      not derive itself — so RFC 5322 threading (`Message-Id`/`In-Reply-To`/`References`)
+      survives.
+- [x] Failure handling: non-2xx raises with the API's own error text, **and** a 200 carrying
+      `data.failed > 0` raises too — SMTP2GO reports per-recipient rejections on a 200, which
+      would otherwise read as success.
+- [x] `config/initializers/smtp2go_api.rb` registers it as `:smtp2go_api` inside `to_prepare`
+      (Zeitwerk-safe; registration lands before any mail is built, which is all ActionMailer
+      needs since `delivery_method` is resolved by symbol at message-build time).
+- [x] `config/environments/production.rb` selects the transport from
+      `Settings.mail.delivery_method`; `smtp_settings` stay populated so falling back to SMTP is
+      one env var.
+- [x] Settings + env overrides: `delivery_method`, `smtp2go_api_key`, `smtp2go_api_url`,
+      `smtp2go_open_timeout`, `smtp2go_read_timeout` (mirrored byte-identically into
+      `config/defaults/settings.yml`).
+
+### Design notes
+- Config is read from `Settings.mail` at delivery time rather than frozen into ActionMailer's
+  `*_settings` hash, so a runtime `SettingOverride` takes effect without a restart — and it
+  sidesteps the initializer-ordering trap where `config.action_mailer.smtp2go_api_settings=`
+  would run before `add_delivery_method` had defined the accessor.
+
+### Verification
+- 14 new tests (`test/lib/mail_delivery/smtp2go_api_test.rb`), `Net::HTTP` stubbed — payload
+  shape, inline-vs-attachment split, header filtering, 401, `data.failed > 0`, network failure,
+  ActionMailer registration.
+- **Live smoke test against the real API**: key from `~/.secrets/.env` accepted,
+  `noreply@aspendora.com` confirmed as a verified sender, `succeeded: 1, failed: 0`.
+
+**PHASE 44 COMPLETE.**
+
+---
+
+## Phase 45: Supervisor Email + SMS Dispatch (Clerk Chat) (2026-08-11)
+
+Send a push's secret link to a recipient **and** an optional supervisor, over email and/or SMS,
+with a per-send delivery record.
+
+### Delivered
+- [x] `push_dispatches` table + `PushDispatch` model — one row per (channel, role, destination)
+      with `pending`/`sent`/`failed` status, `sent_at`, `provider_message_id` and provider error
+      text. `destination` is recipient PII so it is Lockbox-encrypted and only ever surfaced
+      through `masked_destination` (`al***@example.com`, `********0817`).
+- [x] `lib/sms/clerk_chat.rb` — Clerk Chat client (`POST /public/messages`, `apiKey` header).
+      One recipient per call: Clerk accepts an array, but a single bad number in a batch would
+      leave the failure unattributable to a specific dispatch row.
+- [x] `lib/sms/phone_number.rb` — E.164 normalisation of human-typed numbers
+      (`(713) 875-0817`, `713-875-0817`, `1 713 875 0817` → `+17138750817`), configurable
+      default country code, list splitting + dedupe.
+- [x] `app/services/push_dispatcher.rb` — the single entry point for every surface (web form,
+      preview page, JSON API, MCP). Validates, normalises, enforces caps and feature flags,
+      creates rows, enqueues jobs. Refused inputs are *returned*, never silently dropped.
+- [x] `app/jobs/push_dispatch_job.rb` — replaces `AutoDispatchJob` (which fired `deliver_later`
+      from inside a job and had nowhere to record a failure). Delivers inline with
+      `raise_delivery_errors` forced on **for that one message**, so a provider rejection lands
+      on the row instead of looking like success — without mutating global state.
+- [x] `PushMailer#push_dispatched` takes `role:`; supervisor copies get their own subject and an
+      in-body callout that opening the link consumes a view.
+- [x] Settings: `enable_sms_dispatch`, `auto_dispatch.max_sms_recipients`,
+      `auto_dispatch.enable_supervisor`, and the full `clerk_chat` block.
+
+### Design notes
+- **Rows are created before sending.** A link the operator asked to send is recorded even if the
+  provider is unreachable and the job never runs.
+- **Anonymous callers cannot dispatch** (enforced in both the web controller and the API) —
+  otherwise an unauthenticated request could make our infrastructure email arbitrary addresses.
+- **The passphrase is never in the SMS or the email.** That would defeat the second factor.
+- **The supervisor gets the real link**, per operator decision — so the UI, the mail and the SMS
+  all state plainly that their view counts against the limit.
+
+### Verification
+- 43 new tests: `push_dispatcher_test` (18), `push_dispatch_job_test` (9),
+  `push_dispatch_test` (7), `clerk_chat_test` (7), `phone_number_test` (6). No test touches a
+  live provider.
+
+**PHASE 45 COMPLETE.**
+
+---
+
+## Phase 46: Mobile-Friendly Dispatch UX (2026-08-11)
+
+### Delivered
+- [x] `shared/_dispatch_fields.html.erb` — one partial, rendered on **all four** creation forms
+      (text/url/files/qr), replacing the text-form-only inline block. Deliberately **outside**
+      the "Additional Options" collapse: on a phone, texting the link is the reason to be on the
+      page, so it must not require expanding anything.
+- [x] `pushes/_dispatch_now.html.erb` + `POST /p/:url_token/dispatch` — a full dispatch panel on
+      the preview page. This is the natural mobile flow: create the push, *then* text it.
+- [x] `pushes/_dispatch_log.html.erb` on the audit page — stacked list rather than a table, so a
+      six-column delivery log stays readable on a phone. Failed rows show the provider's error.
+- [x] Touch/keyboard affordances: `form-control-lg`, `type="email" multiple`, `type="tel"` +
+      `inputmode="tel"`, `autocapitalize/autocorrect/spellcheck` off on address fields.
+- [x] `standard.css`: new `w-md-75` responsive width utility (Bootstrap's `w-*` are not
+      breakpoint-aware, so the fixed `w-75` on the secret-URL bar and share message left them in
+      a cramped column on a phone); form controls pinned to 16px below `sm` so iOS does not zoom
+      the viewport on focus.
+- [x] Dashboard table wrapped in `table-responsive`; Kind and Note columns drop below `md`.
+- [x] Supervisor fields are collapsed by default with the view-budget warning attached —
+      progressive disclosure rather than four always-visible inputs.
+
+### Verification
+- 11 new tests (`test/controllers/push_dispatch_controller_test.rb`) covering field visibility by
+  flag and auth state, create-with-dispatch, preview-page dispatch, ownership and expiry guards,
+  and that the audit page shows only masked destinations.
+
+**PHASE 46 COMPLETE.**
+
+---
+
+## Phase 47: Dispatch API + Documentation (2026-08-11)
+
+### Delivered
+- [x] `POST /p/:url_token/dispatch.json` and `GET /p/:url_token/dispatches.json` on **v1**
+      (`/p`, `/f`, `/r`) and **v2** (`/api/v2/pushes`), fully annotated for Apipie/Swagger.
+- [x] Inline `dispatch` object on push create; the response gains a `dispatch` block **only**
+      when one was requested, so existing clients see an unchanged shape.
+- [x] `emails`/`phones` accept arrays *or* comma-separated strings — the API and the form
+      produce different shapes and both are legitimate.
+- [x] Auth: token required, ownership enforced (403 for someone else's push), added to
+      `Api::BaseController`'s token-required action list for every route prefix.
+- [x] Partial success semantics: refused addresses come back in `errors` with a 201; only a
+      request where nothing could be queued returns 422.
+- [x] Docs — `~/code/apis/pwpush-api/dispatch.md` (new, full reference), `mcp.md` (new),
+      `README.md` (rewritten endpoint tables, APIv2 section, corrected `PWPUSH_USER_TOKEN` name
+      and stale deployment details); provider docs cross-linked in
+      `~/code/apis/smtp2go-api/` and `~/code/apis/clerk-chat-api/`; repo-local
+      `docs/secret-link-dispatch.md` and `docs/secrets-required.md`.
+
+### Verification
+- 17 new tests (`test/integration/api/api_dispatch_test.rb`) — both API versions, masking,
+  partial success, expiry, ownership, and that an anonymous create silently ignores a `dispatch`
+  object.
+
+**PHASE 47 COMPLETE.**
+
+---
+
+## Phase 48: pwpush-mcp Server (2026-08-11)
+
+New repo: `~/code/pwpush-mcp/` (git initialised, first commit `9860fe7`).
+
+### Delivered
+- [x] Dual-auth FastMCP server on the controlr-mcp / itglue-mcp pattern: static `pwp_` bearer
+      for Claude Code / Desktop / Cursor, Entra ID OAuth (DCR) for claude.ai web / Cowork, both
+      on the same `/mcp` endpoint. Hashed token store + `issue_token` CLI, optional IP allowlist.
+- [x] 29 tools: pushes (create/get/preview/expire/list/audit/bulk), **delivery**
+      (`dispatch_push`, `list_push_dispatches`), account, templates, teams, webhooks,
+      `pwpush_call` escape hatch, `whoami` probe.
+- [x] The service account's own API token is stripped from `get_account` and `whoami` — the live
+      `/api/v1/account` endpoint echoes it back, which would otherwise hand a client the
+      server-side credential.
+- [x] Tool docstrings encode the traps a model would otherwise walk into: `get_push` burns a view
+      and is audited; a supervisor consumes a view of their own; dispatch is asynchronous;
+      partial success is not an error.
+- [x] Port **8311** (8301–8310 are taken by ghl/cw/itglue/cipp/pax8/qbo/cwrmm/immy/n8n/hudu on
+      docker-apps). Dockerfile, deployment compose, README, `docs/secrets-required.md`.
+
+### Verification
+- 16 pytest tests against a mocked API (respx) driving the real tools through an in-memory
+  FastMCP client; ruff clean.
+- **Live smoke test**: server started locally, `/healthz` 200, unauthenticated `/mcp` 401,
+  authenticated `tools/list` returned all 29 tools, and `whoami` reached
+  `https://pwpush.aspendora.com` and authenticated as `n8n-automation@aspendora.com`.
+
+**PHASE 48 COMPLETE.**
+
+---
+
+## Phase 49: Production Deployment — NOT STARTED
+
+Awaiting operator approval. Requires: pwpush image rebuild + env additions, a new Entra app
+registration and DNS/NPM entry for `mcp-pwpush.aspendora.com`, and a first Clerk Chat SMS send
+(the only piece not yet verified against a live provider).

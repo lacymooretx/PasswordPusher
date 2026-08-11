@@ -17,9 +17,14 @@ class PushMailer < ApplicationMailer
     mail(to: push.user.email, subject: "Your push is expiring soon")
   end
 
-  def push_dispatched(push, secret_url, recipient_email)
+  # +role+ is :recipient or :supervisor. A supervisor is copied on the same
+  # secret link (their view counts against the push's view limit), so the mail
+  # says so explicitly rather than reading like a duplicate send.
+  def push_dispatched(push, secret_url, recipient_email, role: :recipient)
     @push = push
     @secret_url = secret_url
+    @role = role.to_s
+    @supervisor = @role == "supervisor"
     @sender_name = push.user&.email || Settings.brand.title
     @brand_title = Settings.brand.title
 
@@ -45,10 +50,16 @@ class PushMailer < ApplicationMailer
     # Extract just the email address if it includes a name
     from_email = from_address[/<(.+)>/, 1] || from_address
 
+    subject = if @supervisor
+      "#{push.user&.email || Settings.brand.title} shared a secret (you are copied as supervisor)"
+    else
+      "#{push.user&.email || Settings.brand.title} has shared a secret with you"
+    end
+
     mail(
       to: recipient_email,
       from: "#{from_name} <#{from_email}>",
-      subject: "#{push.user&.email || Settings.brand.title} has shared a secret with you"
+      subject: subject
     )
   end
 end

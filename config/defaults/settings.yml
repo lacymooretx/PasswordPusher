@@ -122,8 +122,59 @@ enable_auto_dispatch: false
 # Settings for auto dispatch behavior.
 #
 auto_dispatch:
-  # Maximum number of recipients per push
+  # Maximum number of email recipients per push
   max_recipients: 10
+
+  # Maximum number of SMS recipients per push. Kept lower than the email limit
+  # because each message has a per-segment cost.
+  max_sms_recipients: 5
+
+  # Show the optional supervisor / manager fields on the dispatch form. The
+  # supervisor receives the same secret link as the primary recipient, so each
+  # of them consumes a view -- see the view-limit warning on the form.
+  enable_supervisor: true
+
+### SMS Dispatch
+#
+# When enabled, the secret link can also be texted to the recipient and/or the
+# supervisor via Clerk Chat. Requires enable_auto_dispatch and a configured
+# clerk_chat block below.
+#
+# Environment variable override:
+# PWP__ENABLE_SMS_DISPATCH='false'
+#
+enable_sms_dispatch: false
+
+### Clerk Chat (SMS provider)
+#
+# Business SMS/MMS delivery. See https://docs.clerk.chat
+#
+clerk_chat:
+  # API endpoint.
+  # Environment Variable Override: PWP__CLERK_CHAT__API_URL='https://web-api.clerk.chat/public/messages'
+  api_url: 'https://web-api.clerk.chat/public/messages'
+
+  # API key from the Clerk Chat dashboard. Sent as the `apiKey` header.
+  # Environment Variable Override: PWP__CLERK_CHAT__API_KEY='...'
+  # api_key: ''
+
+  # The Clerk Chat business number messages are sent from (E.164).
+  # Environment Variable Override: PWP__CLERK_CHAT__SENDER='+12819414028'
+  # sender: '+12819414028'
+
+  # Display name shown against outbound messages in the Clerk Chat inbox.
+  # Environment Variable Override: PWP__CLERK_CHAT__SENT_BY_NAME='Password Pusher'
+  sent_by_name: 'Password Pusher'
+
+  # Country code assumed for recipient numbers typed without a leading "+".
+  # Environment Variable Override: PWP__CLERK_CHAT__DEFAULT_COUNTRY_CODE='1'
+  default_country_code: '1'
+
+  # Connection / read timeouts (seconds) for the Clerk Chat API call.
+  # Environment Variable Override: PWP__CLERK_CHAT__OPEN_TIMEOUT='5'
+  open_timeout: 5
+  # Environment Variable Override: PWP__CLERK_CHAT__READ_TIMEOUT='15'
+  read_timeout: 15
 
 ### Webhooks
 #
@@ -1200,6 +1251,33 @@ mail:
   # Email delivery errors will be shown in the application
   # Environment Variable Override: PWP__MAIL__RAISE_DELIVERY_ERRORS='false'
   raise_delivery_errors: false
+
+  # How outbound mail is transported. One of:
+  #
+  #   'smtp'        - classic SMTP using the smtp_* settings below (default)
+  #   'smtp2go_api' - HTTPS POST to the SMTP2GO v3 API. No outbound SMTP port
+  #                   required; delivery failures are reported per recipient.
+  #                   Requires smtp2go_api_key.
+  #
+  # Environment Variable Override: PWP__MAIL__DELIVERY_METHOD='smtp2go_api'
+  delivery_method: 'smtp'
+
+  # API key for delivery_method: 'smtp2go_api'. Create one in the SMTP2GO
+  # dashboard under Sending -> API Keys; it must carry the /email/send scope.
+  # The sending address (mailer_sender) must be a verified sender in SMTP2GO.
+  # Environment Variable Override: PWP__MAIL__SMTP2GO_API_KEY='api-xxxxxxxx'
+  # smtp2go_api_key: ''
+
+  # SMTP2GO API endpoint. Only change this if you are pointed at a regional
+  # endpoint or a test double.
+  # Environment Variable Override: PWP__MAIL__SMTP2GO_API_URL='https://api.smtp2go.com/v3/email/send'
+  smtp2go_api_url: 'https://api.smtp2go.com/v3/email/send'
+
+  # Connection / read timeouts (seconds) for the SMTP2GO API call.
+  # Environment Variable Override: PWP__MAIL__SMTP2GO_OPEN_TIMEOUT='5'
+  smtp2go_open_timeout: 5
+  # Environment Variable Override: PWP__MAIL__SMTP2GO_READ_TIMEOUT='15'
+  smtp2go_read_timeout: 15
 
   # Allows you to use a remote mail server. Just change it from its default "localhost" setting.
   # Environment Variable Override: PWP__MAIL__SMTP_ADDRESS='smtp.example.com'

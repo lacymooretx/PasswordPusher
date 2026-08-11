@@ -23,24 +23,24 @@ class Api::BaseController < ApplicationController
       # APIv2 pushes mirror v1 semantics: show/create/preview/destroy are
       # publicly reachable (create-auth is enforced in the controller via
       # requires_authentication_for_create?); only these require a token.
-      if %w[audit active expired].include?(params["action"])
+      if %w[audit active expired dispatch_push dispatches].include?(params["action"])
         head :unauthorized
       end
 
     elsif request.path.start_with?("/p")
-      if %w[audit active expired].include?(params["action"])
+      if %w[audit active expired dispatch_push dispatches].include?(params["action"])
         # These paths require a valid token
         head :unauthorized
       end
 
     elsif request.path.start_with?("/f")
-      if %w[create audit active expired].include?(params["action"])
+      if %w[create audit active expired dispatch_push dispatches].include?(params["action"])
         # These paths require a valid token
         head :unauthorized
       end
 
     elsif request.path.start_with?("/r")
-      if %w[create audit active expired].include?(params["action"])
+      if %w[create audit active expired dispatch_push dispatches].include?(params["action"])
         # These paths require a valid token
         head :unauthorized
       end
