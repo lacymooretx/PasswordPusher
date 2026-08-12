@@ -25,7 +25,19 @@ class PushMailer < ApplicationMailer
     @secret_url = secret_url
     @role = role.to_s
     @supervisor = @role == "supervisor"
-    @sender_name = push.user&.email || Settings.brand.title
+
+    from_address = Settings.mail.mailer_sender || "oss@pwpush.com"
+    # Extract just the email address if it includes a name
+    from_email = from_address[/<(.+)>/, 1] || from_address
+    # Prefer the display name configured on mailer_sender, then the brand title.
+    # Deliberately NOT push.user.email: on an automation-driven instance the
+    # pushing account is a service account (cipp-automation@, n8n-automation@),
+    # and putting that in the From, the subject and the body makes a client-facing
+    # secret handoff read like a misdirected internal mail.
+    configured_from_name = from_address[/\A\s*"?([^"<]+?)"?\s*</, 1]
+    sender_label = configured_from_name.presence || Settings.brand.title
+
+    @sender_name = sender_label
     @brand_title = Settings.brand.title
 
     # Load branding for logo in email
@@ -40,25 +52,15 @@ class PushMailer < ApplicationMailer
       attachments.inline["logo.png"] = @branding.logo.download
     end
 
-    from_name = if push.user&.email.present?
-      "#{push.user.email} via #{Settings.brand.title}"
-    else
-      Settings.brand.title
-    end
-
-    from_address = Settings.mail.mailer_sender || "oss@pwpush.com"
-    # Extract just the email address if it includes a name
-    from_email = from_address[/<(.+)>/, 1] || from_address
-
     subject = if @supervisor
-      "#{push.user&.email || Settings.brand.title} shared a secret (you are copied as supervisor)"
+      "#{sender_label} shared a secret (you are copied as supervisor)"
     else
-      "#{push.user&.email || Settings.brand.title} has shared a secret with you"
+      "#{sender_label} has shared a secret with you"
     end
 
     mail(
       to: recipient_email,
-      from: "#{from_name} <#{from_email}>",
+      from: "#{sender_label} <#{from_email}>",
       subject: subject
     )
   end

@@ -30,7 +30,9 @@ class PushMailerTest < ActionMailer::TestCase
     secret_url = "https://pwpush.test/p/#{push.url_token}"
     email = PushMailer.push_dispatched(push, secret_url, "recipient@example.com")
     assert_equal ["recipient@example.com"], email.to
-    assert_match push.user.email, email.subject
+    # The pushing account is a service account on automation-driven instances,
+    # so it must never surface to the person receiving the secret.
+    refute_match push.user.email, email.subject
     assert_match "has shared a secret with you", email.subject
     assert_match secret_url, email.body.encoded
     assert_match Settings.brand.title, email.body.encoded
@@ -44,11 +46,18 @@ class PushMailerTest < ActionMailer::TestCase
     assert_match "Server Credentials", email.body.encoded
   end
 
-  test "push_dispatched from includes sender email and brand" do
+  test "push_dispatched from uses the configured sender label, never the pushing account" do
     push = pushes(:test_push)
     secret_url = "https://pwpush.test/p/#{push.url_token}"
     email = PushMailer.push_dispatched(push, secret_url, "recipient@example.com")
-    assert_match push.user.email, email[:from].to_s
+    refute_match push.user.email, email[:from].to_s
     assert_match Settings.brand.title, email[:from].to_s
+  end
+
+  test "push_dispatched body does not leak the pushing account address" do
+    push = pushes(:test_push)
+    secret_url = "https://pwpush.test/p/#{push.url_token}"
+    email = PushMailer.push_dispatched(push, secret_url, "recipient@example.com")
+    refute_match push.user.email, email.body.encoded
   end
 end
