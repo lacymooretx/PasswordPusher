@@ -530,3 +530,43 @@ change, set `passphrase_word_count: 4` / `PWP__GEN__PASSPHRASE_WORD_COUNT=4` —
 (`Foo-T-shirt-Bar`). Cosmetic only; entropy is unaffected.
 
 **Next steps.** None required. Deploy picks this up on the next image build.
+
+### 2026-08-16 15:41 CDT — Deployed to production
+
+Commit `b2691aaf` deployed to `pwpush.aspendora.com`.
+
+**Path taken.** Native build on the server (not the surgical file-copy path): the change alters
+the JS bundle, which is produced by `yarn build` *inside* the image, so copying source files into
+a running container would not have updated the compiled asset.
+
+1. `docker tag pwpush:latest pwpush:pre-sfw-wordlist-20260816` (rollback = `dd4bab2bd0ea`)
+2. `git archive HEAD | ssh docker-apps '... tar -x -C /opt/pwpush-build'`
+3. `docker build -f containers/docker/Dockerfile -t pwpush:latest .` on docker-apps
+4. `cd /opt/services/pwpush && docker compose up -d pwpush`
+5. `rm -rf /opt/pwpush-build /opt/pwpush-build.log`
+
+**New image** `a0271ed8fcf8`. Asset digest `application-52be1390.js`.
+
+**Verification (in the image, before swapping the container)**
+- `SFW_WORDLIST = EFF_WORDLIST.filter(...)` present; generator indexes `SFW_WORDLIST`;
+  `EFF_WORDLIST[` indexed **0** times — the raw list is bundled but never drawn from.
+- `passphrase_word_count: 5` in the image's settings.yml.
+
+**Verification (live, public edge)**
+- `GET /` 200, `GET /up` 200, `/api/v2/version.json` -> `{"api_version":"2.0"}`.
+- Page references `/assets/application-52be1390.js` — the exact digest verified in the image.
+- Rendered `data-pwgen-passphrase-word-count-default-value="5"`.
+- In the served JS: filter wiring present, `EFF_WORDLIST[` = 0, and **0** `Math.random` inside
+  `generatePassphrase`.
+- Container healthy; no errors in logs.
+
+**Rollback.** `ssh docker-apps 'docker tag pwpush:pre-sfw-wordlist-20260816 pwpush:latest && cd /opt/services/pwpush && docker compose up -d pwpush'`
+No migration ran, so rollback is image-only and safe.
+
+**Host note (not caused by this change).** docker-apps is at **91% disk (21G free)** with 23.9GB
+reclaimable build cache and 53.4GB reclaimable images. The build fit fine. Per the repo's
+production-safety rule I did **not** run `docker system prune` — that needs explicit approval.
+Worth scheduling, as the host runs 100+ containers.
+
+Also pre-existing: `pwpush:candidate` still points at the previous image `dd4bab2bd0ea`, and
+`pwpush-clamav` reports `unhealthy` (long-standing, per prior notes).
