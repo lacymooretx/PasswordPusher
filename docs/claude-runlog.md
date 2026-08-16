@@ -619,3 +619,36 @@ the rollback path is intact (verified after removal).
 
 **4. Disk / prune — analysed, NOT executed.** Findings presented to the user for approval; see the
 next entry once a decision is made.
+
+### 2026-08-16 15:53 CDT — Disk cleanup on docker-apps (approved subset)
+
+**Approved and run:** `docker builder prune -f` + `docker image prune -f` (dangling only).
+Explicitly **not** run: `docker system prune`, `-a`, or `--volumes`.
+
+**Why the destructive variants were rejected**
+- `-a` deletes every *tagged* image not used by a **running** container — on this host 161 tags,
+  including all 11 `*:pre-*` / `*:rollback-*` tags (pwpush's, `cipp-mcp-server:rollback-2026-08-14`,
+  `aspendora-site:pre-nextbump-20260701`) and 13 `controlr-aspendora` version images. It would have
+  destroyed the rollback tag created earlier today.
+- `--volumes` would remove 37 unused volumes with no way to tell data from scratch.
+- Plain `docker system prune` deletes the 3 stopped containers (`n8n-aspendora`, `controlr`,
+  `controlr-postgres`) for ~20MB. Those containers are the only thing keeping
+  `controlr-postgres-data`, `controlr-downloads`, `controlr-recordings` and `n8n_n8n_data` from
+  being classified as dangling — remove them and a later `docker volume prune` silently destroys
+  the ControlR database. Bad trade.
+
+**Result: 91% -> 77%** (201G -> 169G used; 21G -> 53G free). ~32GB freed.
+
+**Verified nothing was lost** by diffing before/after snapshots:
+containers 107 -> 107, running 104 -> 104, volumes 111 -> 111, tagged images 161 -> 161,
+rollback tags 11 -> 11 — all three diffs empty. pwpush healthy; `pwpush:pre-sfw-wordlist-20260816`
+still resolves to `dd4bab2bd0ea`.
+
+**Estimate correction.** I predicted ~37GB / ~71%; actual was ~32GB / 77%. The shortfall is
+`docker image prune` reclaiming 3.2GB rather than ~13GB, because 4 of the 5 untagged images are
+still referenced by the stopped containers and Docker correctly refused to delete them. The safety
+mechanism working as intended, not an error.
+
+**Still reclaimable if ever needed:** 43.36GB in images (only via `-a`, which is rejected above)
+and 3.58GB in volumes (needs per-volume inspection first). Build cache is now essentially empty
+(35.76MB), so the next `docker build` on this host will be slower — a cold cache, not a fault.
