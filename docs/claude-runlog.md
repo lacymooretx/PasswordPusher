@@ -695,3 +695,43 @@ and 3.58GB in volumes (needs per-volume inspection first). Build cache is now es
 - Settings + env overrides confirmed resolving via `bin/rails runner`.
 
 **Next:** deploy, then confirm in production that the probe runs and stays quiet while healthy.
+
+### 2026-08-16 16:14 CDT — ClamAV monitor deployed and proven end to end
+
+Commit `1258f1e8` deployed. Image `d19cc01f63b7`; rollback tag
+`pwpush:pre-clamav-monitor-20260816` (= `a0271ed8fcf8`). Native-build path as before.
+
+**A real gap the deploy surfaced: there was nobody to alert.** Production has 4 users and
+**0 flagged as admin**, and `alert_emails` defaulted to `[]` — so the recipient fallback resolved
+to an empty list and the monitor would have logged "no alert recipients" and sent nothing. A
+monitor that cannot reach anyone is the same silent failure in a new coat.
+
+Fixed in the deploy config, not the code:
+`PWP__CLAMAV__HEALTH_CHECK__ALERT_EMAILS: 'lacy@aspendora.com'` added to
+`/opt/services/pwpush/docker-compose.yml` (backup: `docker-compose.yml.bak-pre-clamav-alerts-20260816`,
+`docker compose config -q` validated before applying). Chose an explicit recipient over flagging a
+user admin, since `admin` also grants admin-panel access and `User` declares `attr_readonly :admin`.
+
+**Verified in production**
+- Settings resolve: `enabled=true grace=5m realert=6h`, recipients `lacy@aspendora.com`.
+- Cache round-trips (`FileStore`, `retains_state=true`), so grace/throttle logic is live rather
+  than silently degraded.
+- Healthy path: probe leaves no state and sends nothing.
+- Simulated outage (scanner stubbed **in the runner process only**; the server was untouched),
+  walking the whole state machine:
+  1. first probe inside the grace period -> recorded, no alert — PASS
+  2. aged past the grace period -> exactly one alert — PASS
+  3. immediate re-probe -> throttled, no second alert — PASS
+  4. recovery -> recovery notice, state cleared — PASS
+- **Both emails actually delivered** — `ActionMailer::MailDeliveryJob` 7719 (`clamav_unavailable`)
+  and 7720 (`clamav_recovered`) both `finished`, no failed executions. The alert path is proven
+  through SMTP2GO, not just enqueued.
+- Recurring task registered: `clamav_health_check`, `every 15 minutes`, queue `recurring`.
+- Left no residue: monitor state key back to `nil`, live `ClamavScanner.available? = true`.
+
+**Note.** One real alert email and one recovery email were delivered to lacy@aspendora.com during
+this test. They are expected, not a genuine incident.
+
+**Rollback.** `docker tag pwpush:pre-clamav-monitor-20260816 pwpush:latest && cd /opt/services/pwpush && docker compose up -d pwpush`,
+and restore `docker-compose.yml.bak-pre-clamav-alerts-20260816` to drop the alert recipient. No
+migration ran.
