@@ -570,3 +570,52 @@ Worth scheduling, as the host runs 100+ containers.
 
 Also pre-existing: `pwpush:candidate` still points at the previous image `dd4bab2bd0ea`, and
 `pwpush-clamav` reports `unhealthy` (long-standing, per prior notes).
+
+### 2026-08-16 15:48 CDT — Post-deploy: branch pushed, ClamAV scanning restored, stale tag removed
+
+**1. Branch pushed to GitHub.** `feature/secret-link-dispatch` had never been pushed — 6 commits
+existed only on the Mac while production ran from them. Now at
+`origin/feature/secret-link-dispatch`, tracking set.
+
+The fork `lacymooretx/PasswordPusher` is **PUBLIC**, so the diff was scanned first for credential
+assignments and high-entropy blobs before pushing. Clean — the only `secret`-matching paths were
+feature names (`secret-link-dispatch`) and `docs/secrets-required.md`, which by policy holds
+metadata only.
+
+**2. ClamAV was silently not scanning anything — now fixed.**
+
+`pwpush-clamav` had shown `unhealthy` for ~3 months and prior notes dismissed it as cosmetic. It
+was not. Diagnosis:
+
+- `clamd` was a **zombie** (`PID 20, State: Z, RSS 0`). It last ran ~2026-05-16; the container
+  nonetheless stayed "Up" because PID 1 is `/init` running `tail -f /dev/null`, so a dead clamd
+  never takes the container down.
+- `freshclam` kept updating signatures normally, which is why the logs looked healthy at a glance
+  (`daily.cld updated`) — the giveaway was `Clamd was NOT notified: ... Connection refused`.
+- Port 3310 was not listening; from the app container `ClamavScanner.available?` => `false`.
+
+Impact: `FileScanJob` is enqueued **after** the push is already live and retries a connection
+error only 3 times before giving up silently. So file pushes succeeded and were shareable while
+**no scan ever ran**, with `PWP__ENABLE_CLAMAV: 'true'` giving false assurance.
+`SolidQueue::FailedExecution` confirmed **7 of 7** `FileScanJob`s failed with
+`ClamavScanner::ConnectionError`, most recent 2026-06-23.
+
+Fix + verification:
+- `docker restart pwpush-clamav` — clamd listening in ~18s (RSS 955MB), container `healthy`.
+- End-to-end proof, not just a port check: scanned the **EICAR** test string through the app's own
+  `ClamavScanner` -> `clean?=false, virus="Eicar-Test-Signature"`; a benign string -> `clean?=true`.
+- Backlog: all 9 file pushes are already expired, so there was nothing live left to re-scan.
+
+**Root cause is still unknown** — no OOM evidence survived in `dmesg` (3 months rotated). clamd
+holds ~1GB RSS and the host currently shows only ~456Mi free (10Gi available), so memory pressure
+remains the leading theory. **This will likely recur.** The container healthcheck already reports
+it correctly; what is missing is anything that alerts on it. Worth adding a monitor on
+`ClamavScanner.available?` or on container health.
+
+**3. Stale `pwpush:candidate` tag removed.** It still pointed at the previous image
+`dd4bab2bd0ea` and read as "next to ship". No compose file or container referenced it. Removing
+the tag only untagged it — the same image is still tagged `pwpush:pre-sfw-wordlist-20260816`, so
+the rollback path is intact (verified after removal).
+
+**4. Disk / prune — analysed, NOT executed.** Findings presented to the user for approval; see the
+next entry once a decision is made.
