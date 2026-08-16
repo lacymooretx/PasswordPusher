@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import Cookies from 'js-cookie'
 import generatePassword from "omgopass";
 import { Modal } from "bootstrap";
-import { EFF_WORDLIST } from "../lib/eff_wordlist"
+import { SFW_WORDLIST } from "../lib/sfw_wordlist"
 
 export default class extends Controller {
     static targets = [
@@ -116,7 +116,7 @@ export default class extends Controller {
             syllablesCount:    this.syllablesCountDefaultValue,
 
             mode:                   this.modeDefaultValue || 'passphrase',
-            passphraseWordCount:    this.passphraseWordCountDefaultValue || 4,
+            passphraseWordCount:    this.passphraseWordCountDefaultValue || 5,
             passphraseSeparator:    this.passphraseSeparatorDefaultValue || '-',
             passphraseCapitalize:   this.passphraseCapitalizeDefaultValue,
             passphraseIncludeNumber: this.passphraseIncludeNumberDefaultValue,
@@ -247,14 +247,28 @@ export default class extends Controller {
         }
     }
 
+    // Uniform random integer in [0, bound) drawn from the CSPRNG.
+    //
+    // Rejection sampling: a plain `value % bound` skews toward the first
+    // (2^32 % bound) entries. The skew is tiny, but the retry loop costs
+    // nothing and removes the caveat entirely.
+    randomInt(bound) {
+        const limit = Math.floor(0x100000000 / bound) * bound
+        const array = new Uint32Array(1)
+        let value
+        do {
+            crypto.getRandomValues(array)
+            value = array[0]
+        } while (value >= limit)
+        return value % bound
+    }
+
     generatePassphrase(cfg) {
         const config = cfg || this.config
-        const count = config.passphraseWordCount || 4
+        const count = config.passphraseWordCount || 5
         const words = []
-        const array = new Uint32Array(count)
-        crypto.getRandomValues(array)
-        for (const val of array) {
-            let word = EFF_WORDLIST[val % EFF_WORDLIST.length]
+        for (let i = 0; i < count; i++) {
+            let word = SFW_WORDLIST[this.randomInt(SFW_WORDLIST.length)]
             if (config.passphraseCapitalize) {
                 word = word.charAt(0).toUpperCase() + word.slice(1)
             }
@@ -262,7 +276,7 @@ export default class extends Controller {
         }
         let result = words.join(config.passphraseSeparator !== undefined ? config.passphraseSeparator : '-')
         if (config.passphraseIncludeNumber) {
-            result += Math.floor(Math.random() * 10)
+            result += this.randomInt(10)
         }
         return result
     }
@@ -273,7 +287,7 @@ export default class extends Controller {
         if (isPassphrase) {
             const testConfig = {
                 mode: 'passphrase',
-                passphraseWordCount:     this.hasWordCountInputTarget ? Number(this.wordCountInputTarget.value) : (this.config.passphraseWordCount || 4),
+                passphraseWordCount:     this.hasWordCountInputTarget ? Number(this.wordCountInputTarget.value) : (this.config.passphraseWordCount || 5),
                 passphraseSeparator:     this.hasPassphraseSeparatorInputTarget ? this.passphraseSeparatorInputTarget.value : (this.config.passphraseSeparator || '-'),
                 passphraseCapitalize:    this.hasPassphraseCapitalizeCheckboxTarget ? this.passphraseCapitalizeCheckboxTarget.checked : this.config.passphraseCapitalize,
                 passphraseIncludeNumber: this.hasPassphraseIncludeNumberCheckboxTarget ? this.passphraseIncludeNumberCheckboxTarget.checked : this.config.passphraseIncludeNumber,

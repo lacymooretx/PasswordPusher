@@ -468,3 +468,65 @@ normal use, check the number's 10DLC campaign registration before touching code.
   the Entra app if abandoning entirely.
 
 **PHASE 49 COMPLETE.**
+
+---
+
+## 2026-08-16 15:23 CDT — Passphrase generator: SFW word filter, CSPRNG digit, entropy bump
+
+**Goal.** Answer "how are we generating the words, and is this safe for work and education?",
+then fix what the audit turned up.
+
+**Audit findings (before changes)**
+- Word source is `app/javascript/lib/eff_wordlist.js` — the EFF Large Wordlist, 7776 words.
+  Verified against the published file: `curl https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt`
+  then `diff` of the sorted word sets — **identical, zero drift**. Provenance is genuine.
+- Generation is entirely client-side in `pwgen_controller.js` (no server round-trip).
+- SFW: EFF's curation is solid — a scan for ~450 crude/sensitive candidates confirmed the truly
+  vulgar terms are absent. But 62 entries were still awkward for a school/shared screen, incl.
+  `badass` (mild profanity) and `eskimo` (now treated as a slur).
+- `Math.random()` was used for the appended digit — non-cryptographic, two lines below a
+  `crypto.getRandomValues` call.
+- Default was 4 words + digit = **55.0 bits**.
+
+**Changes**
+1. **New `app/javascript/lib/sfw_wordlist.js`.** Holds a 62-word `WORDLIST_DENYLIST` and exports
+   `SFW_WORDLIST`. Deliberately a *derived* list — `eff_wordlist.js` is left byte-for-byte pristine
+   so its provenance stays diffable against EFF's published file. Removal criteria are documented
+   in the file header; ordinary academic vocabulary (virus, epidemic, army, prison, acid, nuclear,
+   autopsy, dwarf, crazy) is deliberately KEPT — the goal is avoiding embarrassment, not
+   sanitising the dictionary.
+2. **`pwgen_controller.js`** — imports `SFW_WORDLIST`; new `randomInt(bound)` helper does
+   CSPRNG rejection sampling, used for *both* the word index and the trailing digit. This kills
+   the `Math.random()` call and, as a side effect, the (negligible) modulo bias.
+3. **Default word count 4 -> 5** in `config/settings.yml` and `config/defaults/settings.yml`
+   (kept byte-identical), plus the two in-code `|| 4` fallbacks. Modal already allowed min=2 max=10.
+
+**Verification**
+- Wordlist: EFF list still 7776; 62 denylist entries all matched real words (no typos silently
+  no-opping); filtered list 7714, no duplicates, no denylisted word survives.
+- RNG: 400k draws per bound in range; digit chi-square 9.44 < 27.88 (9 dof, p=0.001); stubbing
+  `Math.random = () => 0.42` still yields all 10 digits, proving independence.
+- Real controller method (not a copy) via esbuild bundle: 20k passphrases match expected shape;
+  100k emitted words contain zero denylisted terms; word count honoured for n=2..10.
+- `yarn build` clean; bundle contains `randomInt`, and remaining `Math.random` hits are all
+  third-party (Turbo jitter, uuid, progress bar, Stimulus uid).
+- `bin/rails test` -> **1319 runs, 5368 assertions, 0 failures, 0 errors, 0 skips**.
+
+**Entropy.** 12.9133 bits/word (was 12.9248 — the filter costs 0.045 bits over 4 words).
+Shipped default is now 5 words + digit = **67.9 bits**, up from 55.0.
+
+**Files changed**
+- `app/javascript/lib/sfw_wordlist.js` (new)
+- `app/javascript/controllers/pwgen_controller.js`
+- `config/settings.yml`, `config/defaults/settings.yml`
+- `app/assets/builds/application.js`, `.map` (rebuilt)
+- `docs/passphrase-generation.md` (new)
+
+**Rollback.** Revert the four source files and re-run `yarn build`. To undo only the length
+change, set `passphrase_word_count: 4` / `PWP__GEN__PASSPHRASE_WORD_COUNT=4` — no code change.
+
+**Note, not a defect.** The EFF list contains 4 hyphenated words (`drop-down`, `felt-tip`,
+`t-shirt`, `yo-yo`). With the default `-` separator a word boundary is visually ambiguous
+(`Foo-T-shirt-Bar`). Cosmetic only; entropy is unaffected.
+
+**Next steps.** None required. Deploy picks this up on the next image build.

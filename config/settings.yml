@@ -1020,9 +1020,9 @@ gen:
   # Number of words in generated passphrases
   #
   # Environment variable override:
-  # PWP__GEN__PASSPHRASE_WORD_COUNT=4
+  # PWP__GEN__PASSPHRASE_WORD_COUNT=5
   #
-  passphrase_word_count: 4
+  passphrase_word_count: 5
 
   # Separator between passphrase words
   #
