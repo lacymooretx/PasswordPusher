@@ -4,7 +4,19 @@
 # If a virus is detected, the push is expired and marked as quarantined.
 class FileScanJob < ApplicationJob
   queue_as :default
-  retry_on ClamavScanner::ConnectionError, wait: 1.minute, attempts: 3
+
+  # When the scanner is unreachable this job used to exhaust its retries and
+  # disappear without a trace, leaving the push live and unscanned. Make the
+  # give-up loud, and poke the health check so an alert goes out on the same
+  # throttle as the recurring probe.
+  retry_on ClamavScanner::ConnectionError, wait: 1.minute, attempts: 3 do |job, error|
+    push_id = job.arguments.first
+    Rails.logger.error(
+      "FileScanJob: gave up scanning push #{push_id} after #{job.executions} attempts -- " \
+      "the file is live and UNSCANNED: #{error.message}"
+    )
+    ClamavHealthCheckJob.perform_later
+  end
 
   def perform(push_id)
     return unless Settings.respond_to?(:enable_clamav) && Settings.enable_clamav

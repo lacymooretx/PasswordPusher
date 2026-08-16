@@ -652,3 +652,46 @@ mechanism working as intended, not an error.
 **Still reclaimable if ever needed:** 43.36GB in images (only via `-a`, which is rejected above)
 and 3.58GB in volumes (needs per-volume inspection first). Build cache is now essentially empty
 (35.76MB), so the next `docker build` on this host will be slower — a cold cache, not a fault.
+
+### 2026-08-16 16:07 CDT — ClamAV monitoring: alert when the scanner dies
+
+**Goal.** Close the alerting gap behind the 3-month ClamAV outage. Detection already worked
+(the container healthcheck was correct all along); nothing acted on it.
+
+**Added**
+1. `app/jobs/clamav_health_check_job.rb` — probes `ClamavScanner.available?` every 15 min in
+   production (30 min in dev), emails admins on failure. State in `Rails.cache` under
+   `clamav_health:state` = `{down_since:, alerted_at:}`: `down_since` drives a 5-minute grace
+   period so a clamd restart doesn't page anyone; `alerted_at` throttles reminders to one per 6h
+   and gates the recovery notice ("recovered" only if we said "down").
+2. `app/mailers/admin_mailer.rb` + 4 views — `clamav_unavailable` / `clamav_recovered`, html+text.
+   Both spell out that files are being served unscanned and give the zombie-clamd diagnosis
+   commands. Times rendered in US Central per the repo standard.
+3. `FileScanJob` — exhausting `retry_on` now logs at error level naming the push and saying the
+   file is live and `UNSCANNED`, then enqueues the health check. It deliberately does **not**
+   expire the push; fail-open vs fail-closed is a policy call left to a human.
+4. Settings under `clamav.health_check` (both settings files kept byte-identical) and
+   registration in `config/recurring.yml` for production + development.
+5. `docs/clamav-monitoring.md`.
+
+**Two design decisions worth remembering**
+- **Over-alert rather than under-alert.** The prod cache is a file store that `CleanupCacheJob`
+  prunes every 24h; a swept key costs one extra "down" email and a missed "recovered". Cheap
+  direction to fail when the alternative is silently unscanned files.
+- **A broken cache degrades to alerting, not silence.** Found while writing the tests: the test env
+  uses `:null_store`, and with a store that retains nothing every run looks like a fresh outage, so
+  the job would sit inside its grace period forever and never alert — reproducing the exact bug it
+  exists to catch. The job now round-trip-probes the cache and, if state isn't retained, logs an
+  error and alerts every probe. Regression test covers it.
+
+**Verification**
+- 17 new tests across the two job files; full suite **1334 runs, 5429 assertions, 0 failures**
+  (was 1319).
+- Coverage includes: disabled no-op, grace period, alert, throttle, re-alert, recovery,
+  blip-without-alert, admin fallback, `alert_emails` as both a YAML list and a comma-separated env
+  string (the Config gem parses env values as YAML — that has bitten this repo before), a probe
+  that raises, and the null-store degradation.
+- `rubocop` clean (2 autocorrected), `erb_lint` clean on the 4 new views.
+- Settings + env overrides confirmed resolving via `bin/rails runner`.
+
+**Next:** deploy, then confirm in production that the probe runs and stays quiet while healthy.

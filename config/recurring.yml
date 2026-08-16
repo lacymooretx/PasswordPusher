@@ -50,6 +50,11 @@ production:
     queue: recurring
     schedule: every day at 2am
 
+  clamav_health_check:
+    class: ClamavHealthCheckJob
+    queue: recurring
+    schedule: every 15 minutes
+
 development:
   expire_pushes:
     class: ExpirePushesJob
@@ -85,3 +90,8 @@ development:
     class: WebhookDeliveryCleanupJob
     queue: recurring
     schedule: every day at 2am
+
+  clamav_health_check:
+    class: ClamavHealthCheckJob
+    queue: recurring
+    schedule: every 30 minutes

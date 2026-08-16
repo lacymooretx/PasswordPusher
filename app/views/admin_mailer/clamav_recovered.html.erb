@@ -1,0 +1,16 @@
+<h2>ClamAV has recovered</h2>
+
+<p>
+  <strong><%= @site %></strong> can reach the ClamAV daemon at
+  <strong><%= @target %></strong> again. File pushes are being scanned normally.
+</p>
+
+<p>
+  <strong>Outage duration:</strong> <%= @downtime %>
+  (since <%= @down_since.in_time_zone("America/Chicago").strftime("%Y-%m-%d %H:%M %Z") %>)
+</p>
+
+<p>
+  Note that any file pushed during the outage was never scanned. If any are still
+  active, consider re-scanning or expiring them.
+</p>

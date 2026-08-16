@@ -278,6 +278,47 @@ clamav:
   host: 'localhost'
   port: 3310
 
+  ### ClamAV health monitoring
+  #
+  # clamd can die while its container still reports "Up", and freshclam keeps
+  # updating signatures so the logs look healthy. File pushes are scanned in a
+  # background job that runs *after* the push is live, so a dead scanner is
+  # completely silent: files are accepted and served unscanned.
+  #
+  # ClamavHealthCheckJob probes the daemon on a schedule (see
+  # config/recurring.yml) and emails administrators when it cannot be reached.
+  #
+  health_check:
+    # Set to false to disable the probe and its alerts.
+    #
+    # Environment variable override:
+    # PWP__CLAMAV__HEALTH_CHECK__ENABLED='true'
+    #
+    enabled: true
+
+    # How long the scanner must stay unreachable before anyone is emailed.
+    # Stops a routine clamd restart (~20s) from paging anybody.
+    #
+    # Environment variable override:
+    # PWP__CLAMAV__HEALTH_CHECK__GRACE_PERIOD_MINUTES=5
+    #
+    grace_period_minutes: 5
+
+    # While the scanner stays down, send at most one reminder per this many
+    # hours.
+    #
+    # Environment variable override:
+    # PWP__CLAMAV__HEALTH_CHECK__REALERT_AFTER_HOURS=6
+    #
+    realert_after_hours: 6
+
+    # Who to notify. Leave empty to fall back to every user flagged as an admin.
+    #
+    # Environment variable override (comma separated):
+    # PWP__CLAMAV__HEALTH_CHECK__ALERT_EMAILS='ops@example.com,security@example.com'
+    #
+    alert_emails: []
+
 ### Redis
 #
 # When configured, Redis is used as the cache store for Rack::Attack

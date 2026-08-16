@@ -1,0 +1,29 @@
+ClamAV is unreachable
+=====================
+
+<%= @site %> cannot reach the ClamAV daemon at <%= @target %>.
+
+WHILE THIS LASTS, UPLOADED FILES ARE ACCEPTED AND SERVED WITHOUT BEING SCANNED.
+File pushes are scanned in the background AFTER the push is already live, so
+nothing blocks or fails visibly - the scan simply never happens.
+
+Unreachable since: <%= @down_since.in_time_zone("America/Chicago").strftime("%Y-%m-%d %H:%M %Z") %> (<%= @downtime %>)
+
+What to check
+-------------
+The container can report "Up" while the daemon inside it is dead, so check the
+daemon rather than the container:
+
+    docker exec pwpush-clamav ps -o pid,rss,args
+    docker exec pwpush-clamav sh -c 'netstat -ltn | grep 3310'
+
+A clamd entry shown in brackets with RSS 0 is a zombie - the daemon has died.
+Restarting the container usually restores it:
+
+    docker restart pwpush-clamav
+
+Afterwards, verify with a real detection test rather than a port check - a
+listening socket does not prove the signature database loaded.
+
+You will get another reminder if this is still unresolved later, and a single
+confirmation once it recovers.
